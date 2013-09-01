@@ -22,5 +22,9 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/kaelzhang/ignore-rules/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "~1.7.2"
   }
 }
