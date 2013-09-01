@@ -45,7 +45,7 @@ function makeArray (subject) {
 
 // @param {Array.<string>|string} pattern
 Ignore.prototype.add = function(pattern) {
-    makeArray(rule).forEach(this._add, this);
+    makeArray(pattern).forEach(this._add, this);
     return this;
 };
 
@@ -141,30 +141,33 @@ var REPLACERS = [
     // ending
     [
         // 'js' will not match 'js.'
-        /[^*\/]$/,
-        '(?$|\\/)'
+        /(?:[^*\/])$/,
+        function (match1) {
+            return match1 + '(?=$|\\/)';
+        }
     ],
 
     // starting
     [
-        // there will be no leading '/'
+        // there will be no leading '/' (which has been replaced by the first replacer)
         // If starts with '**', adding a '^' to the regular expression also works
-        /^(?[^\^])/,
-        '(?^|\\/)'
+        /^(?=[^\^])/,
+        '(?:^|\\/)'
     ],
 
     // two globstars
     [
-        // '**/'
-        /\*\*\//g,
+        // '/**/'
+        /\/\*\*\//g,
 
         // Zero, one or several directories
-        '(?:[^\\/]+\\/)*'
+        // should not use '*', or it will be replaced by the next replacer
+        '(?:\\/[^\\/]+){0,}\\/'
     ], 
 
     // wildcard
     [
-        /\*/g,
+        /\*+/g,
 
         // 'abc/*.js' matches 'abc/...js'
         '[^\\/]*'
