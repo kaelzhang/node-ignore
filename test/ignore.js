@@ -165,3 +165,24 @@ describe(".makeRegex(), normal options, pattern 'foo/**/':", function(){
         expect( r_foo_globstar_slash.test('/foo') ).to.equal(false);
     });
 });
+
+
+describe(".filter()", function(){
+    it("could filter paths", function(){
+        var ig = ignore({
+            ignore: [
+                'abc',
+                '!abc/b'
+            ]
+        });
+
+        var filtered = ig.filter([
+            'abc/a.js',
+            'abc/b/b.js'
+        ]);
+        
+        console.log('filtered', filtered);
+
+        expect(filtered).to.deep.equal(['abc/b/b.js']);
+    });
+});

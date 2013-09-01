@@ -21,11 +21,11 @@ function Ignore (options){
     options = options || {};
     options.noCase = 'noCase' in options ? options.noCase : true;
 
-    this.add(options.rules);
     this.options = options;
-
     this._patterns = [];
     this._rules = [];
+
+    this.add(options.ignore);
 }
 
 // Events:
@@ -51,7 +51,7 @@ Ignore.prototype.add = function(pattern) {
 
 
 Ignore.prototype.filter = function(paths) {
-    // body...
+    return paths.filter(this._filter, this);
 };
 
 
@@ -91,14 +91,17 @@ var REGEX_LEADING_EXCLAMATION = /^\\\!/;
 var REGEX_LEADING_HASH = /^\\#/;
 
 Ignore.prototype._createRule = function(pattern) {
-    var rule_object = {};
+    var rule_object = {
+        origin: pattern
+    };
+
     var match_start;
 
-    if(pattern.indexOf('!')){
+    if(pattern.indexOf('!') === 0){
         rule_object.negative = true;
+        pattern = pattern.substr(1);
     }
-
-    rule_object.origin = pattern;
+    
 
     pattern = pattern
         .replace(REGEX_LEADING_EXCLAMATION, '!')
@@ -106,7 +109,7 @@ Ignore.prototype._createRule = function(pattern) {
 
     rule_object.pattern = pattern;
 
-    rule_object.regex = this._makeRegex(pattern);
+    rule_object.regex = this.makeRegex(pattern);
 
     return rule_object;
 };
@@ -183,6 +186,30 @@ Ignore.prototype.makeRegex = function(pattern) {
     }, pattern);
 
     return new RegExp(source, this.options.noCase ? 'i' : '');
+};
+
+
+Ignore.prototype._filter = function(path) {
+    var rules = this._rules;
+    var i = 0;
+    var length = rules.length;
+    var matched;
+    var rule;
+
+    for(; i < length; i ++){
+        rule = rules[i];
+
+        // if matched = true, then we only test negative rules
+        // if matched = false, then we test non-negative rules
+        if( !( matched ^ rule.negative ) ){
+            matched = rule.negative ^ rule.regex.test(path);
+
+        }else{
+            continue;
+        }
+    }
+
+    return !matched;
 };
 
 

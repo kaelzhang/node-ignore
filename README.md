@@ -12,7 +12,7 @@ Ignore-rules is a manager and filter for .gitignore rules.
 var ignoreRules = require('ignore-rules');
 
 var rules = ignoreRules({
-	rules: [
+	ignore: [
 		'.abc/*'
 	]
 });
