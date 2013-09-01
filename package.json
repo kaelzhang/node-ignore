@@ -1,0 +1,26 @@
+{
+  "name": "ignore-rules",
+  "version": "0.1.0",
+  "description": "Ignore-rules is a manager and filter for .gitignore rules.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kaelzhang/ignore-rules.git"
+  },
+  "keywords": [
+    "ignore",
+    ".gitignore",
+    "gitignore",
+    "rules",
+    "manager",
+    "filter"
+  ],
+  "author": "kael",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kaelzhang/ignore-rules/issues"
+  }
+}
