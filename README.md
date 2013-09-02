@@ -27,7 +27,7 @@ rules.filter([
 
 ## Why another fstream-ignore?
 
-1. Ignore-rules is a standalone module, and is much more simple,  and could easily work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
+1. Ignore-rules is a standalone module, and is much simpler so that it could easily work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
 
 2. Ignore-rules only contains utility methods to filter paths according to ignore rules.
 
