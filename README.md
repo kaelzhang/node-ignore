@@ -58,4 +58,21 @@ Filters the given array of pathnames, and returns the filtered array.
 
 The array of paths to be filtered
 
+### Constructor: ignoreRules(options)
+
+##### options.noCase `boolean=true`
+
+By default, all ignore rules will be treated as case-insensitive ones as well as the git does. 
+
+##### options.twoGlobstars `boolean=false`
+
+By defailt, `ignoreRules` will omit every pattern that includes '`**`' (two consecutive asterisks) which is not compatible cross operating systems, because the behavior of file .gitignore depends on the implementation of command `fnmatch` in shell.
+
+By the way, Mac OS doesn't support '`**`'.
+
+##### options.ignore `Array.<String>`
+
+The ignore rules to be added.
+
+You can also use `.add()` method to do this.
 

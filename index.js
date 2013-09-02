@@ -12,7 +12,7 @@ function ignore (options){
 
 
 // @param {Object} options
-// - rules: {Array}
+// - ignore: {Array}
 // - twoGlobstars: {boolean=false} enable pattern '`**`' (two consecutive asterisks), default to `false`.
 //      If false, ignore patterns with two globstars will be omitted
 // - noCase: {boolean=true} case sensitive.
@@ -76,7 +76,7 @@ Ignore.prototype._simpleTest = function(pattern) {
     if( ~ pattern.indexOf('**') ){
         this.emit('warn', {
             pattern: origin,
-            reason: '`**` found, which is not compatible with all platforms.' 
+            reason: '`**` found, which is not compatible cross all platforms.' 
         });
 
         if(!this.options.twoGlobstars){
