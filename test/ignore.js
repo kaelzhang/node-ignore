@@ -30,6 +30,34 @@ describe(".makeRegex(), normal options, pattern 'foo':", function(){
     });
 });
 
+
+describe(".makeRegex(), normal options, pattern '**/foo' matches 'foo' anywhere:", function(){
+    var ig = ignore();
+    var r_foo = ig.makeRegex('**/foo');
+
+    console.log('**/foo', r_foo);
+
+    it("'**/foo' should match 'foo'", function(){
+        expect( r_foo.test('foo') ).to.equal(true);
+    });
+
+    it("'**/foo' should match 'foo/'", function(){
+        expect( r_foo.test('foo/') ).to.equal(true);
+    });
+
+    it("'**/foo' should match '/foo'", function(){
+        expect( r_foo.test('/foo') ).to.equal(true);
+    });
+
+    it("'**/foo' should not match 'fooo'", function(){
+        expect( r_foo.test('fooo') ).to.equal(false);
+    });
+
+    it("'**/foo' should not match 'ofoo'", function(){
+        expect( r_foo.test('ofoo') ).to.equal(false);
+    });
+});
+
 describe(".makeRegex(), normal options, pattern 'foo/':", function(){
     var ig = ignore();
     var r_foo_slash = ig.makeRegex('foo/');

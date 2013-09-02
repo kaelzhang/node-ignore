@@ -114,7 +114,7 @@ Ignore.prototype._createRule = function(pattern) {
     return rule_object;
 };
 
-
+// > If the pattern ends with a slash, it is removed for the purpose of the following description, but it would only find a match with a directory. In other words, foo/ will match a directory foo and paths underneath it, but will not match a regular file or a symbolic link foo (this is consistent with the way how pathspec works in general in Git).
 // '`foo/`' will not match regular file '`foo`' or symbolic link '`foo`'
 // -> ignore-rules will not deal with it, because it costs extra `fs.stat` call
 //      you could use option `mark: true` with `glob`
@@ -124,9 +124,19 @@ var REPLACERS = [
     // leading slash
     [
 
+        // > A leading slash matches the beginning of the pathname. For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
         // A leading slash matches the beginning of the pathname 
         /^\//,
         '^'
+    ],
+
+    [
+        // > A leading "**" followed by a slash means match in all directories. For example, "**/foo" matches file or directory "foo" anywhere, the same as pattern "foo". "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".
+        /\*\*\//,
+
+        // '**/foo' <-> 'foo'
+        // just remove it
+        '' 
     ],
 
     // 'f'
@@ -160,6 +170,7 @@ var REPLACERS = [
 
     // two globstars
     [
+        // > A slash followed by two consecutive asterisks then a slash matches zero or more directories. For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
         // '/**/'
         /\/\*\*\//g,
 
