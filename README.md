@@ -32,7 +32,6 @@ rules.filter([
 2. Ignore-rules only contains utility methods to filter paths according to ignore rules.
 
 3. Exactly according to [gitignore man page](http://git-scm.com/docs/gitignore), fixes some known matching issues of fstream-ignore, such as:
-
 	- '`/*.js`' should match '`a.js`', but not '`abc/a.js`'.
 	- '`**/foo`' should match '`foo`' anywhere.
 
