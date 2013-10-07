@@ -2,7 +2,7 @@
 
 # ignore
 
-`ignore` is a manager and filter for .gitignore rules.
+`ignore` is a manager and filter according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
 # Installation
 
@@ -12,25 +12,29 @@
 
 ```js
 var ignore = require('ignore');
-var ig = ignore({
-    ignore: [
-        '.abc/*' // or use the `.add()` method
-    ]
+var ig = ignore(options).addRule(['.abc/*', '!.abc/d/']);
+```
 
-}).add('!.abc/d/');
+## Filter the given paths
 
+```js
 var paths = [
     '.abc/a.js',    // filtered out
     '.abc/d/e.js'   // included
 ];
 
 ig.filter(paths); // ['.abc/d/e.js']
+```
+
+## As the filter function
+
+```js
 paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 ```
 
 # Why another ignore?
 
-1. `ignore` is a standalone module, and is much simpler so that it could easily work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
+1. `ignore` is a standalone module, and is much simpler so that it could easy work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
 
 2. `ignore` only contains utility methods to filter paths according to the specified ignore rules.
 
@@ -42,7 +46,7 @@ paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 
 # Methods
 
-## .add(rule)
+## .addRule(rule)
 
 Adds a rule or several rules to the current manager.
 
@@ -51,6 +55,16 @@ Adds a rule or several rules to the current manager.
 #### Rule `String|Array.<String>`
 
 The ignore rule or a array of rules.
+
+
+## .addRuleFile(path)
+
+Adds rules from a ignore file or several files 
+
+#### Returns `this`
+
+#### Rule `String|Array.<String>`
+
 
 ## .filter(paths)
 
@@ -62,7 +76,7 @@ The array of paths to be filtered
 
 ## .createFilter()
 
-Creates a filter function which could be used with `Array.prototype.filter`.
+Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
 
 #### Returns `function(path)`
 
