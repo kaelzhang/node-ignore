@@ -179,6 +179,21 @@ describe(".makeRegex(), normal options, pattern 'foo/**/':", function(){
 });
 
 
+describe(".addPattern(), leading #", function(){
+    it("will treat leading # as comments", function(){
+        var result = ignore().addPattern('#abc').filter(['#abc']);
+
+        expect( result ).to.deep.equal(['#abc']);
+    });
+
+    it("\\#", function(){
+        var result = ignore().addPattern('\\#abc').filter(['#abc']);
+
+        expect( result ).to.deep.equal([]);
+    });
+});
+
+
 describe(".filter()", function(){
     it("could filter paths", function(){
         var ig = ignore({
@@ -231,10 +246,6 @@ describe(".createFilter()", function(){
 });
 
 
-describe("_private properties", function(){
-});
-
-
 describe(".addPattern()", function(){
     it(".addPattern(rule), chained", function(){
         var ig = ignore().addPattern('abc').addPattern('!abc/b');
@@ -256,6 +267,37 @@ describe(".addPattern()", function(){
         ].filter(ig.createFilter());
 
         expect(filtered).to.deep.equal(['abc/b/b.js']);
+    });
+});
+
+
+describe("ignore.select()", function(){
+    it("returns the first existing file", function(){
+        var file = ignore.select([
+            'test/fixtures/.ignore',
+            'test/fixtures/.aignore'
+        ]);
+
+        expect(file).to.equal('test/fixtures/.aignore');
+    });
+});
+
+
+describe(".addIgnoreFile(), complex testing", function(){
+    it("will add patterns from the file", function(){
+        var result = ignore().addIgnoreFile(
+                ignore.select([
+                    'test/fixtures/.aignore',
+                    'test/fixtures/.bignore'
+                ])
+            ).filter([
+                'abc/a.js',
+                'abc/b/b.js',
+                '#e',
+                '#f'
+            ]);
+
+        expect(result).to.deep.equal(['abc/b/b.js', '#e']);
     });
 });
 
