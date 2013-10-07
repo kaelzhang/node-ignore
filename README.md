@@ -32,6 +32,10 @@ ig.filter(paths); // ['.abc/d/e.js']
 paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 ```
 
+## With ignore files
+
+For most cases, we'd better use only one ignore 
+
 # Why another ignore?
 
 1. `ignore` is a standalone module, and is much simpler so that it could easy work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
@@ -46,15 +50,22 @@ paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 
 # Methods
 
-## .addRule(rule)
+## .addRule(pattern)
 
 Adds a rule or several rules to the current manager.
 
 #### Returns `this`
 
-#### Rule `String|Array.<String>`
+#### pattern `String|Array.<String>`
 
 The ignore rule or a array of rules.
+
+Notice that a line starting with `'#'`(hash) is treated as a comment. Put a backslash (`'\'`) in front of the first hash for patterns that begin with a hash, if you want to ignore a file with a hash at the beginning of the filename.
+
+```js
+ignore().addRule('#abc').filter(['#abc']); // ['abc']
+ignore().addRule('\#abc').filter(['#abc']); // []
+```
 
 
 ## .addRuleFile(path)
@@ -90,7 +101,7 @@ new ignore.Ignore(options);
 ignore(options);
 ```
 
-#### options.noCase `boolean=true`
+#### options.matchCase `boolean=false`
 
 By default, all ignore rules will be treated as case-insensitive ones as well as the git does. 
 
@@ -102,7 +113,9 @@ By the way, Mac OS doesn't support '`**`'.
 
 #### options.ignore `Array.<String>`
 
-The ignore rules to be added.
+The ignore rules to be added. Default to `['.git', '.svn', '.DS_Store']`
 
-You can also use `.add()` method to do this.
+If you want the '.git' directory to be included, 
+
+You can also use `.addRule()` method to do this.
 
