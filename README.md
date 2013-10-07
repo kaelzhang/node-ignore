@@ -34,7 +34,17 @@ paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 
 ## With ignore files
 
-For most cases, we'd better use only one ignore 
+For most cases, we'd better use only one ignore file. We could use `ignore.select` to select the first existing file.
+
+```js
+ignore().addRuleFile(
+	ignore.select([
+		'.xxxignore',
+		'.gitignore',
+		'.ignore'
+	])
+);
+```
 
 # Why another ignore?
 
@@ -115,7 +125,7 @@ By the way, Mac OS doesn't support '`**`'.
 
 The ignore rules to be added. Default to `['.git', '.svn', '.DS_Store']`
 
-If you want the '.git' directory to be included, 
+If you want those directories to be included, 
 
 You can also use `.addRule()` method to do this.
 
