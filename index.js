@@ -11,18 +11,33 @@ function ignore (options){
     return new Ignore(options);
 }
 
+var exists = node_fs.existsSync ?
+    function (file) {
+        return node_fs.existsSync(file);
+    } :
+
+    // if node -v <= 0.6, there's no fs.existsSync method.
+    function (file) {
+        try {
+            node_fs.statSync(file);
+            return true;
+        } catch(e) {
+            return false;
+        }
+    };
+
 // Select the first existing file of the file list
 ignore.select = function (files) {
-    var exists;
+    var selected;
 
     files.some(function (file) {
-        if( node_fs.existsSync(file) ){
-            exists = file;
+        if( exists(file) ){
+            selected = file;
             return true;
         }
     });
 
-    return exists;
+    return selected;
 };
 
 
