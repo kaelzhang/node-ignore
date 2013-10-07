@@ -125,7 +125,13 @@ By the way, Mac OS doesn't support '`**`'.
 
 The ignore rules to be added. Default to `['.git', '.svn', '.DS_Store']`
 
-If you want those directories to be included, 
+If you want those directories to be included, you could
+
+```js
+ignore({
+	ignore: []
+});
+```
 
 You can also use `.addPattern()` method to do this.
 
