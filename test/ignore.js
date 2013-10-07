@@ -216,12 +216,10 @@ describe(".createFilter()", function(){
     });
 
     it("test context", function(){
-        var ig = ignore({
-            ignore: [
+        var ig = ignore().addPattern([
                 'abc',
                 '!abc/b'
-            ]
-        });
+            ]);
 
         var filtered = [
             'abc/a.js',
@@ -234,20 +232,12 @@ describe(".createFilter()", function(){
 
 
 describe("_private properties", function(){
-    describe("constructor", function(){
-        it("will not mess up, if `options.ignore` not specified", function(){
-            var ig = ignore();
-
-            expect(ig._patterns.length).to.equal(0);
-            expect(ig._rules.length).to.equal(0);
-        });
-    });
 });
 
 
-describe(".add()", function(){
-    it(".add(rule), chained", function(){
-        var ig = ignore().add('abc').add('!abc/b');
+describe(".addPattern()", function(){
+    it(".addPattern(rule), chained", function(){
+        var ig = ignore().addPattern('abc').addPattern('!abc/b');
 
         var filtered = [
             'abc/a.js',
@@ -257,8 +247,8 @@ describe(".add()", function(){
         expect(filtered).to.deep.equal(['abc/b/b.js']);
     });
 
-    it(".add(rule), chained", function(){
-        var ig = ignore().add(['abc', '!abc/b']);
+    it(".addPattern(rule), chained", function(){
+        var ig = ignore().addPattern(['abc', '!abc/b']);
 
         var filtered = [
             'abc/a.js',
@@ -268,6 +258,5 @@ describe(".add()", function(){
         expect(filtered).to.deep.equal(['abc/b/b.js']);
     });
 });
-
 
 
