@@ -12,7 +12,7 @@
 
 ```js
 var ignore = require('ignore');
-var ig = ignore(options).addRule(['.abc/*', '!.abc/d/']);
+var ig = ignore(options).addPattern(['.abc/*', '!.abc/d/']);
 ```
 
 ## Filter the given paths
@@ -37,7 +37,7 @@ paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 For most cases, we'd better use only one ignore file. We could use `ignore.select` to select the first existing file.
 
 ```js
-ignore().addRuleFile(
+ignore().addIgnoreFile(
 	ignore.select([
 		'.xxxignore',
 		'.gitignore',
@@ -60,7 +60,7 @@ ignore().addRuleFile(
 
 # Methods
 
-## .addRule(pattern)
+## .addPattern(pattern)
 
 Adds a rule or several rules to the current manager.
 
@@ -73,12 +73,12 @@ The ignore rule or a array of rules.
 Notice that a line starting with `'#'`(hash) is treated as a comment. Put a backslash (`'\'`) in front of the first hash for patterns that begin with a hash, if you want to ignore a file with a hash at the beginning of the filename.
 
 ```js
-ignore().addRule('#abc').filter(['#abc']); // ['abc']
-ignore().addRule('\#abc').filter(['#abc']); // []
+ignore().addPattern('#abc').filter(['#abc']); // ['abc']
+ignore().addPattern('\#abc').filter(['#abc']); // []
 ```
 
 
-## .addRuleFile(path)
+## .addIgnoreFile(path)
 
 Adds rules from a ignore file or several files 
 
@@ -127,5 +127,5 @@ The ignore rules to be added. Default to `['.git', '.svn', '.DS_Store']`
 
 If you want those directories to be included, 
 
-You can also use `.addRule()` method to do this.
+You can also use `.addPattern()` method to do this.
 
