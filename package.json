@@ -1,7 +1,7 @@
 {
-  "name": "ignore-rules",
-  "version": "0.1.2",
-  "description": "Ignore-rules is a manager and filter for .gitignore rules.",
+  "name": "ignore",
+  "version": "1.1.2",
+  "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
@@ -28,6 +28,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "chai": "~1.7.2"
+    "chai": "~1.7.2",
+    "mocha": "~1.13.0"
   }
 }
