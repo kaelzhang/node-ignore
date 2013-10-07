@@ -16,7 +16,7 @@ var exists = node_fs.existsSync ?
         return node_fs.existsSync(file);
     } :
 
-    // if node -v <= 0.6, there's no fs.existsSync method.
+    // if node <= 0.6, there's no fs.existsSync method.
     function (file) {
         try {
             node_fs.statSync(file);
