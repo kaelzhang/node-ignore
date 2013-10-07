@@ -75,8 +75,11 @@ Ignore.prototype._simpleTest = function(pattern) {
 
     if( ~ pattern.indexOf('**') ){
         this.emit('warn', {
-            pattern: origin,
-            reason: '`**` found, which is not compatible cross all platforms.' 
+            code: 'WGLOBSTARS',
+            data: {
+                pattern: origin
+            },
+            message: '`**` found, which is not compatible cross all platforms.' 
         });
 
         if(!this.options.twoGlobstars){
@@ -221,6 +224,15 @@ Ignore.prototype._filter = function(path) {
     }
 
     return !matched;
+};
+
+
+Ignore.prototype.createFilter = function() {
+    var self = this;
+
+    return function (path) {
+        return self._filter(path);  
+    };
 };
 
 
