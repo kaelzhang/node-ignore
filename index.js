@@ -269,9 +269,6 @@ Ignore.prototype._addIgnoreFile = function (file) {
     if(this._checkRuleFile(file)){
         this._ignoreFiles.push(file);
 
-        // make sure `file` is an absolute path
-        file = node_path.resolve(this.cwd, file);
-
         var content;
 
         try {
