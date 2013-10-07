@@ -3,29 +3,51 @@
 module.exports = ignore;
 ignore.Ignore = Ignore;
 
-var EE = require('events').EventEmitter;
+var EE        = require('events').EventEmitter;
 var node_util = require('util');
+var node_fs   = require('fs');
 
 function ignore (options){
     return new Ignore(options);
 }
+
+// Select the first existing file of the file list
+ignore.select = function (files) {
+    var exists;
+
+    files.some(function (file) {
+        if( node_fs.existsSync(file) ){
+            exists = file;
+            return true;
+        }
+    });
+
+    return exists;
+};
 
 
 // @param {Object} options
 // - ignore: {Array}
 // - twoGlobstars: {boolean=false} enable pattern '`**`' (two consecutive asterisks), default to `false`.
 //      If false, ignore patterns with two globstars will be omitted
-// - noCase: {boolean=true} case sensitive.
+// - matchCase: {boolean=true} case sensitive.
 //      By default, git is case-insensitive
 function Ignore (options){
     options = options || {};
-    options.noCase = 'noCase' in options ? options.noCase : true;
 
     this.options = options;
     this._patterns = [];
     this._rules = [];
+    this._ignoreFiles = [];
 
-    this.add(options.ignore);
+    options.ignore = options.ignore || [
+        // Some files or directories which we should ignore for most cases.
+        '.git',
+        '.svn',
+        '.DS_Store'
+    ];
+
+    this.addPattern(options.ignore);
 }
 
 // Events:
@@ -44,9 +66,17 @@ function makeArray (subject) {
 
 
 // @param {Array.<string>|string} pattern
-Ignore.prototype.add = function(pattern) {
-    makeArray(pattern).forEach(this._add, this);
+Ignore.prototype.addPattern = function(pattern) {
+    makeArray(pattern).forEach(this._addPattern, this);
     return this;
+};
+
+
+Ignore.prototype._addPattern = function(pattern) {
+    if(this._simpleTest(pattern)){
+        var rule = this._createRule(pattern);
+        this._rules.push(rule);
+    }
 };
 
 
@@ -54,13 +84,6 @@ Ignore.prototype.filter = function(paths) {
     return paths.filter(this._filter, this);
 };
 
-
-Ignore.prototype._add = function(pattern) {
-    if(this._simpleTest(pattern)){
-        var rule = this._createRule(pattern);
-        this._rules.push(rule);
-    }
-};
 
 Ignore.prototype._simpleTest = function(pattern) {
     var pass = 
@@ -104,7 +127,6 @@ Ignore.prototype._createRule = function(pattern) {
         rule_object.negative = true;
         pattern = pattern.substr(1);
     }
-    
 
     pattern = pattern
         .replace(REGEX_LEADING_EXCLAMATION, '!')
@@ -199,7 +221,7 @@ Ignore.prototype.makeRegex = function(pattern) {
 
     }, pattern);
 
-    return new RegExp(source, this.options.noCase ? 'i' : '');
+    return new RegExp(source, this.options.matchCase ? '' : 'i');
 };
 
 
@@ -231,8 +253,43 @@ Ignore.prototype.createFilter = function() {
     var self = this;
 
     return function (path) {
-        return self._filter(path);  
+        return self._filter(path);
     };
+};
+
+
+// @param {Array.<path>|path} a
+Ignore.prototype.addIgnoreFile = function(files) {
+    makeArray(files).forEach(this._addIgnoreFile, this);
+    return this;
+};
+
+
+Ignore.prototype._addIgnoreFile = function (file) {
+    if(this._checkRuleFile(file)){
+        this._ignoreFiles.push(file);
+
+        // make sure `file` is an absolute path
+        file = node_path.resolve(this.cwd, file);
+
+        var content;
+
+        try {
+            content = node_fs.readFileSync(file);
+        } catch(e) {
+        }
+
+        if(content){
+            this.addPattern( content.toString().split(/\r?\n/) );
+        }
+    }
+};
+
+
+Ignore.prototype._checkRuleFile = function(file) {
+    return file !== '.' &&
+           file !== '..' &&
+           ! ~ this._ignoreFiles.indexOf(file);
 };
 
 
