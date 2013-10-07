@@ -43,7 +43,7 @@ ignore.select = function (files) {
 
 // @param {Object} options
 // - ignore: {Array}
-// - twoGlobstars: {boolean=false} enable pattern '`**`' (two consecutive asterisks), default to `false`.
+// - twoGlobstars: {boolean=false} enable pattern `'**'` (two consecutive asterisks), default to `false`.
 //      If false, ignore patterns with two globstars will be omitted
 // - matchCase: {boolean=true} case sensitive.
 //      By default, git is case-insensitive
