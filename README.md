@@ -22,7 +22,6 @@ var ig = ignore({
 var paths = [
     '.abc/a.js',    // filtered out
     '.abc/d/e.js'   // included
-    
 ];
 
 ig.filter(paths); // ['.abc/d/e.js']

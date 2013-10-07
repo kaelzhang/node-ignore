@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:kaelzhang/node-ignore-rules.git"
+    "url": "git@github.com:kaelzhang/node-ignore.git"
   },
   "keywords": [
     "ignore",
@@ -24,7 +24,7 @@
   "author": "kael",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kaelzhang/node-ignore-rules/issues"
+    "url": "https://github.com/kaelzhang/node-ignore/issues"
   },
   "dependencies": {},
   "devDependencies": {
