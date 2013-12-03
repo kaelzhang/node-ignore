@@ -115,7 +115,7 @@ Ignore.prototype._simpleTest = function(pattern) {
         this.emit('warn', {
             code: 'WGLOBSTARS',
             data: {
-                pattern: origin
+                origin: pattern
             },
             message: '`**` found, which is not compatible cross all platforms.' 
         });
