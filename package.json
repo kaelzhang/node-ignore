@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "index.js",
   "scripts": {
