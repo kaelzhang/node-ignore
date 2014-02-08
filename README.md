@@ -1,8 +1,4 @@
-[![NPM version](https://badge.fury.io/js/ignore.png)](http://badge.fury.io/js/ignore)
-[![Build Status](https://travis-ci.org/kaelzhang/node-ignore.png?branch=master)](https://travis-ci.org/kaelzhang/node-ignore)
-[![Dependency Status](https://gemnasium.com/kaelzhang/node-ignore.png)](https://gemnasium.com/kaelzhang/node-ignore)
-
-# ignore
+# ignore [![NPM version](https://badge.fury.io/js/ignore.png)](http://badge.fury.io/js/ignore) [![Build Status](https://travis-ci.org/kaelzhang/node-ignore.png?branch=master)](https://travis-ci.org/kaelzhang/node-ignore) [![Dependency Status](https://gemnasium.com/kaelzhang/node-ignore.png)](https://gemnasium.com/kaelzhang/node-ignore)
 
 `ignore` is a manager and filter according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
@@ -52,10 +48,14 @@ ignore().addIgnoreFile(
 
 1. `ignore` is a standalone module, and is much simpler so that it could easy work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
 
-2. `ignore` only contains utility methods to filter paths according to the specified ignore rules.
+2. `ignore` only contains utility methods to filter paths according to the specified ignore rules, so
+
+- `ignore` never try to find out ignore rules by traversing directories or fetching from git configurations.
+
+- `ignore` don't cares about sub-modules of git projects.
 
 3. Exactly according to [gitignore man page](http://git-scm.com/docs/gitignore), fixes some known matching issues of fstream-ignore, such as:
-	- '`/*.js`' should match '`a.js`', but not '`abc/a.js`'.
+	- '`/*.js`' should only match '`a.js`', but not '`abc/a.js`'.
 	- '`**/foo`' should match '`foo`' anywhere.
 
 
@@ -93,9 +93,32 @@ Adds rules from a ignore file or several files
 
 Filters the given array of pathnames, and returns the filtered array.
 
-#### paths `Array`
+#### paths `Array.<path>`
 
-The array of paths to be filtered
+The array of paths to be filtered.
+
+*NOTICE* that each `path` here should be a relative path to the root of your repository. Suppose the dir structure is:
+
+```
+/path/to/your/repo
+    |-- a
+    |   |-- a.js
+    |
+    |-- .b
+    |
+    |-- .c
+         |-- .DS_store 
+```
+
+Then the `paths` might be like this:
+
+```
+[
+    'a/a.js'
+    '.b',
+    '.c/.DS_store'
+]
+```
 
 ## .createFilter()
 
