@@ -45,7 +45,7 @@ ignore.select = function (files) {
 // - ignore: {Array}
 // - twoGlobstars: {boolean=false} enable pattern `'**'` (two consecutive asterisks), default to `false`.
 //      If false, ignore patterns with two globstars will be omitted
-// - matchCase: {boolean=true} case sensitive.
+// - matchCase: {boolean=} case sensitive.
 //      By default, git is case-insensitive
 function Ignore (options){
     options = options || {};
@@ -161,6 +161,31 @@ Ignore.prototype._createRule = function(pattern) {
 
 // '`foo/`' should not continue with the '`..`'
 var REPLACERS = [
+
+    // Escape metacharacters 
+    // which is written down by users but means special for regular expressions.
+
+    // > There are 12 characters with special meanings: 
+    // > - the backslash \, 
+    // > - the caret ^, 
+    // > - the dollar sign $, 
+    // > - the period or dot ., 
+    // > - the vertical bar or pipe symbol |, 
+    // > - the question mark ?, 
+    // > - the asterisk or star *, 
+    // > - the plus sign +, 
+    // > - the opening parenthesis (, 
+    // > - the closing parenthesis ), 
+    // > - and the opening square bracket [, 
+    // > - the opening curly brace {, 
+    // > These special characters are often called "metacharacters".
+    [
+        /[\\\^$.|?*+()\[{]/g,
+        function (match) {
+            return '\\' + match;
+        }
+    ],
+
     // leading slash
     [
 
@@ -172,7 +197,8 @@ var REPLACERS = [
 
     [
         // > A leading "**" followed by a slash means match in all directories. For example, "**/foo" matches file or directory "foo" anywhere, the same as pattern "foo". "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".
-        /\*\*\//,
+        // Notice that the '*'s have been replaced as '\\*'
+        /\\\*\\\*\//,
 
         // '**/foo' <-> 'foo'
         // just remove it
@@ -195,14 +221,17 @@ var REPLACERS = [
     [
         // 'js' will not match 'js.'
         /(?:[^*\/])$/,
-        function (match1) {
-            return match1 + '(?=$|\\/)';
+        function (match) {
+            // 'js*' will not match 'a.js'
+            // 'js/' will not match 'a.js'
+            // 'js' will match 'a.js' and 'a.js/'
+            return match + '(?=$|\\/)';
         }
     ],
 
     // starting
     [
-        // there will be no leading '/' (which has been replaced by the first replacer)
+        // there will be no leading '/' (which has been replaced by the second replacer)
         // If starts with '**', adding a '^' to the regular expression also works
         /^(?=[^\^])/,
         '(?:^|\\/)'
@@ -212,19 +241,28 @@ var REPLACERS = [
     [
         // > A slash followed by two consecutive asterisks then a slash matches zero or more directories. For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
         // '/**/'
-        /\/\*\*\//g,
+        /\/\\\*\\\*\//g,
 
         // Zero, one or several directories
         // should not use '*', or it will be replaced by the next replacer
-        '(?:\\/[^\\/]+){0,}\\/'
+        '(?:\\/[^\\/]+)*\\/'
     ], 
 
     // wildcard
     [
-        /\*+/g,
+        // Never replace escaped '*'
+        // ignore rule '\*' will match the path '*'
+        /(^|[^\\]+)(\\\*)+/g,
 
         // 'abc/*.js' matches 'abc/...js'
-        '[^\\/]*'
+        function (match, p1) {
+            return p1 + '[^\\/]*';
+        }
+    ],
+
+    [
+        /\\\\\\/g,
+        '\\'
     ]
 ];
 
