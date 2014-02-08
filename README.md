@@ -2,18 +2,18 @@
 
 `ignore` is a manager and filter according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
-# Installation
+## Installation
 
 	npm install ignore --save
 	
-# Usage
+## Usage
 
 ```js
 var ignore = require('ignore');
 var ig = ignore(options).addPattern(['.abc/*', '!.abc/d/']);
 ```
 
-## Filter the given paths
+### Filter the given paths
 
 ```js
 var paths = [
@@ -24,13 +24,13 @@ var paths = [
 ig.filter(paths); // ['.abc/d/e.js']
 ```
 
-## As the filter function
+### As the filter function
 
 ```js
 paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 ```
 
-## With ignore files
+### With ignore files
 
 For most cases, we'd better use only one ignore file. We could use `ignore.select` to select the first existing file.
 
@@ -44,7 +44,7 @@ ignore().addIgnoreFile(
 );
 ```
 
-# Why another ignore?
+## Why another ignore?
 
 1. `ignore` is a standalone module, and is much simpler so that it could easy work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
 
@@ -60,9 +60,9 @@ ignore().addIgnoreFile(
 
 
 
-# Methods
+## Methods
 
-## .addPattern(pattern)
+### .addPattern(pattern)
 
 Adds a rule or several rules to the current manager.
 
@@ -80,7 +80,7 @@ ignore().addPattern('\#abc').filter(['#abc']); // []
 ```
 
 
-## .addIgnoreFile(path)
+### .addIgnoreFile(path)
 
 Adds rules from a ignore file or several files 
 
@@ -89,7 +89,7 @@ Adds rules from a ignore file or several files
 #### Rule `String|Array.<String>`
 
 
-## .filter(paths)
+### .filter(paths)
 
 Filters the given array of pathnames, and returns the filtered array.
 
@@ -136,7 +136,7 @@ glob('**', function(err, files){
 });
 ```
 
-## .createFilter()
+### .createFilter()
 
 Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
 
@@ -145,7 +145,7 @@ Creates a filter function which could filter an array of paths with `Array.proto
 The filter function.
 
 
-# Constructor: ignore.Ignore
+## Constructor: ignore.Ignore
 
 ```js
 new ignore.Ignore(options);
