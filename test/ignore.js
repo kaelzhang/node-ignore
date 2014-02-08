@@ -310,15 +310,30 @@ describe("metacharacters of regular expression", function(){
         var result = ignore()
             .addPattern([
                 '*.js',
-                '!\\*.js'
+                '!\\*.js',
+                '!a#b.js',
+                '!?.js',
+
+                // comments
+                '#abc',
+
+                '\\#abc'
 
             ]).filter([
                 '*.js',
-                'abc.js'
+                'abc.js',
+                'a#b.js',
+                'abc',
+                '#abc',
+                '?.js'
             ]);
 
         expect(result.sort()).to.deep.equal([
-            '*.js'
+            '*.js',
+            'abc',
+            'a#b.js',
+            '?.js'
+
         ].sort());
     });
 });
