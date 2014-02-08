@@ -112,7 +112,7 @@ The array of paths to be filtered.
 
 Then the `paths` might be like this:
 
-```
+```js
 [
     'a/a.js'
     '.b',
@@ -122,7 +122,7 @@ Then the `paths` might be like this:
 
 Usually, you could use [`glob`](http://npmjs.org/package/glob) to fetch the structure of the current directory:
 
-```
+```js
 var glob = require('glob');
 glob('**', function(err, files){
     var filtered;
