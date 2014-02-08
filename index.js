@@ -151,6 +151,8 @@ Ignore.prototype._createRule = function(pattern) {
 
     rule_object.regex = this.makeRegex(pattern);
 
+    console.log(rule_object)
+
     return rule_object;
 };
 
@@ -196,9 +198,14 @@ var REPLACERS = [
     ],
 
     [
+        /\//g,
+        '\\/'
+    ],
+
+    [
         // > A leading "**" followed by a slash means match in all directories. For example, "**/foo" matches file or directory "foo" anywhere, the same as pattern "foo". "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".
         // Notice that the '*'s have been replaced as '\\*'
-        /\\\*\\\*\//,
+        /\\\*\\\*\\\//,
 
         // '**/foo' <-> 'foo'
         // just remove it
@@ -248,16 +255,26 @@ var REPLACERS = [
         '(?:\\/[^\\/]+)*\\/'
     ], 
 
-    // wildcard
+    // intermediate wildcards
     [
         // Never replace escaped '*'
         // ignore rule '\*' will match the path '*'
-        /(^|[^\\]+)(\\\*)+/g,
 
-        // 'abc/*.js' matches 'abc/...js'
+        // 'abc.*/' -> go
+        // 'abc.*'  -> skip
+        /(^|[^\\]+)\\\*(?=.+)/g,
         function (match, p1) {
+            // '*.js' matches '.js'
+            // '*.js' doesn't match 'abc'
             return p1 + '[^\\/]*';
         }
+    ],
+
+    // ending wildcard
+    [
+        /\\\*$/,
+        // simply remove it
+        ''
     ],
 
     [
