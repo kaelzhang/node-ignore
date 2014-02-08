@@ -248,7 +248,9 @@ describe(".createFilter()", function(){
 
 describe(".addPattern()", function(){
     it(".addPattern(rule), chained", function(){
-        var ig = ignore().addPattern('abc').addPattern('!abc/b');
+        var ig = ignore()
+            .addPattern('abc')
+            .addPattern('!abc/b');
 
         var filtered = [
             'abc/a.js',
@@ -285,10 +287,11 @@ describe("ignore.select()", function(){
 
 describe(".addIgnoreFile(), complex testing", function(){
     it("will add patterns from the file", function(){
-        var result = ignore().addIgnoreFile(
+        var result = ignore()
+            .addIgnoreFile(
                 ignore.select([
                     'test/fixtures/.aignore',
-                    'test/fixtures/.bignore'
+                    'test/fixtures/.fakeignore'
                 ])
             ).filter([
                 'abc/a.js',
@@ -301,4 +304,49 @@ describe(".addIgnoreFile(), complex testing", function(){
     });
 });
 
+
+describe("metacharacters of regular expression", function(){
+    it("should excape them", function(){
+        var result = ignore()
+            .addPattern([
+                '*.js',
+                '!\\*.js'
+
+            ]).filter([
+                '*.js',
+                'abc.js'
+            ]);
+
+        expect(result.sort()).to.deep.equal([
+            '*.js'
+        ].sort());
+    });
+});
+
+
+describe("issue #2", function(){
+    it("question mark should not break all things", function(){
+        var result = ignore()
+            .addIgnoreFile('test/fixtures/.ignore-issue-2')
+            .filter([
+                '.project',
+                // remain
+                'abc/.project',
+                '.a.sw',
+                '.a.sw?',
+                'thumbs.db'
+            ]);
+
+        expect(
+            // Sort the result
+            result.sort()
+        ).to.deep.equal(
+            [
+                'abc/.project',
+                '.a.sw',
+                // 'thumbs.db'
+            ].sort()
+        );
+    });
+});
 
