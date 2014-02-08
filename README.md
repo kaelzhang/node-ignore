@@ -120,6 +120,22 @@ Then the `paths` might be like this:
 ]
 ```
 
+Usually, you could use [`glob`](http://npmjs.org/package/glob) to fetch the structure of the current directory:
+
+```
+var glob = require('glob');
+glob('**', function(err, files){
+    var filtered;
+
+    if ( err ) {
+        console.log(err);
+    } else {
+        filtered = ignore().addIgnoreFile('.gitignore').filter(files);
+        console.log(filtered);
+    }
+});
+```
+
 ## .createFilter()
 
 Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
