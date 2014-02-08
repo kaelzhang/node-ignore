@@ -1,5 +1,6 @@
 'use strict';
 
+var fs = require('fs');
 var ignore = require('../');
 var expect = require('chai').expect;
 
@@ -179,189 +180,215 @@ describe(".makeRegex(), normal options, pattern 'foo/**/':", function(){
 });
 
 
-describe(".addPattern(), leading #", function(){
-    it("will treat leading # as comments", function(){
-        var result = ignore().addPattern('#abc').filter(['#abc']);
+var cases = [
+    // description      patterns    paths     expect
+    // [
+    //     'leading hash: will treat leading # as comments',
+    //     ['#abc'],
+    //     ['#abc'],
+    //     ['#abc']
+    // ],
+    // [
+    //     '\\#',
+    //     ['\\#abc'],
+    //     ['#abc'],
+    //     []
+    // ],
+    // [
+    //     'could filter paths',
+    //     [
+    //         'abc',
+    //         '!abc/b'
+    //     ],
+    //     [
+    //         'abc/a.js',
+    //         'abc/b/b.js'
+    //     ],
+    //     [
+    //         'abc/b/b.js'
+    //     ]
+    // ],
+    // [
+    //     'ignore.select',
+    //     ignore.select([
+    //         'test/fixtures/.aignore',
+    //         'test/fixtures/.fakeignore'
+    //     ]),
+    //     [
+    //         'abc/a.js',
+    //         'abc/b/b.js',
+    //         '#e',
+    //         '#f'
+    //     ],
+    //     ['abc/b/b.js', '#e']
+    // ],
+    // [
+    //     'should excape metacharacters of regular expressions',
+    //     [
+    //         '*.js',
+    //         '!\\*.js',
+    //         '!a#b.js',
+    //         '!?.js',
 
-        expect( result ).to.deep.equal(['#abc']);
-    });
+    //         // comments
+    //         '#abc',
 
-    it("\\#", function(){
-        var result = ignore().addPattern('\\#abc').filter(['#abc']);
+    //         '\\#abc'
+    //     ],
+    //     [
+    //         '*.js',
+    //         'abc.js',
+    //         'a#b.js',
+    //         'abc',
+    //         '#abc',
+    //         '?.js'
+    //     ],
+    //     [
+    //         '*.js',
+    //         'abc',
+    //         'a#b.js',
+    //         '?.js'
+    //     ]
+    // ],
 
-        expect( result ).to.deep.equal([]);
-    });
-});
+    // [
+    //     'issue #2: question mark should not break all things',
+    //     'test/fixtures/.ignore-issue-2',
+    //     [
+    //         '.project',
+    //         // remain
+    //         'abc/.project',
+    //         '.a.sw',
+    //         '.a.sw?',
+    //         'thumbs.db'
+    //     ],
+    //     [
+    //         'abc/.project',
+    //         '.a.sw',
+    //         // 'thumbs.db'
+    //     ]
+    // ],
+    [
+        'dir ended with "*"',
+        [
+            'abc/*'
+        ],
+        {
+            'abc': 0
+        }
+    ],
+    [
+        'file ended with "*"',
+        [
+            'abc.js*',
+        ],
+        {
+            'abc.js/':      1,
+            'abc.js/abc':   1,
+            'abc.jsa/':     1,
+            'abc.jsa/abc':  1  
+        }
+    ],
+    [
+        'wildcard as filename',
+        [
+            '*.b'
+        ],
+        {
+            'b/a.b':   1,
+            'b/.b':    1,
+            'b/.ba':   0,
+            'b/c/a.b': 1
+        }
+    ],
+    [
+        'slash at the beginning and come with a wildcard',
+        [
+            '/*.c'
+        ],
+        {
+            '.c': 1,
+            'c.c': 1,
+            'c/c.c': 0,
+            'c/d': 0
+        }
+    ],
+    [
+        'dot file',
+        [
+            '.d'
+        ],
+        {
+            '.d': 1,
+            '.dd': 0,
+            'd.d': 0,
+            'd/.d': 1,
+            'd/d.d': 0,
+            'd/e': 0
+        }
+    ],
+    [
+        'dot dir',
+        [
+            '.e'
+        ],
+        {
+            '.e/': 1,
+            '.ee/': 0,
+            'e.e/': 0,
+            '.e/e': 1,
+            'e/.e': 1,
+            'e/e.e': 0,
+            'e/f': 0
+        }
+    ]
+];
 
 
-describe(".filter()", function(){
-    it("could filter paths", function(){
-        var ig = ignore({
-            ignore: [
-                'abc',
-                '!abc/b'
-            ]
+function readPatterns (file) {
+    var content = fs.readFileSync(file);
+
+    return content
+        ? content.toString().split(/\r?\n/)
+        : [];
+}
+
+
+describe("cases", function(){
+    cases.forEach(function (c) {
+        var description = c[0];
+        var patterns = c[1];
+        var paths_object = c[2];
+
+        if ( typeof patterns === 'string' ) {
+            patterns = readPatterns(patterns);
+        }
+
+        it('.filter():       ' + description, function(){
+            var paths = Object.keys(paths_object);
+
+            var result = ignore()
+                .addPattern(patterns)
+                .filter(paths);
+
+            var expected = paths.filter(function (p) {
+                return !paths_object[p];
+            });
+
+            expect(result.sort()).to.deep.equal(expected.sort());
         });
 
-        var filtered = ig.filter([
-            'abc/a.js',
-            'abc/b/b.js'
-        ]);
+        // it(".createFilter(): " + description, function(){
+        //     var result = paths.filter(
+        //         ignore()
+        //             .addPattern(patterns)
+        //             .createFilter(),
+        //         // thisArg should be binded
+        //         null
+        //     );
 
-        expect(filtered).to.deep.equal(['abc/b/b.js']);
-    });
-});
-
-
-describe(".createFilter()", function(){
-    it("basic usage", function(){
-        var ig = ignore({
-            ignore: [
-                'abc',
-                '!abc/b'
-            ]
-        });
-
-        var filtered = [
-            'abc/a.js',
-            'abc/b/b.js'
-        ].filter(ig.createFilter());
-
-        expect(filtered).to.deep.equal(['abc/b/b.js']);
-    });
-
-    it("test context", function(){
-        var ig = ignore().addPattern([
-                'abc',
-                '!abc/b'
-            ]);
-
-        var filtered = [
-            'abc/a.js',
-            'abc/b/b.js'
-        ].filter(ig.createFilter(), []);
-
-        expect(filtered).to.deep.equal(['abc/b/b.js']);
-    });
-});
-
-
-describe(".addPattern()", function(){
-    it(".addPattern(rule), chained", function(){
-        var ig = ignore()
-            .addPattern('abc')
-            .addPattern('!abc/b');
-
-        var filtered = [
-            'abc/a.js',
-            'abc/b/b.js'
-        ].filter(ig.createFilter());
-
-        expect(filtered).to.deep.equal(['abc/b/b.js']);
-    });
-
-    it(".addPattern(rule), chained", function(){
-        var ig = ignore().addPattern(['abc', '!abc/b']);
-
-        var filtered = [
-            'abc/a.js',
-            'abc/b/b.js'
-        ].filter(ig.createFilter());
-
-        expect(filtered).to.deep.equal(['abc/b/b.js']);
-    });
-});
-
-
-describe("ignore.select()", function(){
-    it("returns the first existing file", function(){
-        var file = ignore.select([
-            'test/fixtures/.ignore',
-            'test/fixtures/.aignore'
-        ]);
-
-        expect(file).to.equal('test/fixtures/.aignore');
-    });
-});
-
-
-describe(".addIgnoreFile(), complex testing", function(){
-    it("will add patterns from the file", function(){
-        var result = ignore()
-            .addIgnoreFile(
-                ignore.select([
-                    'test/fixtures/.aignore',
-                    'test/fixtures/.fakeignore'
-                ])
-            ).filter([
-                'abc/a.js',
-                'abc/b/b.js',
-                '#e',
-                '#f'
-            ]);
-
-        expect(result).to.deep.equal(['abc/b/b.js', '#e']);
-    });
-});
-
-
-describe("metacharacters of regular expression", function(){
-    it("should excape them", function(){
-        var result = ignore()
-            .addPattern([
-                '*.js',
-                '!\\*.js',
-                '!a#b.js',
-                '!?.js',
-
-                // comments
-                '#abc',
-
-                '\\#abc'
-
-            ]).filter([
-                '*.js',
-                'abc.js',
-                'a#b.js',
-                'abc',
-                '#abc',
-                '?.js'
-            ]);
-
-        expect(result.sort()).to.deep.equal([
-            '*.js',
-            'abc',
-            'a#b.js',
-            '?.js'
-
-        ].sort());
-    });
-});
-
-
-describe("issue #2", function(){
-    it("question mark should not break all things", function(){
-        var result = ignore()
-            .addIgnoreFile('test/fixtures/.ignore-issue-2')
-            .filter([
-                '.project',
-                // remain
-                'abc/.project',
-                '.a.sw',
-                '.a.sw?',
-                'thumbs.db'
-            ]);
-
-        expect(
-            // Sort the result
-            result.sort()
-        ).to.deep.equal(
-            [
-                'abc/.project',
-                '.a.sw',
-                // 'thumbs.db'
-            ].sort()
-        );
+        //     expect(result.sort()).to.deep.equal(expected.sort());
+        // });
     });
 });
 
