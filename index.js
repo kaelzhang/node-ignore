@@ -151,8 +151,6 @@ Ignore.prototype._createRule = function(pattern) {
 
     rule_object.regex = this.makeRegex(pattern);
 
-    console.log(rule_object)
-
     return rule_object;
 };
 
