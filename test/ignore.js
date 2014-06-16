@@ -182,92 +182,76 @@ describe(".makeRegex(), normal options, pattern 'foo/**/':", function() {
 
 var cases = [
   // description      patterns    paths     expect
-  // [
-  //     'leading hash: will treat leading # as comments',
-  //     ['#abc'],
-  //     ['#abc'],
-  //     ['#abc']
-  // ],
-  // [
-  //     '\\#',
-  //     ['\\#abc'],
-  //     ['#abc'],
-  //     []
-  // ],
-  // [
-  //     'could filter paths',
-  //     [
-  //         'abc',
-  //         '!abc/b'
-  //     ],
-  //     [
-  //         'abc/a.js',
-  //         'abc/b/b.js'
-  //     ],
-  //     [
-  //         'abc/b/b.js'
-  //     ]
-  // ],
-  // [
-  //     'ignore.select',
-  //     ignore.select([
-  //         'test/fixtures/.aignore',
-  //         'test/fixtures/.fakeignore'
-  //     ]),
-  //     [
-  //         'abc/a.js',
-  //         'abc/b/b.js',
-  //         '#e',
-  //         '#f'
-  //     ],
-  //     ['abc/b/b.js', '#e']
-  // ],
-  // [
-  //     'should excape metacharacters of regular expressions',
-  //     [
-  //         '*.js',
-  //         '!\\*.js',
-  //         '!a#b.js',
-  //         '!?.js',
+  [
+      'leading hash: will treat leading # as comments',
+      ['#abc'],
+      {
+        '#abc': 0
+      }
+  ],
+  [
+      '\\#',
+      ['\\#abc'],
+      {
+        '#abc': 1
+      }
+  ],
+  [
+      'could filter paths',
+      [
+        'abc',
+        '!abc/b'
+      ],
+      {
+        'abc/a.js': 1,
+        'abc/b/b.js': 0
+      }
+  ],
+  [
+    'ignore.select',
+    ignore.select([
+      'test/fixtures/.aignore',
+      'test/fixtures/.fakeignore'
+    ]), {
+      'abc/a.js': 1,
+      'abc/b/b.js': 0,
+      '#e': 0,
+      '#f': 1
+    }
+  ],
+  [
+    'should excape metacharacters of regular expressions', [
+      '*.js',
+      '!\\*.js',
+      '!a#b.js',
+      '!?.js',
 
-  //         // comments
-  //         '#abc',
+      // comments
+      '#abc',
 
-  //         '\\#abc'
-  //     ],
-  //     [
-  //         '*.js',
-  //         'abc.js',
-  //         'a#b.js',
-  //         'abc',
-  //         '#abc',
-  //         '?.js'
-  //     ],
-  //     [
-  //         '*.js',
-  //         'abc',
-  //         'a#b.js',
-  //         '?.js'
-  //     ]
-  // ],
+      '\\#abc'
+    ], {
+      '*.js': 0,
+      'abc.js': 1,
+      'a#b.js': 0,
+      'abc': 0,
+      '#abc': 1,
+      '?.js': 0
+    }
+  ],
 
-  // [
-  //     'issue #2: question mark should not break all things',
-  //     'test/fixtures/.ignore-issue-2',
-  //     [
-  //         '.project',
-  //         // remain
-  //         'abc/.project',
-  //         '.a.sw',
-  //         '.a.sw?',
-  //         'thumbs.db'
-  //     ],
-  //     [
-  //         'abc/.project',
-  //         '.a.sw',
-  //         // 'thumbs.db'
-  //     ]
-  // ],
+  [
+    'issue #2: question mark should not break all things',
+    'test/fixtures/.ignore-issue-2',
+    {
+      '.project': 1,
+      // remain
+      'abc/.project': 0,
+      '.a.sw': 0,
+      '.a.sw?': 1,
+      'thumbs.db': 1
+    }
+  ],
   [
     'dir ended with "*"', [
       'abc/*'
@@ -329,6 +313,23 @@ var cases = [
       'e/e.e': 0,
       'e/f': 0
     }
+  ],
+  [
+    'node modules: once', [
+      'node_modules/'
+    ], {
+      'node_modules/gulp/node_modules/abc.md': 1,
+      'node_modules/gulp/node_modules/abc.json': 1
+    }
+  ],
+  [
+    'node modules: twice', [
+      'node_modules/',
+      'node_modules/'
+    ], {
+      'node_modules/gulp/node_modules/abc.md': 1,
+      'node_modules/gulp/node_modules/abc.json': 1
+    }
   ]
 ];
 
@@ -350,30 +351,29 @@ describe("cases", function() {
       patterns = readPatterns(patterns);
     }
 
-    it('.filter():       ' + description, function() {
-      var paths = Object.keys(paths_object);
+    var paths = Object.keys(paths_object);
+    var expected = paths.filter(function(p) {
+      return !paths_object[p];
+    });
 
+    it('.filter():       ' + description, function() {
       var result = ignore()
         .addPattern(patterns)
         .filter(paths);
 
-      var expected = paths.filter(function(p) {
-        return !paths_object[p];
-      });
-
       expect(result.sort()).to.deep.equal(expected.sort());
     });
 
-    // it(".createFilter(): " + description, function(){
-    //     var result = paths.filter(
-    //         ignore()
-    //             .addPattern(patterns)
-    //             .createFilter(),
-    //         // thisArg should be binded
-    //         null
-    //     );
+    it(".createFilter(): " + description, function(){
+      var result = paths.filter(
+        ignore()
+          .addPattern(patterns)
+          .createFilter(),
+        // thisArg should be binded
+        null
+      );
 
-    //     expect(result.sort()).to.deep.equal(expected.sort());
-    // });
+      expect(result.sort()).to.deep.equal(expected.sort());
+    });
   });
 });
