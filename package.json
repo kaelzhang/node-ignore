@@ -4,7 +4,7 @@
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "./node_modules/.bin/mocha --reporter spec ./test/ignore.js"
   },
   "repository": {
     "type": "git",
