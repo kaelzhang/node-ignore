@@ -1,4 +1,8 @@
-# ignore [![NPM version](https://badge.fury.io/js/ignore.png)](http://badge.fury.io/js/ignore) [![Build Status](https://travis-ci.org/kaelzhang/node-ignore.png?branch=master)](https://travis-ci.org/kaelzhang/node-ignore) [![Dependency Status](https://gemnasium.com/kaelzhang/node-ignore.png)](https://gemnasium.com/kaelzhang/node-ignore)
+# ignore
+
+[![NPM version](https://badge.fury.io/js/ignore.png)](http://badge.fury.io/js/ignore)
+[![Build Status](https://travis-ci.org/kaelzhang/node-ignore.png?branch=master)](https://travis-ci.org/kaelzhang/node-ignore)
+[![Dependency Status](https://gemnasium.com/kaelzhang/node-ignore.png)](https://gemnasium.com/kaelzhang/node-ignore)
 
 `ignore` is a manager and filter which implemented in pure JavaScript according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
