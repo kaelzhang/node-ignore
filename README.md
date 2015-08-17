@@ -81,7 +81,7 @@ The ignore rule or a array of rules.
 Notice that a line starting with `'#'`(hash) is treated as a comment. Put a backslash (`'\'`) in front of the first hash for patterns that begin with a hash, if you want to ignore a file with a hash at the beginning of the filename.
 
 ```js
-ignore().addPattern('#abc').filter(['#abc']); // ['abc']
+ignore().addPattern('#abc').filter(['#abc']); // ['#abc']
 ignore().addPattern('\#abc').filter(['#abc']); // []
 ```
 
