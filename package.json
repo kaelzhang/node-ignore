@@ -3,6 +3,10 @@
   "version": "2.2.16",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "index.js",
+  "files": [
+    "index.js",
+    "LICENSE-MIT"
+  ],
   "scripts": {
     "test": "./node_modules/.bin/mocha --reporter spec ./test/ignore.js"
   },
