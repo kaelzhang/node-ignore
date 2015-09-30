@@ -11,13 +11,13 @@ function ignore(options) {
   return new Ignore(options);
 }
 
-var exists = node_fs.existsSync ?
-    function(file) {
+var exists = node_fs.existsSync
+  ? function(file) {
       return node_fs.existsSync(file);
-  } :
+  }
 
   // if node <= 0.6, there's no fs.existsSync method.
-  function(file) {
+  : function(file) {
     try {
       node_fs.statSync(file);
       return true;
@@ -72,11 +72,11 @@ function Ignore(options) {
 node_util.inherits(Ignore, EE);
 
 function makeArray(subject) {
-  return Array.isArray(subject) ?
-    subject :
-    subject === undefined || subject === null ?
-    [] :
-    [subject];
+  return Array.isArray(subject)
+    ? subject 
+    : subject === undefined || subject === null
+      ? [] 
+      : [subject];
 }
 
 
@@ -101,13 +101,11 @@ Ignore.prototype.filter = function(paths) {
 
 
 Ignore.prototype._simpleTest = function(pattern) {
-  var pass =
   // Whitespace dirs are allowed, so only filter blank pattern.
-  pattern &&
-  // And not start with a '#'
-  pattern.indexOf('#') !== 0 &&
-
-  !~this._patterns.indexOf(pattern);
+  var pass = pattern
+    // And not start with a '#'
+    && pattern.indexOf('#') !== 0
+    && !~this._patterns.indexOf(pattern);
 
   this._patterns.push(pattern);
 
@@ -154,7 +152,11 @@ Ignore.prototype._createRule = function(pattern) {
   return rule_object;
 };
 
-// > If the pattern ends with a slash, it is removed for the purpose of the following description, but it would only find a match with a directory. In other words, foo/ will match a directory foo and paths underneath it, but will not match a regular file or a symbolic link foo (this is consistent with the way how pathspec works in general in Git).
+// > If the pattern ends with a slash, 
+// > it is removed for the purpose of the following description, 
+// > but it would only find a match with a directory. 
+// > In other words, foo/ will match a directory foo and paths underneath it, 
+// > but will not match a regular file or a symbolic link foo (this is consistent with the way how pathspec works in general in Git).
 // '`foo/`' will not match regular file '`foo`' or symbolic link '`foo`'
 // -> ignore-rules will not deal with it, because it costs extra `fs.stat` call
 //      you could use option `mark: true` with `glob`
@@ -189,7 +191,8 @@ var REPLACERS = [
   // leading slash
   [
 
-    // > A leading slash matches the beginning of the pathname. For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
+    // > A leading slash matches the beginning of the pathname. 
+    // > For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
     // A leading slash matches the beginning of the pathname 
     /^\//,
     '^'
@@ -201,7 +204,10 @@ var REPLACERS = [
   ],
 
   [
-    // > A leading "**" followed by a slash means match in all directories. For example, "**/foo" matches file or directory "foo" anywhere, the same as pattern "foo". "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".
+    // > A leading "**" followed by a slash means match in all directories. 
+    // > For example, "**/foo" matches file or directory "foo" anywhere, 
+    // > the same as pattern "foo". 
+    // > "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".
     // Notice that the '*'s have been replaced as '\\*'
     /\\\*\\\*\\\//,
 
@@ -244,7 +250,8 @@ var REPLACERS = [
 
   // two globstars
   [
-    // > A slash followed by two consecutive asterisks then a slash matches zero or more directories. For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
+    // > A slash followed by two consecutive asterisks then a slash matches zero or more directories. 
+    // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
     // '/**/'
     /\/\\\*\\\*\//g,
 
@@ -351,6 +358,7 @@ Ignore.prototype._addIgnoreFile = function(file) {
 
 
 Ignore.prototype._checkRuleFile = function(file) {
-  return file !== '.' &&
-    file !== '..' && !~this._ignoreFiles.indexOf(file);
+  return file !== '.'
+    && file !== '..' 
+    && !~this._ignoreFiles.indexOf(file);
 };
