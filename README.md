@@ -1,6 +1,7 @@
 # ignore
 
 [![NPM version](https://badge.fury.io/js/ignore.png)](http://badge.fury.io/js/ignore)
+[![npm module downloads per month](http://img.shields.io/npm/dm/ignore.svg)](https://www.npmjs.org/package/ignore)
 [![Build Status](https://travis-ci.org/kaelzhang/node-ignore.png?branch=master)](https://travis-ci.org/kaelzhang/node-ignore)
 [![Dependency Status](https://gemnasium.com/kaelzhang/node-ignore.png)](https://gemnasium.com/kaelzhang/node-ignore)
 
