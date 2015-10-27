@@ -209,7 +209,7 @@ var REPLACERS = [
     // > the same as pattern "foo". 
     // > "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".
     // Notice that the '*'s have been replaced as '\\*'
-    /\\\*\\\*\\\//,
+    /^\^*\\\*\\\*\\\//,
 
     // '**/foo' <-> 'foo'
     // just remove it
@@ -253,7 +253,7 @@ var REPLACERS = [
     // > A slash followed by two consecutive asterisks then a slash matches zero or more directories. 
     // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
     // '/**/'
-    /\/\\\*\\\*\//g,
+    /\\\/\\\*\\\*\\\//g,
 
     // Zero, one or several directories
     // should not use '*', or it will be replaced by the next replacer
