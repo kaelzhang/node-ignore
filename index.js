@@ -156,7 +156,8 @@ Ignore.prototype._createRule = function(pattern) {
 // > it is removed for the purpose of the following description, 
 // > but it would only find a match with a directory. 
 // > In other words, foo/ will match a directory foo and paths underneath it, 
-// > but will not match a regular file or a symbolic link foo (this is consistent with the way how pathspec works in general in Git).
+// > but will not match a regular file or a symbolic link foo
+// >  (this is consistent with the way how pathspec works in general in Git).
 // '`foo/`' will not match regular file '`foo`' or symbolic link '`foo`'
 // -> ignore-rules will not deal with it, because it costs extra `fs.stat` call
 //      you could use option `mark: true` with `glob`
