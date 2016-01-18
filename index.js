@@ -6,6 +6,7 @@ ignore.Ignore = Ignore;
 var EE = require('events').EventEmitter;
 var node_util = require('util');
 var node_fs = require('fs');
+var path = require('path');
 
 function ignore(options) {
   return new Ignore(options);
@@ -295,6 +296,10 @@ Ignore.prototype.makeRegex = function(pattern) {
     return prev.replace(current[0], current[1]);
 
   }, pattern);
+
+  if(path.sep === '\\') {
+    source = source.replace(/\//g, '\\');
+  }
 
   return new RegExp(source, this.options.matchCase ? '' : 'i');
 };
