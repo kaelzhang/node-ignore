@@ -297,7 +297,7 @@ Ignore.prototype.makeRegex = function(pattern) {
 
   }, pattern);
 
-  if(path.sep !== '/') {
+  if((path.sep && path.sep !== '/') || process.platform === 'win32') {
     source = source.replace(/\//g, '\\');
   }
 
