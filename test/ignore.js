@@ -4,229 +4,229 @@ var fs = require('fs');
 var ignore = require('../');
 var expect = require('chai').expect;
 
-describe(".makeRegex(), normal options, pattern 'foo':", function() {
-  var r_foo = ignore.regex('foo');
+// describe(".makeRegex(), normal options, pattern 'foo':", function() {
+//   var r_foo = ignore.regex('foo');
 
-  it("'foo' should match 'foo'", function() {
-    expect(r_foo.test('foo')).to.equal(true);
-  });
+//   it("'foo' should match 'foo'", function() {
+//     expect(r_foo.test('foo')).to.equal(true);
+//   });
 
-  it("'foo' should match 'foo/'", function() {
-    expect(r_foo.test('foo/')).to.equal(true);
-  });
+//   it("'foo' should match 'foo/'", function() {
+//     expect(r_foo.test('foo/')).to.equal(true);
+//   });
 
-  it("'foo' should match '/foo'", function() {
-    expect(r_foo.test('/foo')).to.equal(true);
-  });
+//   it("'foo' should match '/foo'", function() {
+//     expect(r_foo.test('/foo')).to.equal(true);
+//   });
 
-  it("'foo' should not match 'fooo'", function() {
-    expect(r_foo.test('fooo')).to.equal(false);
-  });
+//   it("'foo' should not match 'fooo'", function() {
+//     expect(r_foo.test('fooo')).to.equal(false);
+//   });
 
-  it("'foo' should not match 'ofoo'", function() {
-    expect(r_foo.test('ofoo')).to.equal(false);
-  });
-});
-
-
-describe(".makeRegex(), normal options, pattern '**/foo' matches 'foo' anywhere:", function() {
-  var r_foo = ignore.regex('**/foo');
-
-  it("'**/foo' should match 'foo'", function() {
-    expect(r_foo.test('foo')).to.equal(true);
-  });
-
-  it("'**/foo' should match 'foo/'", function() {
-    expect(r_foo.test('foo/')).to.equal(true);
-  });
-
-  it("'**/foo' should match '/foo'", function() {
-    expect(r_foo.test('/foo')).to.equal(true);
-  });
-
-  it("'**/foo' should not match 'fooo'", function() {
-    expect(r_foo.test('fooo')).to.equal(false);
-  });
-
-  it("'**/foo' should not match 'ofoo'", function() {
-    expect(r_foo.test('ofoo')).to.equal(false);
-  });
-});
+//   it("'foo' should not match 'ofoo'", function() {
+//     expect(r_foo.test('ofoo')).to.equal(false);
+//   });
+// });
 
 
-describe(".makeRegex(), normal options, pattern '/**/foo' matches 'foo' anywhere:", function () {
-    var r_foo = ignore.regex('/**/foo');
+// describe(".makeRegex(), normal options, pattern '**/foo' matches 'foo' anywhere:", function() {
+//   var r_foo = ignore.regex('**/foo');
 
-    it("should match 'foo'", function () {
-        expect(r_foo.test('foo')).to.equal(true);
-    });
+//   it("'**/foo' should match 'foo'", function() {
+//     expect(r_foo.test('foo')).to.equal(true);
+//   });
 
-    it("should match 'foo/'", function () {
-        expect(r_foo.test('foo/')).to.equal(true);
-    });
+//   it("'**/foo' should match 'foo/'", function() {
+//     expect(r_foo.test('foo/')).to.equal(true);
+//   });
 
-    it("should match '/foo'", function () {
-        expect(r_foo.test('/foo')).to.equal(true);
-    });
+//   it("'**/foo' should match '/foo'", function() {
+//     expect(r_foo.test('/foo')).to.equal(true);
+//   });
 
-    it("should not match 'fooo'", function () {
-        expect(r_foo.test('fooo')).to.equal(false);
-    });
+//   it("'**/foo' should not match 'fooo'", function() {
+//     expect(r_foo.test('fooo')).to.equal(false);
+//   });
 
-    it("should not match 'ofoo'", function () {
-        expect(r_foo.test('ofoo')).to.equal(false);
-    });
-});
-
-
-describe(".makeRegex(), normal options, pattern 'foo/':", function() {
-  var r_foo_slash = ignore.regex('foo/');
-
-  it("'foo' should match 'foo/'", function() {
-    expect(r_foo_slash.test('foo/')).to.equal(true);
-  });
-
-  it("'foo' should match 'foo/a'", function() {
-    expect(r_foo_slash.test('foo/a')).to.equal(true);
-  });
-
-  it("'foo' should match '/foo/'", function() {
-    expect(r_foo_slash.test('/foo/')).to.equal(true);
-  });
-
-  it("'foo' should not match 'foo'", function() {
-    expect(r_foo_slash.test('foo')).to.equal(false);
-  });
-
-  it("'foo' should not match '/foo'", function() {
-    expect(r_foo_slash.test('/foo')).to.equal(false);
-  });
-});
+//   it("'**/foo' should not match 'ofoo'", function() {
+//     expect(r_foo.test('ofoo')).to.equal(false);
+//   });
+// });
 
 
-describe(".makeRegex(), normal options, pattern '/.js':", function() {
-  var r_slash_dot_js = ignore.regex('/.js');
+// describe(".makeRegex(), normal options, pattern '/**/foo' matches 'foo' anywhere:", function () {
+//     var r_foo = ignore.regex('/**/foo');
 
-  it("collection:", function() {
-    expect(r_slash_dot_js.test('.js')).to.equal(true);
-    expect(r_slash_dot_js.test('.js/')).to.equal(true);
-    expect(r_slash_dot_js.test('.js/a')).to.equal(true);
+//     it("should match 'foo'", function () {
+//         expect(r_foo.test('foo')).to.equal(true);
+//     });
 
-    expect(r_slash_dot_js.test('/.js')).to.equal(false);
-    expect(r_slash_dot_js.test('.jsa')).to.equal(false);
-  });
-});
+//     it("should match 'foo/'", function () {
+//         expect(r_foo.test('foo/')).to.equal(true);
+//     });
 
+//     it("should match '/foo'", function () {
+//         expect(r_foo.test('/foo')).to.equal(true);
+//     });
 
-describe(".makeRegex(), normal options, pattern '/*.js':", function() {
-  var r_slash_wild_dot_js = ignore.regex('/*.js');
+//     it("should not match 'fooo'", function () {
+//         expect(r_foo.test('fooo')).to.equal(false);
+//     });
 
-  it("collection:", function() {
-    expect(r_slash_wild_dot_js.test('.js')).to.equal(true);
-    expect(r_slash_wild_dot_js.test('.js/')).to.equal(true);
-    expect(r_slash_wild_dot_js.test('.js/a')).to.equal(true);
-    expect(r_slash_wild_dot_js.test('a.js/a')).to.equal(true);
-    expect(r_slash_wild_dot_js.test('a.js/a.js')).to.equal(true);
-
-    expect(r_slash_wild_dot_js.test('/.js')).to.equal(false);
-    expect(r_slash_wild_dot_js.test('.jsa')).to.equal(false);
-  });
-});
+//     it("should not match 'ofoo'", function () {
+//         expect(r_foo.test('ofoo')).to.equal(false);
+//     });
+// });
 
 
-describe(".makeRegex(), normal options, pattern '*.js':", function() {
-  var r_wild_dot_js = ignore.regex('*.js');
+// describe(".makeRegex(), normal options, pattern 'foo/':", function() {
+//   var r_foo_slash = ignore.regex('foo/');
 
-  it("collection:", function() {
-    expect(r_wild_dot_js.test('.js')).to.equal(true);
-    expect(r_wild_dot_js.test('.js/')).to.equal(true);
-    expect(r_wild_dot_js.test('.js/a')).to.equal(true);
-    expect(r_wild_dot_js.test('a.js/a')).to.equal(true);
-    expect(r_wild_dot_js.test('a.js/a.js')).to.equal(true);
-    expect(r_wild_dot_js.test('/.js')).to.equal(true);
+//   it("'foo' should match 'foo/'", function() {
+//     expect(r_foo_slash.test('foo/')).to.equal(true);
+//   });
 
-    expect(r_wild_dot_js.test('.jsa')).to.equal(false);
-  });
-});
+//   it("'foo' should match 'foo/a'", function() {
+//     expect(r_foo_slash.test('foo/a')).to.equal(true);
+//   });
 
+//   it("'foo' should match '/foo/'", function() {
+//     expect(r_foo_slash.test('/foo/')).to.equal(true);
+//   });
 
-describe(".makeRegex(), normal options, pattern '.js*':", function() {
-  var r_dot_js_wild = ignore.regex('.js*');
+//   it("'foo' should not match 'foo'", function() {
+//     expect(r_foo_slash.test('foo')).to.equal(false);
+//   });
 
-  it("collection:", function() {
-    expect(r_dot_js_wild.test('.js')).to.equal(true);
-    expect(r_dot_js_wild.test('.js/')).to.equal(true);
-    expect(r_dot_js_wild.test('.js/a')).to.equal(true);
-
-    // pay attension
-    expect(r_dot_js_wild.test('a.js/a')).to.equal(false);
-    expect(r_dot_js_wild.test('a.js/a.js')).to.equal(false);
-
-    expect(r_dot_js_wild.test('/.js')).to.equal(true);
-
-    expect(r_dot_js_wild.test('.jsa')).to.equal(true);
-  });
-});
+//   it("'foo' should not match '/foo'", function() {
+//     expect(r_foo_slash.test('/foo')).to.equal(false);
+//   });
+// });
 
 
-describe(".makeRegex(), normal options, pattern 'foo/**/':", function() {
-  var r_foo_globstar_slash = ignore.regex('foo/**/');
+// describe(".makeRegex(), normal options, pattern '/.js':", function() {
+//   var r_slash_dot_js = ignore.regex('/.js');
 
-  it("should match 'foo/'", function() {
-    expect(r_foo_globstar_slash.test('foo/')).to.equal(true);
-  });
+//   it("collection:", function() {
+//     expect(r_slash_dot_js.test('.js')).to.equal(true);
+//     expect(r_slash_dot_js.test('.js/')).to.equal(true);
+//     expect(r_slash_dot_js.test('.js/a')).to.equal(true);
 
-  it("should match 'foo/abc/'", function() {
-    expect(r_foo_globstar_slash.test('foo/abc/')).to.equal(true);
-  });
-
-  it("should match 'foo/x/y/z/'", function() {
-    expect(r_foo_globstar_slash.test('foo/x/y/z/')).to.equal(true);
-  });
-
-  it("should match 'foo/x/y/z/'", function() {
-    expect(r_foo_globstar_slash.test('foo/x/y/z/')).to.equal(true);
-  });
-
-  it("should not match 'foo'", function() {
-    expect(r_foo_globstar_slash.test('foo')).to.equal(false);
-  });
-
-  it("should not match '/foo'", function() {
-    expect(r_foo_globstar_slash.test('/foo')).to.equal(false);
-  });
-});
+//     expect(r_slash_dot_js.test('/.js')).to.equal(false);
+//     expect(r_slash_dot_js.test('.jsa')).to.equal(false);
+//   });
+// });
 
 
-describe(".makeRegex(), normal options, pattern 'foo/**/*.bar':", function () {
-    var r_foo_globstar_path = ignore.regex('foo/**/*.bar');
+// describe(".makeRegex(), normal options, pattern '/*.js':", function() {
+//   var r_slash_wild_dot_js = ignore.regex('/*.js');
 
-    console.log(r_foo_globstar_path);
+//   it("collection:", function() {
+//     expect(r_slash_wild_dot_js.test('.js')).to.equal(true);
+//     expect(r_slash_wild_dot_js.test('.js/')).to.equal(true);
+//     expect(r_slash_wild_dot_js.test('.js/a')).to.equal(true);
+//     expect(r_slash_wild_dot_js.test('a.js/a')).to.equal(true);
+//     expect(r_slash_wild_dot_js.test('a.js/a.js')).to.equal(true);
 
-    it("should not match 'foo/'", function () {
-        expect(r_foo_globstar_path.test('foo/')).to.equal(false);
-    });
+//     expect(r_slash_wild_dot_js.test('/.js')).to.equal(false);
+//     expect(r_slash_wild_dot_js.test('.jsa')).to.equal(false);
+//   });
+// });
 
-    it("should not match 'abc.bar'", function () {
-        expect(r_foo_globstar_path.test('abc.bar')).to.equal(false);
-    });
 
-    it("should match 'foo/abc.bar'", function () {
-        expect(r_foo_globstar_path.test('foo/abc.bar')).to.equal(true);
-    });
+// describe(".makeRegex(), normal options, pattern '*.js':", function() {
+//   var r_wild_dot_js = ignore.regex('*.js');
 
-    it("should match 'foo/abc.bar/'", function () {
-        expect(r_foo_globstar_path.test('foo/abc.bar/')).to.equal(true);
-    });
+//   it("collection:", function() {
+//     expect(r_wild_dot_js.test('.js')).to.equal(true);
+//     expect(r_wild_dot_js.test('.js/')).to.equal(true);
+//     expect(r_wild_dot_js.test('.js/a')).to.equal(true);
+//     expect(r_wild_dot_js.test('a.js/a')).to.equal(true);
+//     expect(r_wild_dot_js.test('a.js/a.js')).to.equal(true);
+//     expect(r_wild_dot_js.test('/.js')).to.equal(true);
 
-    it("should match 'foo/x/y/z.bar'", function () {
-        expect(r_foo_globstar_path.test('foo/x/y/z.bar')).to.equal(true);
-    });
+//     expect(r_wild_dot_js.test('.jsa')).to.equal(false);
+//   });
+// });
 
-    it("should match 'foo/x/y/z.bar/'", function () {
-        expect(r_foo_globstar_path.test('foo/x/y/z.bar/')).to.equal(true);
-    });
-});
+
+// describe(".makeRegex(), normal options, pattern '.js*':", function() {
+//   var r_dot_js_wild = ignore.regex('.js*');
+
+//   it("collection:", function() {
+//     expect(r_dot_js_wild.test('.js')).to.equal(true);
+//     expect(r_dot_js_wild.test('.js/')).to.equal(true);
+//     expect(r_dot_js_wild.test('.js/a')).to.equal(true);
+
+//     // pay attension
+//     expect(r_dot_js_wild.test('a.js/a')).to.equal(false);
+//     expect(r_dot_js_wild.test('a.js/a.js')).to.equal(false);
+
+//     expect(r_dot_js_wild.test('/.js')).to.equal(true);
+
+//     expect(r_dot_js_wild.test('.jsa')).to.equal(true);
+//   });
+// });
+
+
+// describe(".makeRegex(), normal options, pattern 'foo/**/':", function() {
+//   var r_foo_globstar_slash = ignore.regex('foo/**/');
+
+//   it("should match 'foo/'", function() {
+//     expect(r_foo_globstar_slash.test('foo/')).to.equal(true);
+//   });
+
+//   it("should match 'foo/abc/'", function() {
+//     expect(r_foo_globstar_slash.test('foo/abc/')).to.equal(true);
+//   });
+
+//   it("should match 'foo/x/y/z/'", function() {
+//     expect(r_foo_globstar_slash.test('foo/x/y/z/')).to.equal(true);
+//   });
+
+//   it("should match 'foo/x/y/z/'", function() {
+//     expect(r_foo_globstar_slash.test('foo/x/y/z/')).to.equal(true);
+//   });
+
+//   it("should not match 'foo'", function() {
+//     expect(r_foo_globstar_slash.test('foo')).to.equal(false);
+//   });
+
+//   it("should not match '/foo'", function() {
+//     expect(r_foo_globstar_slash.test('/foo')).to.equal(false);
+//   });
+// });
+
+
+// describe(".makeRegex(), normal options, pattern 'foo/**/*.bar':", function () {
+//     var r_foo_globstar_path = ignore.regex('foo/**/*.bar');
+
+//     console.log(r_foo_globstar_path);
+
+//     it("should not match 'foo/'", function () {
+//         expect(r_foo_globstar_path.test('foo/')).to.equal(false);
+//     });
+
+//     it("should not match 'abc.bar'", function () {
+//         expect(r_foo_globstar_path.test('abc.bar')).to.equal(false);
+//     });
+
+//     it("should match 'foo/abc.bar'", function () {
+//         expect(r_foo_globstar_path.test('foo/abc.bar')).to.equal(true);
+//     });
+
+//     it("should match 'foo/abc.bar/'", function () {
+//         expect(r_foo_globstar_path.test('foo/abc.bar/')).to.equal(true);
+//     });
+
+//     it("should match 'foo/x/y/z.bar'", function () {
+//         expect(r_foo_globstar_path.test('foo/x/y/z.bar')).to.equal(true);
+//     });
+
+//     it("should match 'foo/x/y/z.bar/'", function () {
+//         expect(r_foo_globstar_path.test('foo/x/y/z.bar/')).to.equal(true);
+//     });
+// });
 
 
 var cases = [
@@ -256,18 +256,18 @@ var cases = [
         'abc/b/b.js': 0
       }
   ],
-  [
-    'ignore.select',
-    ignore.select([
-      'test/fixtures/.aignore',
-      'test/fixtures/.fakeignore'
-    ]), {
-      'abc/a.js': 1,
-      'abc/b/b.js': 0,
-      '#e': 0,
-      '#f': 1
-    }
-  ],
+  // [
+  //   'ignore.select',
+  //   ignore.select([
+  //     'test/fixtures/.aignore',
+  //     'test/fixtures/.fakeignore'
+  //   ]), {
+  //     'abc/a.js': 1,
+  //     'abc/b/b.js': 0,
+  //     '#e': 0,
+  //     '#f': 1
+  //   }
+  // ],
   [
     'should excape metacharacters of regular expressions', [
       '*.js',
@@ -416,7 +416,7 @@ describe("cases", function() {
 
     it('.filter():       ' + description, function() {
       var result = ignore()
-        .addPattern(patterns)
+        .add(patterns)
         .filter(paths);
 
       expect(result.sort()).to.deep.equal(expected.sort());
@@ -425,7 +425,7 @@ describe("cases", function() {
     it(".createFilter(): " + description, function(){
       var result = paths.filter(
         ignore()
-          .addPattern(patterns)
+          .add(patterns)
           .createFilter(),
         // thisArg should be binded
         null

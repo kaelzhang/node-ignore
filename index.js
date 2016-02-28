@@ -1,57 +1,22 @@
 'use strict'
 
-module.exports = ignore
-ignore.regex = regex
-ignore.select = select
-
-var node_util = require('util')
-var node_fs = require('fs')
-
-function ignore(options = {}) {
-  return new Ignore(options)
-}
-
-var exists = node_fs.existsSync
-  ? function(file) {
-      return node_fs.existsSync(file)
-  }
-
-  // if node <= 0.6, there's no fs.existsSync method.
-  : function(file) {
-    try {
-      node_fs.statSync(file)
-      return true
-    } catch (e) {
-      return false
-    }
-  }
-
-// Select the first existing file of the file list
-function select (files) {
-  var selected
-
-  files.some(function(file) {
-    if (exists(file)) {
-      selected = file
-      return true
-    }
-  })
-
-  return selected
-}
-
+module.exports = (options = {}) => new Ignore(options)
 
 var array_slice = Array.prototype.slice
 
-function make_array(args) {
-  return array_slice
-    .call(args)
-    .reduce((prev, current) => {
-      return prev.concat(current)
-    }, [])
+function make_array (args) {
+  return flatten(array_slice.call(args))
 }
 
 
+function flatten (array) {
+  return array.reduce((prev, current) => {
+    return prev.concat(current)
+  }, [])
+}
+
+
+var REGEX_BLANK_LINE = /\s+/
 var REGEX_LEADING_EXCLAMATION = /^\\\!/
 var REGEX_LEADING_HASH = /^\\#/
 
@@ -62,32 +27,39 @@ var REGEX_LEADING_HASH = /^\\#/
 // - matchCase: {boolean=} case sensitive.
 //      By default, git is case-insensitive
 class Ignore {
-  constructor (options) {
-    this.options = options
+  constructor () {
     this._patterns = []
     this._rules = []
-    this._ignoreFiles = []
+    this._files = []
 
-    options.ignore = options.ignore || [
-      // Some files or directories which we should ignore for most cases.
-      '.git',
-      '.svn',
-      '.DS_Store'
-    ]
-
-    this.addPattern(options.ignore)
+    this.add.apply(this, arguments)
   }
 
   // @param {Array.<string>|string} pattern
-  addPattern (pattern) {
-    make_array(pattern).forEach(p => this._addPattern(p))
+  add () {
+    make_array(arguments).forEach(this._addPattern, this)
     return this
   }
 
   _addPattern (pattern) {
-    if (this._simpleTest(pattern)) {
+    if (this._check(pattern)) {
       var rule = this._createRule(pattern)
       this._rules.push(rule)
+    }
+  }
+
+  _check (pattern) {
+    if (
+      typeof pattern === 'string'
+
+      // > A blank line matches no files, so it can serve as a separator for readability.
+      && pattern
+      && !REGEX_BLANK_LINE.test(pattern)
+
+      // > A line starting with # serves as a comment.
+      && pattern.indexOf('#') !== 0
+    ) {
+      return true
     }
   }
 
@@ -97,18 +69,6 @@ class Ignore {
 
   createFilter () {
     return path => this._filter(path)
-  }
-
-  _simpleTest (pattern) {
-    // Whitespace dirs are allowed, so only filter blank pattern.
-    var pass = pattern
-      // And not start with a '#'
-      && pattern.indexOf('#') !== 0
-      && !~this._patterns.indexOf(pattern)
-
-    this._patterns.push(pattern)
-
-    return pass
   }
 
   _createRule (pattern) {
@@ -146,34 +106,6 @@ class Ignore {
     })
 
     return !matched
-  }
-
-  // @param {Array.<path>|path} a
-  addIgnoreFile (files) {
-    make_array(files).forEach(this._addIgnoreFile, this)
-    return this
-  }
-
-  _addIgnoreFile (file) {
-    if (this._checkRuleFile(file)) {
-      this._ignoreFiles.push(file)
-
-      var content
-
-      try {
-        content = node_fs.readFileSync(file)
-      } catch (e) {}
-
-      if (content) {
-        this.addPattern(content.toString().split(/\r?\n/))
-      }
-    }
-  }
-
-  _checkRuleFile (file) {
-    return file !== '.'
-      && file !== '..'
-      && !~this._ignoreFiles.indexOf(file)
   }
 }
 
@@ -316,11 +248,18 @@ var REPLACERS = [
 ]
 
 
+var cache = {}
+
 // @param {pattern}
 function regex (pattern) {
-  var source = REPLACERS.reduce(function(prev, current) {
+  var r = cache[pattern]
+  if (r) {
+    return r
+  }
+
+  var source = REPLACERS.reduce((prev, current) => {
     return prev.replace(current[0], current[1])
   }, pattern)
 
-  return new RegExp(source, 'i')
+  return cache[pattern] = new RegExp(source, 'i')
 }

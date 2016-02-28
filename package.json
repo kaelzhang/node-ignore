@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "prepublish": "babel -o ignore.js index.js",
-    "test": "mocha --reporter spec ./test/ignore.js"
+    "test": "bash test.sh"
   },
   "repository": {
     "type": "git",
