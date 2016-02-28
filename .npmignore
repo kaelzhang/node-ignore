@@ -1,4 +1,9 @@
-/ignore.js
+# npm
+/index.js
+test/
+.travis.yml
+*.sh
+.babelrc
 
 # php files
 index.php

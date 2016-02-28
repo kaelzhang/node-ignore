@@ -5,8 +5,7 @@ var ignore = require('../');
 var expect = require('chai').expect;
 
 describe(".makeRegex(), normal options, pattern 'foo':", function() {
-  var ig = ignore();
-  var r_foo = ig.makeRegex('foo');
+  var r_foo = ignore.regex('foo');
 
   it("'foo' should match 'foo'", function() {
     expect(r_foo.test('foo')).to.equal(true);
@@ -31,8 +30,7 @@ describe(".makeRegex(), normal options, pattern 'foo':", function() {
 
 
 describe(".makeRegex(), normal options, pattern '**/foo' matches 'foo' anywhere:", function() {
-  var ig = ignore();
-  var r_foo = ig.makeRegex('**/foo');
+  var r_foo = ignore.regex('**/foo');
 
   it("'**/foo' should match 'foo'", function() {
     expect(r_foo.test('foo')).to.equal(true);
@@ -57,8 +55,7 @@ describe(".makeRegex(), normal options, pattern '**/foo' matches 'foo' anywhere:
 
 
 describe(".makeRegex(), normal options, pattern '/**/foo' matches 'foo' anywhere:", function () {
-    var ig = ignore();
-    var r_foo = ig.makeRegex('/**/foo');
+    var r_foo = ignore.regex('/**/foo');
 
     it("should match 'foo'", function () {
         expect(r_foo.test('foo')).to.equal(true);
@@ -83,8 +80,7 @@ describe(".makeRegex(), normal options, pattern '/**/foo' matches 'foo' anywhere
 
 
 describe(".makeRegex(), normal options, pattern 'foo/':", function() {
-  var ig = ignore();
-  var r_foo_slash = ig.makeRegex('foo/');
+  var r_foo_slash = ignore.regex('foo/');
 
   it("'foo' should match 'foo/'", function() {
     expect(r_foo_slash.test('foo/')).to.equal(true);
@@ -109,8 +105,7 @@ describe(".makeRegex(), normal options, pattern 'foo/':", function() {
 
 
 describe(".makeRegex(), normal options, pattern '/.js':", function() {
-  var ig = ignore();
-  var r_slash_dot_js = ig.makeRegex('/.js');
+  var r_slash_dot_js = ignore.regex('/.js');
 
   it("collection:", function() {
     expect(r_slash_dot_js.test('.js')).to.equal(true);
@@ -124,8 +119,7 @@ describe(".makeRegex(), normal options, pattern '/.js':", function() {
 
 
 describe(".makeRegex(), normal options, pattern '/*.js':", function() {
-  var ig = ignore();
-  var r_slash_wild_dot_js = ig.makeRegex('/*.js');
+  var r_slash_wild_dot_js = ignore.regex('/*.js');
 
   it("collection:", function() {
     expect(r_slash_wild_dot_js.test('.js')).to.equal(true);
@@ -141,8 +135,7 @@ describe(".makeRegex(), normal options, pattern '/*.js':", function() {
 
 
 describe(".makeRegex(), normal options, pattern '*.js':", function() {
-  var ig = ignore();
-  var r_wild_dot_js = ig.makeRegex('*.js');
+  var r_wild_dot_js = ignore.regex('*.js');
 
   it("collection:", function() {
     expect(r_wild_dot_js.test('.js')).to.equal(true);
@@ -158,8 +151,7 @@ describe(".makeRegex(), normal options, pattern '*.js':", function() {
 
 
 describe(".makeRegex(), normal options, pattern '.js*':", function() {
-  var ig = ignore();
-  var r_dot_js_wild = ig.makeRegex('.js*');
+  var r_dot_js_wild = ignore.regex('.js*');
 
   it("collection:", function() {
     expect(r_dot_js_wild.test('.js')).to.equal(true);
@@ -178,8 +170,7 @@ describe(".makeRegex(), normal options, pattern '.js*':", function() {
 
 
 describe(".makeRegex(), normal options, pattern 'foo/**/':", function() {
-  var ig = ignore();
-  var r_foo_globstar_slash = ig.makeRegex('foo/**/');
+  var r_foo_globstar_slash = ignore.regex('foo/**/');
 
   it("should match 'foo/'", function() {
     expect(r_foo_globstar_slash.test('foo/')).to.equal(true);
@@ -208,8 +199,7 @@ describe(".makeRegex(), normal options, pattern 'foo/**/':", function() {
 
 
 describe(".makeRegex(), normal options, pattern 'foo/**/*.bar':", function () {
-    var ig = ignore();
-    var r_foo_globstar_path = ig.makeRegex('foo/**/*.bar');
+    var r_foo_globstar_path = ignore.regex('foo/**/*.bar');
 
     console.log(r_foo_globstar_path);
 

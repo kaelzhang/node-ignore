@@ -1,9 +1,7 @@
-# ignore
-
-[![NPM version](https://badge.fury.io/js/ignore.png)](http://badge.fury.io/js/ignore)
-[![npm module downloads per month](http://img.shields.io/npm/dm/ignore.svg)](https://www.npmjs.org/package/ignore)
 [![Build Status](https://travis-ci.org/kaelzhang/node-ignore.png?branch=master)](https://travis-ci.org/kaelzhang/node-ignore)
-[![Dependency Status](https://gemnasium.com/kaelzhang/node-ignore.png)](https://gemnasium.com/kaelzhang/node-ignore)
+[![npm module downloads per month](http://img.shields.io/npm/dm/ignore.svg)](https://www.npmjs.org/package/ignore)
+
+# ignore
 
 `ignore` is a manager and filter which implemented in pure JavaScript according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
@@ -12,7 +10,7 @@ Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does n
 ## Installation
 
 	npm install ignore --save
-	
+
 ## Usage
 
 ```js
@@ -89,7 +87,7 @@ ignore().addPattern('\#abc').filter(['#abc']); // []
 
 ### .addIgnoreFile(path)
 
-Adds rules from a ignore file or several files 
+Adds rules from a ignore file or several files
 
 #### Returns `this`
 
@@ -114,7 +112,7 @@ The array of paths to be filtered.
     |-- .b
     |
     |-- .c
-         |-- .DS_store 
+         |-- .DS_store
 ```
 
 Then the `paths` might be like this:
@@ -161,7 +159,7 @@ ignore(options);
 
 #### options.matchCase `boolean=false`
 
-By default, all ignore rules will be treated as case-insensitive ones as well as the git does. 
+By default, all ignore rules will be treated as case-insensitive ones as well as the git does.
 
 #### options.twoGlobstars `boolean=false`
 
