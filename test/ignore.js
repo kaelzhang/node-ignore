@@ -59,23 +59,23 @@ describe(".makeRegex(), normal options, pattern '**/foo' matches 'foo' anywhere:
 describe(".makeRegex(), normal options, pattern '/**/foo' matches 'foo' anywhere:", function () {
     var ig = ignore();
     var r_foo = ig.makeRegex('/**/foo');
-    
+
     it("should match 'foo'", function () {
         expect(r_foo.test('foo')).to.equal(true);
     });
-    
+
     it("should match 'foo/'", function () {
         expect(r_foo.test('foo/')).to.equal(true);
     });
-    
+
     it("should match '/foo'", function () {
         expect(r_foo.test('/foo')).to.equal(true);
     });
-    
+
     it("should not match 'fooo'", function () {
         expect(r_foo.test('fooo')).to.equal(false);
     });
-    
+
     it("should not match 'ofoo'", function () {
         expect(r_foo.test('ofoo')).to.equal(false);
     });
@@ -212,27 +212,27 @@ describe(".makeRegex(), normal options, pattern 'foo/**/*.bar':", function () {
     var r_foo_globstar_path = ig.makeRegex('foo/**/*.bar');
 
     console.log(r_foo_globstar_path);
-    
+
     it("should not match 'foo/'", function () {
         expect(r_foo_globstar_path.test('foo/')).to.equal(false);
     });
-    
+
     it("should not match 'abc.bar'", function () {
         expect(r_foo_globstar_path.test('abc.bar')).to.equal(false);
     });
-    
+
     it("should match 'foo/abc.bar'", function () {
         expect(r_foo_globstar_path.test('foo/abc.bar')).to.equal(true);
     });
-    
+
     it("should match 'foo/abc.bar/'", function () {
         expect(r_foo_globstar_path.test('foo/abc.bar/')).to.equal(true);
     });
-    
+
     it("should match 'foo/x/y/z.bar'", function () {
         expect(r_foo_globstar_path.test('foo/x/y/z.bar')).to.equal(true);
     });
-    
+
     it("should match 'foo/x/y/z.bar/'", function () {
         expect(r_foo_globstar_path.test('foo/x/y/z.bar/')).to.equal(true);
     });
@@ -388,6 +388,15 @@ var cases = [
     ], {
       'node_modules/gulp/node_modules/abc.md': 1,
       'node_modules/gulp/node_modules/abc.json': 1
+    }
+  ],
+  [
+    'issue #10', [
+      '/abc/',
+      '!/abc/a.js'
+    ], {
+      'abc/a.js': 1,
+      'abc/d/e.js': 1
     }
   ]
 ];
