@@ -9,13 +9,15 @@ Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does n
 
 ## Installation
 
-	npm install ignore --save
+```sh
+npm install ignore --save
+```
 
 ## Usage
 
 ```js
 var ignore = require('ignore');
-var ig = ignore(options).addPattern(['.abc/*', '!.abc/d/']);
+var ig = ignore().add(['.abc/*', '!.abc/d/']);
 ```
 
 ### Filter the given paths
@@ -67,7 +69,9 @@ ignore().addIgnoreFile(
 
 ## Methods
 
-### .addPattern(pattern)
+### .add(pattern)
+### .add(patterns)
+### .add(...patterns)
 
 Adds a rule or several rules to the current manager.
 
@@ -145,39 +149,5 @@ glob('**', function(err, files){
 
 Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
 
-#### Returns `function(path)`
-
-The filter function.
-
-
-## Constructor: ignore.Ignore
-
-```js
-new ignore.Ignore(options);
-ignore(options);
-```
-
-#### options.matchCase `boolean=false`
-
-By default, all ignore rules will be treated as case-insensitive ones as well as the git does.
-
-#### options.twoGlobstars `boolean=false`
-
-By defailt, `ignoreRules` will omit every pattern that includes '`**`' (two consecutive asterisks) which is not compatible cross operating systems, because the behavior of file .gitignore depends on the implementation of command `fnmatch` in shell.
-
-By the way, Mac OS doesn't support '`**`'.
-
-#### options.ignore `Array.<String>`
-
-The ignore rules to be added. Default to `['.git', '.svn', '.DS_Store']`
-
-If you want those directories to be included, you could
-
-```js
-ignore({
-	ignore: []
-});
-```
-
-You can also use `.addPattern()` method to do this.
+Returns `function(path)` the filter function.
 
