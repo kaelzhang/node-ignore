@@ -25,7 +25,7 @@ var cases = [
     }
   ],
   [
-    'Put a backslash ("\") in front of the first hash for patterns that begin with a hash.',
+    'Put a backslash ("\\") in front of the first hash for patterns that begin with a hash.',
     ['\\#abc'],
     {
       '#abc': 1
@@ -66,7 +66,7 @@ var cases = [
     }
   ],
   [
-    'Put a backslash ("\") in front of the first "!" for patterns that begin with a literal "!"',
+    'Put a backslash ("\\") in front of the first "!" for patterns that begin with a literal "!"',
     [
       '\\!abc',
       '\\!important!.txt'
@@ -89,7 +89,110 @@ var cases = [
       // you should `glob({mark: true})`
       'abc': 0,
       'abc/': 1,
+
+      // Actually, if there is only a trailing slash, git also treats it as a shell glob pattern
+      // 'abc/' should make 'bcd/abc/' ignored.
       'bcd/abc/': 1
+    }
+  ],
+
+  [
+    'If the pattern does not contain a slash /, Git treats it as a shell glob pattern',
+    [
+      'a.js'
+    ],
+    {
+      'a.js': 1,
+      'b/a/a.js': 1,
+      'a/a.js': 1,
+      'b/a.jsa': 0
+    }
+  ],
+  [
+    'Otherwise, Git treats the pattern as a shell glob suitable for consumption by fnmatch(3) with the FNM_PATHNAME flag',
+    [
+      'a/a.js'
+    ],
+    {
+      'a/a.js': 1,
+      'a/a.jsa': 0,
+      'b/a/a.js': 0,
+      'c/a/a.js': 0
+    }
+  ],
+
+  [
+    'wildcards in the pattern will not match a / in the pathname.',
+    [
+      'Documentation/*.html'
+    ],
+    {
+      'Documentation/git.html': 1,
+      'Documentation/ppc/ppc.html': 0,
+      'tools/perf/Documentation/perf.html': 0
+    }
+  ],
+
+  [
+    'A leading slash matches the beginning of the pathname',
+    [
+      '/*.c'
+    ],
+    {
+      'cat-file.c': 1,
+      'mozilla-sha1/sha1.c': 0
+    }
+  ],
+
+  [
+    'A leading "**" followed by a slash means match in all directories',
+    [
+      '**/foo'
+    ],
+    {
+      'foo': 1,
+      'a/foo': 1,
+      'foo/a': 1,
+      'a/foo/a': 1
+    }
+  ],
+
+  [
+    '"**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo"',
+    [
+      '**/foo/bar'
+    ],
+    {
+      'foo/bar': 1,
+      'abc/foo/bar': 1,
+      'abc/foo/bar/': 1
+    }
+  ],
+
+  [
+    'A trailing "/**" matches everything inside',
+    [
+      'abc/**'
+    ],
+    {
+      'abc/a/': 1,
+      'abc/b': 1,
+      'abc/d/e/f/g': 1,
+      'bcd/abc/a': 0,
+      'abc': 0
+    }
+  ],
+
+  [
+    'A slash followed by two consecutive asterisks then a slash matches zero or more directories',
+    [
+      'a/**/b'
+    ],
+    {
+      'a/b': 1,
+      'a/x/b': 1,
+      'a/x/y/b': 1,
+      'b/a/b': 0
     }
   ],
 

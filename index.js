@@ -199,12 +199,17 @@ var REPLACERS = [
     // > For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
     // A leading slash matches the beginning of the pathname
     /^\//,
-    '^'
+    function () {
+      return '^'
+    }
   ],
 
+  // replace special metacharacter slash after the leading slash
   [
     /\//g,
-    '\\/'
+    function () {
+      return '\\/'
+    }
   ],
 
   [
@@ -217,7 +222,9 @@ var REPLACERS = [
 
     // '**/foo' <-> 'foo'
     // just remove it
-    ''
+    function () {
+      return '(?:.*\\/)?'
+    }
   ],
 
   // 'f'
@@ -250,7 +257,15 @@ var REPLACERS = [
     // there will be no leading '/' (which has been replaced by the second replacer)
     // If starts with '**', adding a '^' to the regular expression also works
     /^(?=[^\^])/,
-    '(?:^|\\/)'
+    function (match) {
+      return !/\/(?!$)/.test(this)
+        // > If the pattern does not contain a slash /, Git treats it as a shell glob pattern
+        // Actually, if there is only a trailing slash, git also treats it as a shell glob pattern
+        ? '(?:^|\\/)'
+
+        // > Otherwise, Git treats the pattern as a shell glob suitable for consumption by fnmatch(3)
+        : '^'
+    }
   ],
 
   // two globstars
@@ -262,7 +277,9 @@ var REPLACERS = [
 
     // Zero, one or several directories
     // should not use '*', or it will be replaced by the next replacer
-    '(?:\\/[^\\/]+)*\\/'
+    function () {
+      return '(?:\\/[^\\/]+)*\\/'
+    }
   ],
 
   // intermediate wildcards
@@ -284,13 +301,17 @@ var REPLACERS = [
   [
     /\\\*$/,
     // simply remove it
-    ''
+    function () {
+      return ''
+    }
   ],
 
   [
     // escape back
     /\\\\\\/g,
-    '\\'
+    function () {
+      return '\\'
+    }
   ]
 ]
 
@@ -305,7 +326,7 @@ function regex (pattern) {
   }
 
   var source = REPLACERS.reduce((prev, current) => {
-    return prev.replace(current[0], current[1])
+    return prev.replace(current[0], current[1].bind(pattern))
   }, pattern)
 
   return cache[pattern] = new RegExp(source, 'i')

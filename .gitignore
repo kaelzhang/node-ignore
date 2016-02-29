@@ -3,10 +3,6 @@
 # php files
 index.php
 
-test-lala
-!test-lala
-!test-lala/a.js
-
 # Numerous always-ignore extensions
 *.bak
 *.patch
