@@ -1,273 +1,99 @@
-'use strict';
-
-var fs = require('fs');
-var ignore = require('../');
-var expect = require('chai').expect;
-
-// describe(".makeRegex(), normal options, pattern 'foo':", function() {
-//   var r_foo = ignore.regex('foo');
-
-//   it("'foo' should match 'foo'", function() {
-//     expect(r_foo.test('foo')).to.equal(true);
-//   });
-
-//   it("'foo' should match 'foo/'", function() {
-//     expect(r_foo.test('foo/')).to.equal(true);
-//   });
-
-//   it("'foo' should match '/foo'", function() {
-//     expect(r_foo.test('/foo')).to.equal(true);
-//   });
-
-//   it("'foo' should not match 'fooo'", function() {
-//     expect(r_foo.test('fooo')).to.equal(false);
-//   });
-
-//   it("'foo' should not match 'ofoo'", function() {
-//     expect(r_foo.test('ofoo')).to.equal(false);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern '**/foo' matches 'foo' anywhere:", function() {
-//   var r_foo = ignore.regex('**/foo');
-
-//   it("'**/foo' should match 'foo'", function() {
-//     expect(r_foo.test('foo')).to.equal(true);
-//   });
-
-//   it("'**/foo' should match 'foo/'", function() {
-//     expect(r_foo.test('foo/')).to.equal(true);
-//   });
-
-//   it("'**/foo' should match '/foo'", function() {
-//     expect(r_foo.test('/foo')).to.equal(true);
-//   });
-
-//   it("'**/foo' should not match 'fooo'", function() {
-//     expect(r_foo.test('fooo')).to.equal(false);
-//   });
-
-//   it("'**/foo' should not match 'ofoo'", function() {
-//     expect(r_foo.test('ofoo')).to.equal(false);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern '/**/foo' matches 'foo' anywhere:", function () {
-//     var r_foo = ignore.regex('/**/foo');
-
-//     it("should match 'foo'", function () {
-//         expect(r_foo.test('foo')).to.equal(true);
-//     });
-
-//     it("should match 'foo/'", function () {
-//         expect(r_foo.test('foo/')).to.equal(true);
-//     });
-
-//     it("should match '/foo'", function () {
-//         expect(r_foo.test('/foo')).to.equal(true);
-//     });
-
-//     it("should not match 'fooo'", function () {
-//         expect(r_foo.test('fooo')).to.equal(false);
-//     });
-
-//     it("should not match 'ofoo'", function () {
-//         expect(r_foo.test('ofoo')).to.equal(false);
-//     });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern 'foo/':", function() {
-//   var r_foo_slash = ignore.regex('foo/');
-
-//   it("'foo' should match 'foo/'", function() {
-//     expect(r_foo_slash.test('foo/')).to.equal(true);
-//   });
-
-//   it("'foo' should match 'foo/a'", function() {
-//     expect(r_foo_slash.test('foo/a')).to.equal(true);
-//   });
-
-//   it("'foo' should match '/foo/'", function() {
-//     expect(r_foo_slash.test('/foo/')).to.equal(true);
-//   });
-
-//   it("'foo' should not match 'foo'", function() {
-//     expect(r_foo_slash.test('foo')).to.equal(false);
-//   });
-
-//   it("'foo' should not match '/foo'", function() {
-//     expect(r_foo_slash.test('/foo')).to.equal(false);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern '/.js':", function() {
-//   var r_slash_dot_js = ignore.regex('/.js');
-
-//   it("collection:", function() {
-//     expect(r_slash_dot_js.test('.js')).to.equal(true);
-//     expect(r_slash_dot_js.test('.js/')).to.equal(true);
-//     expect(r_slash_dot_js.test('.js/a')).to.equal(true);
-
-//     expect(r_slash_dot_js.test('/.js')).to.equal(false);
-//     expect(r_slash_dot_js.test('.jsa')).to.equal(false);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern '/*.js':", function() {
-//   var r_slash_wild_dot_js = ignore.regex('/*.js');
-
-//   it("collection:", function() {
-//     expect(r_slash_wild_dot_js.test('.js')).to.equal(true);
-//     expect(r_slash_wild_dot_js.test('.js/')).to.equal(true);
-//     expect(r_slash_wild_dot_js.test('.js/a')).to.equal(true);
-//     expect(r_slash_wild_dot_js.test('a.js/a')).to.equal(true);
-//     expect(r_slash_wild_dot_js.test('a.js/a.js')).to.equal(true);
-
-//     expect(r_slash_wild_dot_js.test('/.js')).to.equal(false);
-//     expect(r_slash_wild_dot_js.test('.jsa')).to.equal(false);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern '*.js':", function() {
-//   var r_wild_dot_js = ignore.regex('*.js');
-
-//   it("collection:", function() {
-//     expect(r_wild_dot_js.test('.js')).to.equal(true);
-//     expect(r_wild_dot_js.test('.js/')).to.equal(true);
-//     expect(r_wild_dot_js.test('.js/a')).to.equal(true);
-//     expect(r_wild_dot_js.test('a.js/a')).to.equal(true);
-//     expect(r_wild_dot_js.test('a.js/a.js')).to.equal(true);
-//     expect(r_wild_dot_js.test('/.js')).to.equal(true);
-
-//     expect(r_wild_dot_js.test('.jsa')).to.equal(false);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern '.js*':", function() {
-//   var r_dot_js_wild = ignore.regex('.js*');
-
-//   it("collection:", function() {
-//     expect(r_dot_js_wild.test('.js')).to.equal(true);
-//     expect(r_dot_js_wild.test('.js/')).to.equal(true);
-//     expect(r_dot_js_wild.test('.js/a')).to.equal(true);
-
-//     // pay attension
-//     expect(r_dot_js_wild.test('a.js/a')).to.equal(false);
-//     expect(r_dot_js_wild.test('a.js/a.js')).to.equal(false);
-
-//     expect(r_dot_js_wild.test('/.js')).to.equal(true);
-
-//     expect(r_dot_js_wild.test('.jsa')).to.equal(true);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern 'foo/**/':", function() {
-//   var r_foo_globstar_slash = ignore.regex('foo/**/');
-
-//   it("should match 'foo/'", function() {
-//     expect(r_foo_globstar_slash.test('foo/')).to.equal(true);
-//   });
-
-//   it("should match 'foo/abc/'", function() {
-//     expect(r_foo_globstar_slash.test('foo/abc/')).to.equal(true);
-//   });
-
-//   it("should match 'foo/x/y/z/'", function() {
-//     expect(r_foo_globstar_slash.test('foo/x/y/z/')).to.equal(true);
-//   });
-
-//   it("should match 'foo/x/y/z/'", function() {
-//     expect(r_foo_globstar_slash.test('foo/x/y/z/')).to.equal(true);
-//   });
-
-//   it("should not match 'foo'", function() {
-//     expect(r_foo_globstar_slash.test('foo')).to.equal(false);
-//   });
-
-//   it("should not match '/foo'", function() {
-//     expect(r_foo_globstar_slash.test('/foo')).to.equal(false);
-//   });
-// });
-
-
-// describe(".makeRegex(), normal options, pattern 'foo/**/*.bar':", function () {
-//     var r_foo_globstar_path = ignore.regex('foo/**/*.bar');
-
-//     console.log(r_foo_globstar_path);
-
-//     it("should not match 'foo/'", function () {
-//         expect(r_foo_globstar_path.test('foo/')).to.equal(false);
-//     });
-
-//     it("should not match 'abc.bar'", function () {
-//         expect(r_foo_globstar_path.test('abc.bar')).to.equal(false);
-//     });
-
-//     it("should match 'foo/abc.bar'", function () {
-//         expect(r_foo_globstar_path.test('foo/abc.bar')).to.equal(true);
-//     });
-
-//     it("should match 'foo/abc.bar/'", function () {
-//         expect(r_foo_globstar_path.test('foo/abc.bar/')).to.equal(true);
-//     });
-
-//     it("should match 'foo/x/y/z.bar'", function () {
-//         expect(r_foo_globstar_path.test('foo/x/y/z.bar')).to.equal(true);
-//     });
-
-//     it("should match 'foo/x/y/z.bar/'", function () {
-//         expect(r_foo_globstar_path.test('foo/x/y/z.bar/')).to.equal(true);
-//     });
-// });
-
+'use strict'
+
+var fs = require('fs')
+var ignore = require('../')
+var expect = require('chai').expect
 
 var cases = [
-  // description      patterns    paths     expect
+  // description  patterns  paths/expect  only
   [
-      'leading hash: will treat leading # as comments',
-      ['#abc'],
-      {
-        '#abc': 0
-      }
+    'A blank line matches no files',
+    [
+      ''
+    ],
+    {
+      'a': 0,
+      '/a': 0,
+      'a/b/c': 0
+    }
   ],
   [
-      '\\#',
-      ['\\#abc'],
-      {
-        '#abc': 1
-      }
+    'A line starting with # serves as a comment.',
+    ['#abc'],
+    {
+      '#abc': 0
+    }
   ],
   [
-      'could filter paths',
-      [
-        'abc',
-        '!abc/b'
-      ],
-      {
-        'abc/a.js': 1,
-        'abc/b/b.js': 0
-      }
+    'Put a backslash ("\") in front of the first hash for patterns that begin with a hash.',
+    ['\\#abc'],
+    {
+      '#abc': 1
+    }
   ],
-  // [
-  //   'ignore.select',
-  //   ignore.select([
-  //     'test/fixtures/.aignore',
-  //     'test/fixtures/.fakeignore'
-  //   ]), {
-  //     'abc/a.js': 1,
-  //     'abc/b/b.js': 0,
-  //     '#e': 0,
-  //     '#f': 1
-  //   }
-  // ],
+  [
+    'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
+    [
+      'abc',
+      '!abc'
+    ],
+    {
+      // the parent folder is included again
+      'abc/a.js': 0,
+      'abc/': 0
+    }
+  ],
+  [
+    'issue #10: It is not possible to re-include a file if a parent directory of that file is excluded',
+    [
+      '/abc/',
+      '!/abc/a.js'
+    ],
+    {
+      'abc/a.js': 1,
+      'abc/d/e.js': 1
+    }
+  ],
+  [
+    'we did not know whether the rule is a dir first',
+    [
+      'abc',
+      '!bcd/abc/a.js'
+    ],
+    {
+      'abc/a.js': 1,
+      'bcd/abc/a.js': 1
+    }
+  ],
+  [
+    'Put a backslash ("\") in front of the first "!" for patterns that begin with a literal "!"',
+    [
+      '\\!abc',
+      '\\!important!.txt'
+    ],
+    {
+      '!abc': 1,
+      'abc': 0,
+      'b/!important!.txt': 1,
+      '!important!.txt': 1
+    }
+  ],
+
+  [
+    'If the pattern ends with a slash, it is removed for the purpose of the following description, but it would only find a match with a directory',
+    [
+      'abc/'
+    ],
+    {
+      // actually, node-ignore have no idea about fs.Stat,
+      // you should `glob({mark: true})`
+      'abc': 0,
+      'abc/': 1,
+      'bcd/abc/': 1
+    }
+  ],
+
+  // old test cases
   [
     'should excape metacharacters of regular expressions', [
       '*.js',
@@ -291,8 +117,7 @@ var cases = [
 
   [
     'issue #2: question mark should not break all things',
-    'test/fixtures/.ignore-issue-2',
-    {
+    'test/fixtures/.ignore-issue-2', {
       '.project': 1,
       // remain
       'abc/.project': 0,
@@ -379,59 +204,61 @@ var cases = [
       'node_modules/gulp/node_modules/abc.md': 1,
       'node_modules/gulp/node_modules/abc.json': 1
     }
-  ],
-  [
-    'issue #10', [
-      '/abc/',
-      '!/abc/a.js'
-    ], {
-      'abc/a.js': 1,
-      'abc/d/e.js': 1
-    }
   ]
-];
+]
 
+var cases_to_test_only = cases.filter(function (c) {
+  return c[3]
+})
 
 function readPatterns(file) {
-  var content = fs.readFileSync(file);
+  var content = fs.readFileSync(file)
 
-  return content ? content.toString().split(/\r?\n/) : [];
+  return content ? content.toString().split(/\r?\n/) : []
 }
 
-
 describe("cases", function() {
-  cases.forEach(function(c) {
-    var description = c[0];
-    var patterns = c[1];
-    var paths_object = c[2];
+  (
+    cases_to_test_only.length
+      ? cases_to_test_only
+      : cases
+
+  ).forEach(function(c) {
+    var description = c[0]
+    var patterns = c[1]
+    var paths_object = c[2]
 
     if (typeof patterns === 'string') {
-      patterns = readPatterns(patterns);
+      patterns = readPatterns(patterns)
     }
 
-    var paths = Object.keys(paths_object);
+    var paths = Object.keys(paths_object)
     var expected = paths.filter(function(p) {
-      return !paths_object[p];
-    });
+      return !paths_object[p]
+    })
+
+    function expect_result(result) {
+      expect(result.sort()).to.deep.equal(expected.sort())
+    }
 
     it('.filter():       ' + description, function() {
       var result = ignore()
         .add(patterns)
-        .filter(paths);
+        .filter(paths)
 
-      expect(result.sort()).to.deep.equal(expected.sort());
-    });
+      expect_result(result)
+    })
 
-    it(".createFilter(): " + description, function(){
+    it(".createFilter(): " + description, function() {
       var result = paths.filter(
         ignore()
-          .add(patterns)
-          .createFilter(),
+        .add(patterns)
+        .createFilter(),
         // thisArg should be binded
         null
-      );
+      )
 
-      expect(result.sort()).to.deep.equal(expected.sort());
-    });
-  });
-});
+      expect_result(result)
+    })
+  })
+})

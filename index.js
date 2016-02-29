@@ -5,20 +5,19 @@ module.exports = (options = {}) => new Ignore(options)
 var array_slice = Array.prototype.slice
 
 function make_array (args) {
-  return flatten(array_slice.call(args))
-}
-
-
-function flatten (array) {
-  return array.reduce((prev, current) => {
-    return prev.concat(current)
-  }, [])
+  return array_slice
+    .call(args)
+    .reduce((prev, current) => {
+      return prev.concat(current)
+    }, [])
 }
 
 
 var REGEX_BLANK_LINE = /\s+/
-var REGEX_LEADING_EXCLAMATION = /^\\\!/
-var REGEX_LEADING_HASH = /^\\#/
+var REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/
+var REGEX_LEADING_EXCAPED_HASH = /^\\#/
+var REGEX_TRAILING_SLASH = /\/$/
+var SLASH = '/'
 
 // @param {Object} options
 // - ignore: {Array}
@@ -32,25 +31,39 @@ class Ignore {
     this._rules = []
     this._files = []
 
-    this.add.apply(this, arguments)
+    this._initCache()
+
+    arguments.length && this.add.apply(this, arguments)
   }
 
   // @param {Array.<string>|string} pattern
   add () {
+    this._added = false
     make_array(arguments).forEach(this._addPattern, this)
+
+    // Some rules have just added to the ignore,
+    // making the behavior changed.
+    if (this._added) {
+      this._initCache()
+    }
+
     return this
   }
 
+  _initCache () {
+    this._cache = {}
+  }
+
   _addPattern (pattern) {
-    if (this._check(pattern)) {
+    if (this._checkPattern(pattern)) {
       var rule = this._createRule(pattern)
+      this._added = true
       this._rules.push(rule)
     }
   }
 
-  _check (pattern) {
-    if (
-      typeof pattern === 'string'
+  _checkPattern (pattern) {
+    return typeof pattern === 'string'
 
       // > A blank line matches no files, so it can serve as a separator for readability.
       && pattern
@@ -58,13 +71,10 @@ class Ignore {
 
       // > A line starting with # serves as a comment.
       && pattern.indexOf('#') !== 0
-    ) {
-      return true
-    }
   }
 
-  filter (paths) {
-    return paths.filter(this._filter, this)
+  filter () {
+    return make_array(arguments).filter(path => this._filter(path))
   }
 
   createFilter () {
@@ -76,25 +86,60 @@ class Ignore {
       origin: pattern
     }
 
-    var match_start
-
     if (pattern.indexOf('!') === 0) {
       rule_object.negative = true
       pattern = pattern.substr(1)
     }
 
+    // > It is not possible to re-include a file if a parent directory of that file is excluded.
+    if (REGEX_TRAILING_SLASH.test(pattern)) {
+      rule_object.directory = true
+    }
+
     pattern = pattern
-      .replace(REGEX_LEADING_EXCLAMATION, '!')
-      .replace(REGEX_LEADING_HASH, '#')
+      .replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!')
+      .replace(REGEX_LEADING_EXCAPED_HASH, '#')
 
     rule_object.pattern = pattern
-
     rule_object.regex = regex(pattern)
 
     return rule_object
   }
 
-  _filter (path) {
+  _filter (path, slices) {
+    if (!path) {
+      return false
+    }
+
+    if (path in this._cache) {
+      return this._cache[path]
+    }
+
+    if (!slices) {
+      // path/to/a.js
+      // ['path', 'to', 'a.js']
+      slices = path.split(SLASH)
+
+      // '/b/a.js' -> ['', 'b', 'a.js'] -> ['']
+      if (slices.length && !slices[0]) {
+        slices = slices.slice(1)
+        slices[0] = SLASH + slices[0]
+      }
+    }
+
+    slices.pop()
+
+    return this._cache[path] = slices.length
+      // > It is not possible to re-include a file if a parent directory of that file is excluded.
+      // If the path contains a parent directory, check the parent first
+      ? this._filter(slices.join(SLASH) + SLASH, slices)
+        && this._test(path)
+
+      // Or only test the path
+      : this._test(path)
+  }
+
+  _test (path) {
     var matched
 
     this._rules.forEach(rule => {
@@ -190,6 +235,7 @@ var REPLACERS = [
   // ending
   [
     // 'js' will not match 'js.'
+    // 'ab' will not match 'abc'
     /(?:[^*\/])$/,
     function(match) {
       // 'js*' will not match 'a.js'
@@ -242,6 +288,7 @@ var REPLACERS = [
   ],
 
   [
+    // escape back
     /\\\\\\/g,
     '\\'
   ]
