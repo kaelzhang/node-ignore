@@ -188,10 +188,16 @@ var IgnoreBase = (function () {
 
 var REPLACERS = [
 
-// OOPS: Tested up from git 1.9.3 -> 2.6.4
-// Trailing whitespaces are not ignored actually!!!!
-
 // > Trailing spaces are ignored unless they are quoted with backslash ("\")
+[
+// (a\ ) -> (a )
+// (a  ) -> (a)
+// (a \ ) -> (a  )
+/\\?\s+$/, function (match) {
+  return match.indexOf('\\') === 0 ? ' ' : '';
+}],
+
+// replace (\ ) with ' '
 [/\\\s/g, function (match) {
   return ' ';
 }],

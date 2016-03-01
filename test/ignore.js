@@ -32,19 +32,25 @@ var cases = [
     }
   ],
   [
-    'X Test and doc do not match!!! Trailing spaces are ignored unless they are quoted with backslash ("\")',
+    'Trailing spaces are ignored unless they are quoted with backslash ("\")',
     [
-      'abc\\  ',
-      'bcd  '
+      'abc\\  ', // only one space left -> (abc )
+      'bcd  ',   // no space left -> (bcd)
+      'cde \\ '  // -> (cde  )
     ],
     {
       'abc\\  ': 0,
-      'abc  ': 1,
-      'abc ': 0,
+      'abc  ': 0,
+      'abc ': 1,
       'abc   ': 0,
-      'bcd': 0,
-      'bcd  ': 1
-    }
+      'bcd': 1,
+      'bcd ': 0,
+      'bcd  ': 0,
+      'cde  ': 1,
+      'cde ': 0,
+      'cde   ': 0
+    },
+    true
   ],
   [
     'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
@@ -219,8 +225,7 @@ var cases = [
       'abc/b/b.js': 1,
       '#e': 0,
       '#f': 1
-    },
-    true
+    }
   ],
 
   // old test cases
