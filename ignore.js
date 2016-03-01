@@ -1,6 +1,6 @@
 'use strict';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -20,7 +20,7 @@ var REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/;
 var REGEX_LEADING_EXCAPED_HASH = /^\\#/;
 var SLASH = '/';
 
-var IgnoreBase = function () {
+var IgnoreBase = (function () {
   function IgnoreBase() {
     _classCallCheck(this, IgnoreBase);
 
@@ -45,7 +45,7 @@ var IgnoreBase = function () {
       this._added = false;
 
       if (typeof pattern === 'string') {
-        pattern = pattern.split('\r?\n');
+        pattern = pattern.split(/\r?\n/g);
       }
 
       make_array(pattern).forEach(this._addPattern, this);
@@ -172,7 +172,7 @@ var IgnoreBase = function () {
   }]);
 
   return IgnoreBase;
-}();
+})();
 
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
@@ -185,7 +185,6 @@ var IgnoreBase = function () {
 //      you could use option `mark: true` with `glob`
 
 // '`foo/`' should not continue with the '`..`'
-
 
 var REPLACERS = [
 

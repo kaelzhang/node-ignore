@@ -36,7 +36,7 @@ class IgnoreBase {
     this._added = false
 
     if (typeof pattern === 'string') {
-      pattern = pattern.split('\r?\n')
+      pattern = pattern.split(/\r?\n/g)
     }
 
     make_array(pattern).forEach(this._addPattern, this)

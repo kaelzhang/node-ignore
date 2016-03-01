@@ -211,6 +211,18 @@ var cases = [
     }
   ],
 
+  [
+    'add a file content',
+    'test/fixtures/.aignore',
+    {
+      'abc/a.js': 1,
+      'abc/b/b.js': 1,
+      '#e': 0,
+      '#f': 1
+    },
+    true
+  ],
+
   // old test cases
   [
     'should excape metacharacters of regular expressions', [
@@ -330,9 +342,7 @@ var cases_to_test_only = cases.filter(function (c) {
 })
 
 function readPatterns(file) {
-  var content = fs.readFileSync(file)
-
-  return content ? content.toString().split(/\r?\n/) : []
+  return fs.readFileSync(file).toString()
 }
 
 describe("cases", function() {
