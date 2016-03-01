@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "prepublish": "bash build.sh",
-    "test": "./node_modules/.bin/mocha --reporter spec ./test/ignore.js"
+    "test": "bash test.sh"
   },
   "repository": {
     "type": "git",

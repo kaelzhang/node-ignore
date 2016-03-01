@@ -32,6 +32,21 @@ var cases = [
     }
   ],
   [
+    'X Test and doc do not match!!! Trailing spaces are ignored unless they are quoted with backslash ("\")',
+    [
+      'abc\\  ',
+      'bcd  '
+    ],
+    {
+      'abc\\  ': 0,
+      'abc  ': 1,
+      'abc ': 0,
+      'abc   ': 0,
+      'bcd': 0,
+      'bcd  ': 1
+    }
+  ],
+  [
     'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
     [
       'abc',
@@ -346,7 +361,7 @@ describe("cases", function() {
 
     it('.filter():       ' + description, function() {
       var result = ignore()
-        .add(patterns)
+        .addPattern(patterns)
         .filter(paths)
 
       expect_result(result)
@@ -355,7 +370,7 @@ describe("cases", function() {
     it(".createFilter(): " + description, function() {
       var result = paths.filter(
         ignore()
-        .add(patterns)
+        .addPattern(patterns)
         .createFilter(),
         // thisArg should be binded
         null

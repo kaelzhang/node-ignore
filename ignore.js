@@ -17,17 +17,10 @@ function make_array(args) {
   }, []);
 }
 
-var REGEX_BLANK_LINE = /\s+/;
+var REGEX_BLANK_LINE = /^\s+$/;
 var REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/;
 var REGEX_LEADING_EXCAPED_HASH = /^\\#/;
 var SLASH = '/';
-
-// @param {Object} options
-// - ignore: {Array}
-// - twoGlobstars: {boolean=false} enable pattern `'**'` (two consecutive asterisks), default to `false`.
-//      If false, ignore patterns with two globstars will be omitted
-// - matchCase: {boolean=} case sensitive.
-//      By default, git is case-insensitive
 
 var IgnoreBase = function () {
   function IgnoreBase() {
@@ -40,12 +33,17 @@ var IgnoreBase = function () {
     this._initCache();
   }
 
-  // @param {Array.<string>|string} pattern
-
-
   _createClass(IgnoreBase, [{
-    key: 'add',
-    value: function add() {
+    key: '_initCache',
+    value: function _initCache() {
+      this._cache = {};
+    }
+
+    // @param {Array.<string>|string} pattern
+
+  }, {
+    key: 'addPattern',
+    value: function addPattern() {
       this._added = false;
       make_array(arguments).forEach(this._addPattern, this);
 
@@ -56,11 +54,6 @@ var IgnoreBase = function () {
       }
 
       return this;
-    }
-  }, {
-    key: '_initCache',
-    value: function _initCache() {
-      this._cache = {};
     }
   }, {
     key: '_addPattern',
@@ -186,6 +179,14 @@ var IgnoreBase = function () {
 
 
 var REPLACERS = [
+
+// OOPS: Tested up from git 1.9.3 -> 2.6.4
+// Trailing whitespaces are not ignored actually!!!!
+
+// > Trailing spaces are ignored unless they are quoted with backslash ("\")
+[/\\\s/g, function (match) {
+  return ' ';
+}],
 
 // Escape metacharacters
 // which is written down by users but means special for regular expressions.

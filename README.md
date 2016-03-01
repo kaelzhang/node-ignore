@@ -17,7 +17,7 @@ npm install ignore --save
 
 ```js
 var ignore = require('ignore');
-var ig = ignore().add(['.abc/*', '!.abc/d/']);
+var ig = ignore().addPattern(['.abc/*', '!.abc/d/']);
 ```
 
 ### Filter the given paths
@@ -69,9 +69,9 @@ ignore().addIgnoreFile(
 
 ## Methods
 
-### .add(pattern)
-### .add(patterns)
-### .add(...patterns)
+### .addPattern(pattern)
+### .addPattern(patterns)
+### .addPattern(...patterns)
 
 Adds a rule or several rules to the current manager.
 

@@ -13,7 +13,7 @@ function make_array (args) {
 }
 
 
-var REGEX_BLANK_LINE = /\s+/
+var REGEX_BLANK_LINE = /^\s+$/
 var REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/
 var REGEX_LEADING_EXCAPED_HASH = /^\\#/
 var SLASH = '/'
@@ -28,8 +28,13 @@ class IgnoreBase {
     this._initCache()
   }
 
+
+  _initCache () {
+    this._cache = {}
+  }
+
   // @param {Array.<string>|string} pattern
-  add () {
+  addPattern () {
     this._added = false
     make_array(arguments).forEach(this._addPattern, this)
 
@@ -40,10 +45,6 @@ class IgnoreBase {
     }
 
     return this
-  }
-
-  _initCache () {
-    this._cache = {}
   }
 
   _addPattern (pattern) {
@@ -154,6 +155,17 @@ class IgnoreBase {
 
 // '`foo/`' should not continue with the '`..`'
 var REPLACERS = [
+
+  // OOPS: Tested up from git 1.9.3 -> 2.6.4
+  // Trailing whitespaces are not ignored actually!!!!
+
+  // > Trailing spaces are ignored unless they are quoted with backslash ("\")
+  [
+    /\\\s/g,
+    function(match) {
+      return ' '
+    }
+  ],
 
   // Escape metacharacters
   // which is written down by users but means special for regular expressions.
