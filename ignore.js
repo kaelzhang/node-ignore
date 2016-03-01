@@ -24,10 +24,7 @@ var IgnoreBase = (function () {
   function IgnoreBase() {
     _classCallCheck(this, IgnoreBase);
 
-    this._patterns = [];
     this._rules = [];
-    this._files = [];
-
     this._initCache();
   }
 

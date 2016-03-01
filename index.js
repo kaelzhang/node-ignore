@@ -19,13 +19,9 @@ var SLASH = '/'
 
 class IgnoreBase {
   constructor () {
-    this._patterns = []
     this._rules = []
-    this._files = []
-
     this._initCache()
   }
-
 
   _initCache () {
     this._cache = {}

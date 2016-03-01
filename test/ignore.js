@@ -49,8 +49,7 @@ var cases = [
       'cde  ': 1,
       'cde ': 0,
       'cde   ': 0
-    },
-    true
+    }
   ],
   [
     'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
