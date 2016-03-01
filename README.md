@@ -7,48 +7,28 @@
 
 Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does not work in the gitignore way. To filter filenames according to .gitignore file, I recommend this module.
 
-## Installation
-
-```sh
-npm install ignore --save
-```
-
 ## Usage
 
 ```js
-var ignore = require('ignore');
-var ig = ignore().addPattern(['.abc/*', '!.abc/d/']);
+var ignore = require('ignore')
+var ig = ignore().add(['.abc/*', '!.abc/d/'])
 ```
 
 ### Filter the given paths
 
 ```js
 var paths = [
-    '.abc/a.js',    // filtered out
-    '.abc/d/e.js'   // included
-];
+  '.abc/a.js',    // filtered out
+  '.abc/d/e.js'   // included
+]
 
-ig.filter(paths); // ['.abc/d/e.js']
+ig.filter(paths)  // ['.abc/d/e.js']
 ```
 
 ### As the filter function
 
 ```js
 paths.filter(ig.createFilter()); // ['.abc/d/e.js']
-```
-
-### With ignore files
-
-For most cases, we'd better use only one ignore file. We could use `ignore.select` to select the first existing file.
-
-```js
-ignore().addIgnoreFile(
-	ignore.select([
-		'.xxxignore',
-		'.gitignore',
-		'.ignore'
-	])
-);
 ```
 
 ## Why another ignore?
@@ -64,47 +44,43 @@ ignore().addIgnoreFile(
 3. Exactly according to [gitignore man page](http://git-scm.com/docs/gitignore), fixes some known matching issues of fstream-ignore, such as:
 	- '`/*.js`' should only match '`a.js`', but not '`abc/a.js`'.
 	- '`**/foo`' should match '`foo`' anywhere.
-
+  - Prevent re-including a file if a parent directory of that file is excluded.
 
 
 ## Methods
 
-### .addPattern(pattern)
-### .addPattern(patterns)
-### .addPattern(...patterns)
+### .add(pattern)
+### .add(patterns)
+
+- pattern `String` Ignore pattern.
+- patterns `Array.<pattern>` Array of ignore patterns.
 
 Adds a rule or several rules to the current manager.
 
-#### Returns `this`
-
-#### pattern `String|Array.<String>`
-
-The ignore rule or a array of rules.
+Returns `this`
 
 Notice that a line starting with `'#'`(hash) is treated as a comment. Put a backslash (`'\'`) in front of the first hash for patterns that begin with a hash, if you want to ignore a file with a hash at the beginning of the filename.
 
 ```js
-ignore().addPattern('#abc').filter(['#abc']); // ['#abc']
-ignore().addPattern('\#abc').filter(['#abc']); // []
+ignore().add('#abc').filter(['#abc'])   // ['#abc']
+ignore().add('\#abc').filter(['#abc'])  // []
 ```
 
 
-### .addIgnoreFile(path)
+<!-- ### .addIgnoreFile(path)
 
 Adds rules from a ignore file or several files
 
 #### Returns `this`
 
-#### Rule `String|Array.<String>`
+#### Rule `String|Array.<String>` -->
 
 
 ### .filter(paths)
 
 Filters the given array of pathnames, and returns the filtered array.
 
-#### paths `Array.<path>`
-
-The array of paths to be filtered.
+- paths `Array.<path>` The array of paths to be filtered.
 
 *NOTICE* that each `path` here should be a relative path to the root of your repository. Suppose the dir structure is:
 
@@ -129,20 +105,19 @@ Then the `paths` might be like this:
 ]
 ```
 
-Usually, you could use [`glob`](http://npmjs.org/package/glob) to fetch the structure of the current directory:
+Usually, you could use [`glob`](http://npmjs.org/package/glob) with `option.mark = true` to fetch the structure of the current directory:
 
 ```js
-var glob = require('glob');
+var glob = require('glob')
 glob('**', function(err, files){
-    var filtered;
+  if ( err ) {
+    console.log(err)
+    return
+  }
 
-    if ( err ) {
-        console.log(err);
-    } else {
-        filtered = ignore().addIgnoreFile('.gitignore').filter(files);
-        console.log(filtered);
-    }
-});
+  var filtered = ignore().add(patterns).filter(files)
+  console.log(filtered)
+})
 ```
 
 ### .createFilter()
@@ -150,4 +125,3 @@ glob('**', function(err, files){
 Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
 
 Returns `function(path)` the filter function.
-

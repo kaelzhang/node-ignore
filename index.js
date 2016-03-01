@@ -4,12 +4,10 @@ module.exports = (options = {}) => new IgnoreBase(options)
 
 var array_slice = Array.prototype.slice
 
-function make_array (args) {
-  return array_slice
-    .call(args)
-    .reduce((prev, current) => {
-      return prev.concat(current)
-    }, [])
+function make_array (subject) {
+  return Array.isArray(subject)
+    ? subject
+    : [subject]
 }
 
 
@@ -34,9 +32,14 @@ class IgnoreBase {
   }
 
   // @param {Array.<string>|string} pattern
-  addPattern () {
+  add (pattern) {
     this._added = false
-    make_array(arguments).forEach(this._addPattern, this)
+
+    if (typeof pattern === 'string') {
+      pattern = pattern.split('\r?\n')
+    }
+
+    make_array(pattern).forEach(this._addPattern, this)
 
     // Some rules have just added to the ignore,
     // making the behavior changed.
@@ -45,6 +48,11 @@ class IgnoreBase {
     }
 
     return this
+  }
+
+  // legacy
+  addPattern (pattern) {
+    return this.add(pattern)
   }
 
   _addPattern (pattern) {
@@ -56,18 +64,17 @@ class IgnoreBase {
   }
 
   _checkPattern (pattern) {
-    return typeof pattern === 'string'
-
-      // > A blank line matches no files, so it can serve as a separator for readability.
-      && pattern
+    // > A blank line matches no files, so it can serve as a separator for readability.
+    return pattern
+      && typeof pattern === 'string'
       && !REGEX_BLANK_LINE.test(pattern)
 
       // > A line starting with # serves as a comment.
       && pattern.indexOf('#') !== 0
   }
 
-  filter () {
-    return make_array(arguments).filter(path => this._filter(path))
+  filter (paths) {
+    return make_array(paths).filter(path => this._filter(path))
   }
 
   createFilter () {

@@ -11,10 +11,8 @@ module.exports = function () {
 
 var array_slice = Array.prototype.slice;
 
-function make_array(args) {
-  return array_slice.call(args).reduce(function (prev, current) {
-    return prev.concat(current);
-  }, []);
+function make_array(subject) {
+  return Array.isArray(subject) ? subject : [subject];
 }
 
 var REGEX_BLANK_LINE = /^\s+$/;
@@ -42,10 +40,15 @@ var IgnoreBase = function () {
     // @param {Array.<string>|string} pattern
 
   }, {
-    key: 'addPattern',
-    value: function addPattern() {
+    key: 'add',
+    value: function add(pattern) {
       this._added = false;
-      make_array(arguments).forEach(this._addPattern, this);
+
+      if (typeof pattern === 'string') {
+        pattern = pattern.split('\r?\n');
+      }
+
+      make_array(pattern).forEach(this._addPattern, this);
 
       // Some rules have just added to the ignore,
       // making the behavior changed.
@@ -54,6 +57,14 @@ var IgnoreBase = function () {
       }
 
       return this;
+    }
+
+    // legacy
+
+  }, {
+    key: 'addPattern',
+    value: function addPattern(pattern) {
+      return this.add(pattern);
     }
   }, {
     key: '_addPattern',
@@ -67,20 +78,18 @@ var IgnoreBase = function () {
   }, {
     key: '_checkPattern',
     value: function _checkPattern(pattern) {
-      return typeof pattern === 'string'
-
       // > A blank line matches no files, so it can serve as a separator for readability.
-       && pattern && !REGEX_BLANK_LINE.test(pattern)
+      return pattern && typeof pattern === 'string' && !REGEX_BLANK_LINE.test(pattern)
 
       // > A line starting with # serves as a comment.
        && pattern.indexOf('#') !== 0;
     }
   }, {
     key: 'filter',
-    value: function filter() {
+    value: function filter(paths) {
       var _this = this;
 
-      return make_array(arguments).filter(function (path) {
+      return make_array(paths).filter(function (path) {
         return _this._filter(path);
       });
     }
