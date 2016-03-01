@@ -44,8 +44,8 @@ paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 3. Exactly according to [gitignore man page](http://git-scm.com/docs/gitignore), fixes some known matching issues of fstream-ignore, such as:
 	- '`/*.js`' should only match '`a.js`', but not '`abc/a.js`'.
 	- '`**/foo`' should match '`foo`' anywhere.
-  - Prevent re-including a file if a parent directory of that file is excluded.
-
+  - prevent re-including a file if a parent directory of that file is excluded.
+  - handle trailing whitespaces.
 
 ## Methods
 
