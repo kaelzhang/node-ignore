@@ -1,6 +1,6 @@
 'use strict'
 
-module.exports = (options = {}) => new Ignore(options)
+module.exports = (options = {}) => new IgnoreBase(options)
 
 var array_slice = Array.prototype.slice
 
@@ -16,24 +16,16 @@ function make_array (args) {
 var REGEX_BLANK_LINE = /\s+/
 var REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/
 var REGEX_LEADING_EXCAPED_HASH = /^\\#/
-var REGEX_TRAILING_SLASH = /\/$/
 var SLASH = '/'
 
-// @param {Object} options
-// - ignore: {Array}
-// - twoGlobstars: {boolean=false} enable pattern `'**'` (two consecutive asterisks), default to `false`.
-//      If false, ignore patterns with two globstars will be omitted
-// - matchCase: {boolean=} case sensitive.
-//      By default, git is case-insensitive
-class Ignore {
+
+class IgnoreBase {
   constructor () {
     this._patterns = []
     this._rules = []
     this._files = []
 
     this._initCache()
-
-    arguments.length && this.add.apply(this, arguments)
   }
 
   // @param {Array.<string>|string} pattern
@@ -89,11 +81,6 @@ class Ignore {
     if (pattern.indexOf('!') === 0) {
       rule_object.negative = true
       pattern = pattern.substr(1)
-    }
-
-    // > It is not possible to re-include a file if a parent directory of that file is excluded.
-    if (REGEX_TRAILING_SLASH.test(pattern)) {
-      rule_object.directory = true
     }
 
     pattern = pattern

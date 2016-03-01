@@ -2,14 +2,14 @@
   "name": "ignore",
   "version": "3.0.0",
   "description": "Ignore is a manager and filter for .gitignore rules.",
-  "main": "ignore.js",
+  "main": "./ignore.js",
   "files": [
     "index.js",
     "LICENSE-MIT"
   ],
   "scripts": {
-    "prepublish": "babel -o ignore.js index.js",
-    "test": "bash test.sh"
+    "prepublish": "bash build.sh",
+    "test": "./node_modules/.bin/mocha --reporter spec ./test/ignore.js"
   },
   "repository": {
     "type": "git",
@@ -37,8 +37,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "babel-cli": "^6.5.1",
-    "babel-preset-es2015": "^6.5.0",
     "chai": "*",
     "mocha": "*"
   }
