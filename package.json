@@ -8,8 +8,7 @@
     "LICENSE-MIT"
   ],
   "scripts": {
-    "prepublish": "bash build.sh",
-    "test": "bash test.sh"
+    "test": "mocha --reporter spec ./test/ignore.js"
   },
   "repository": {
     "type": "git",
