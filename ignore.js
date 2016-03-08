@@ -179,20 +179,6 @@ var IgnoreBase = function () {
   return IgnoreBase;
 }();
 
-function make_posix(str) {
-  return (/^\\\\\?\\/.test(str) || /[^\x00-\x80]+/.test(str) ? str : str.replace(/\\/g, '/')
-  );
-};
-
-if (process.platform === 'win32') {
-  (function () {
-    var _test = IgnoreBase.prototype._test;
-    IgnoreBase.prototype._test = function (path) {
-      return _test.call(this, make_posix(path));
-    };
-  })();
-}
-
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
 // > but it would only find a match with a directory.
@@ -204,6 +190,8 @@ if (process.platform === 'win32') {
 //      you could use option `mark: true` with `glob`
 
 // '`foo/`' should not continue with the '`..`'
+
+
 var REPLACERS = [
 
 // > Trailing spaces are ignored unless they are quoted with backslash ("\")
@@ -367,4 +355,22 @@ function regex(pattern) {
   }, pattern);
 
   return cache[pattern] = new RegExp(source, 'i');
+}
+
+// Windows
+// --------------------------------------------------------------
+if (process.env.IGNORE_TEST_WIN32 || process.platform === 'win32') {
+  (function () {
+
+    var filter = IgnoreBase.prototype._filter;
+    var make_posix = function make_posix(str) {
+      return (/^\\\\\?\\/.test(str) || /[^\x00-\x80]+/.test(str) ? str : str.replace(/\\/g, '/')
+      );
+    };
+
+    IgnoreBase.prototype._filter = function (path, slices) {
+      path = make_posix(path);
+      return filter.call(this, path, slices);
+    };
+  })();
 }

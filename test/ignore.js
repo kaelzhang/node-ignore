@@ -1,7 +1,6 @@
 'use strict'
 
 var fs = require('fs')
-var node_path = require('path')
 var ignore = require('../')
 var expect = require('chai').expect
 
@@ -399,11 +398,15 @@ describe("cases", function() {
       return !paths_object[p]
     })
 
-    function expect_result(result) {
+    function expect_result(result, mapper) {
+      if (mapper) {
+        expected = expected.map(mapper)
+      }
+
       expect(result.sort()).to.deep.equal(expected.sort())
     }
 
-    it('.filter():       ' + description, function() {
+    it('.filter():        ' + description, function() {
       var ig = ignore()
       var result = ig
         .addPattern(patterns)
@@ -412,7 +415,7 @@ describe("cases", function() {
       expect_result(result)
     })
 
-    it(".createFilter(): " + description, function() {
+    it('.createFilter():  ' + description, function() {
       var result = paths.filter(
         ignore()
         .addPattern(patterns)
@@ -424,17 +427,26 @@ describe("cases", function() {
       expect_result(result)
     })
 
-    if (process.platform === 'win32') {
-      it('.filter():       ' + description, function() {
-        var ig = ignore()
-        var result = ig
-          .addPattern(patterns)
-          .filter(paths.map(function (path) {
-            return path.replace(/\//g, node_path.sep)
-          }))
-
-        expect_result(result)
-      })
+    if (
+      !process.env.IGNORE_TEST_WIN32
+      && process.platform !== 'win32'
+    ) {
+      return
     }
+
+    it('win32: .filter(): ' + description, function() {
+      var win_paths = paths.map(make_win32)
+
+      var ig = ignore()
+      var result = ig
+        .addPattern(patterns)
+        .filter(win_paths)
+
+      expect_result(result, make_win32)
+    })
   })
 })
+
+function make_win32 (path) {
+  return path.replace(/\//g, '\\')
+}
