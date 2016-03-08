@@ -430,7 +430,7 @@ describe("cases", function() {
         var result = ig
           .addPattern(patterns)
           .filter(paths.map(function (path) {
-            return path.replace('/', node_path.sep)
+            return path.replace(/\//g, node_path.sep)
           }))
 
         expect_result(result)

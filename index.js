@@ -154,7 +154,7 @@ function make_posix (str) {
   return /^\\\\\?\\/.test(str) || /[^\x00-\x80]+/.test(str)
     ? str
     : str.replace(/\\/g, '/')
-};
+}
 
 
 if (process.platform === 'win32') {
