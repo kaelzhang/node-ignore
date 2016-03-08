@@ -150,6 +150,21 @@ class IgnoreBase {
 }
 
 
+function make_posix (str) {
+  return /^\\\\\?\\/.test(str) || /[^\x00-\x80]+/.test(str)
+    ? str
+    : str.replace(/\\/g, '/')
+};
+
+
+if (process.platform === 'win32') {
+  let _test = IgnoreBase.prototype._test
+  IgnoreBase.prototype._test = function (path) {
+    return _test.call(this, make_posix(path))
+  }
+}
+
+
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
 // > but it would only find a match with a directory.
