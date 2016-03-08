@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/kaelzhang/node-ignore.png?branch=master)](https://travis-ci.org/kaelzhang/node-ignore)
+[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/kaelzhang/node-ignore?branch=master&svg=true)](https://ci.appveyor.com/project/kaelzhang/node-ignore)
 [![npm module downloads per month](http://img.shields.io/npm/dm/ignore.svg)](https://www.npmjs.org/package/ignore)
 
 # ignore
@@ -6,6 +7,11 @@
 `ignore` is a manager and filter which implemented in pure JavaScript according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
 Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does not work in the gitignore way. To filter filenames according to .gitignore file, I recommend this module.
+
+## Tested on
+
+Linux + Node: `0.8` - `5.x`
+Windows + Node: `0.10` - `5.x`, node < `0.10` is not tested due to the lack of support of appveyor.
 
 ## Usage
 

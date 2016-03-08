@@ -1,6 +1,7 @@
 'use strict'
 
 var fs = require('fs')
+var node_path = require('path')
 var ignore = require('../')
 var expect = require('chai').expect
 
@@ -422,5 +423,18 @@ describe("cases", function() {
 
       expect_result(result)
     })
+
+    if (process.platform === 'win32') {
+      it('.filter():       ' + description, function() {
+        var ig = ignore()
+        var result = ig
+          .addPattern(patterns)
+          .filter(paths.map(function (path) {
+            return path.replace('/', node_path.sep)
+          }))
+
+        expect_result(result)
+      })
+    }
   })
 })
