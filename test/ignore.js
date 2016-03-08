@@ -7,6 +7,17 @@ var expect = require('chai').expect
 var cases = [
   // description  patterns  paths/expect  only
   [
+    'ignore dot files',
+    [
+      '.*'
+    ],
+    {
+      '.a': 1,
+      '.gitignore': 1
+    }
+  ],
+
+  [
     '#14, README example broken in `3.0.3`',
     [
       '.abc/*',

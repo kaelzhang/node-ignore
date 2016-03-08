@@ -37,6 +37,14 @@ ig.filter(paths)  // ['.abc/d/e.js']
 paths.filter(ig.createFilter()); // ['.abc/d/e.js']
 ```
 
+### Win32 paths will be handled
+
+```js
+ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
+// if the code above runs on windows, the result will be
+// ['.abc\\d\\e.js']
+```
+
 ## Why another ignore?
 
 1. `ignore` is a standalone module, and is much simpler so that it could easy work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
