@@ -10,7 +10,7 @@ Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does n
 ## Usage
 
 ```js
-var ignore = require('ignore')
+const ignore = require('ignore')
 var ig = ignore().add(['.abc/*', '!.abc/d/'])
 ```
 
@@ -67,13 +67,19 @@ ignore().add('\#abc').filter(['#abc'])  // []
 ```
 
 
-<!-- ### .addIgnoreFile(path)
+### <strike>.addIgnoreFile(path)</strike>
 
-Adds rules from a ignore file or several files
+REMOVED in `3.x` for now.
 
-#### Returns `this`
+To upgrade `ignore@2.x` up to `3.x`, use
 
-#### Rule `String|Array.<String>` -->
+```js
+const fs = require('fs')
+
+ignore().add(fs.readFileSync(filename))
+```
+
+instead.
 
 
 ### .filter(paths)
@@ -99,20 +105,23 @@ Then the `paths` might be like this:
 
 ```js
 [
-    'a/a.js'
-    '.b',
-    '.c/.DS_store'
+  'a/a.js'
+  '.b',
+  '.c/.DS_store'
 ]
 ```
 
 Usually, you could use [`glob`](http://npmjs.org/package/glob) with `option.mark = true` to fetch the structure of the current directory:
 
 ```js
-var glob = require('glob')
-glob('**', function(err, files){
-  if ( err ) {
-    console.log(err)
-    return
+const glob = require('glob')
+
+glob('**', {
+  // Adds a / character to directory matches.
+  mark: true
+}, (err, files) => {
+  if (err) {
+    return console.error(err)
   }
 
   var filtered = ignore().add(patterns).filter(files)
