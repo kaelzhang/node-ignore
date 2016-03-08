@@ -1,6 +1,6 @@
 'use strict';
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -20,7 +20,7 @@ var REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/;
 var REGEX_LEADING_EXCAPED_HASH = /^\\#/;
 var SLASH = '/';
 
-var IgnoreBase = (function () {
+var IgnoreBase = function () {
   function IgnoreBase() {
     _classCallCheck(this, IgnoreBase);
 
@@ -106,12 +106,17 @@ var IgnoreBase = (function () {
         origin: pattern
       };
 
+      // > An optional prefix "!" which negates the pattern;
       if (pattern.indexOf('!') === 0) {
         rule_object.negative = true;
         pattern = pattern.substr(1);
       }
 
-      pattern = pattern.replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!').replace(REGEX_LEADING_EXCAPED_HASH, '#');
+      pattern = pattern
+      // > Put a backslash ("\") in front of the first "!" for patterns that begin with a literal "!", for example, `"\!important!.txt"`.
+      .replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!')
+      // > Put a backslash ("\") in front of the first hash for patterns that begin with a hash.
+      .replace(REGEX_LEADING_EXCAPED_HASH, '#');
 
       rule_object.pattern = pattern;
       rule_object.regex = regex(pattern);
@@ -151,6 +156,9 @@ var IgnoreBase = (function () {
       // Or only test the path
       : this._test(path);
     }
+
+    // @returns {Boolean} true if a file is NOT ignored
+
   }, {
     key: '_test',
     value: function _test(path) {
@@ -169,7 +177,7 @@ var IgnoreBase = (function () {
   }]);
 
   return IgnoreBase;
-})();
+}();
 
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
@@ -182,6 +190,7 @@ var IgnoreBase = (function () {
 //      you could use option `mark: true` with `glob`
 
 // '`foo/`' should not continue with the '`..`'
+
 
 var REPLACERS = [
 
@@ -244,7 +253,7 @@ var REPLACERS = [
 // '**/foo' <-> 'foo'
 // just remove it
 function () {
-  return '(?:.*\\/)?';
+  return '^(?:.*\\/)?';
 }],
 
 // 'f'
@@ -272,7 +281,7 @@ function () {
 
 // starting
 [
-// there will be no leading '/' (which has been replaced by the second replacer)
+// there will be no leading '/' (which has been replaced by section "leading slash")
 // If starts with '**', adding a '^' to the regular expression also works
 /^(?=[^\^])/, function (match) {
   return !/\/(?!$)/.test(this)
@@ -285,16 +294,22 @@ function () {
 }],
 
 // two globstars
-[
-// > A slash followed by two consecutive asterisks then a slash matches zero or more directories.
-// > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
-// '/**/'
-/\\\/\\\*\\\*\\\//g,
+[/\\\/\\\*\\\*(\\\/|$)/g,
 
 // Zero, one or several directories
 // should not use '*', or it will be replaced by the next replacer
-function () {
-  return '(?:\\/[^\\/]+)*\\/';
+function (m, p1) {
+  return p1 === '\\/'
+
+  // case: /**/
+  // > A slash followed by two consecutive asterisks then a slash matches zero or more directories.
+  // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
+  // '/**/'
+  ? '(?:\\/[^\\/]+)*\\/'
+
+  // case: /**
+  // > A trailing `"/**"` matches everything inside.
+  : '\\/';
 }],
 
 // intermediate wildcards
@@ -303,20 +318,25 @@ function () {
 // ignore rule '\*' will match the path '*'
 
 // 'abc.*/' -> go
-// 'abc.*'  -> skip
+// 'abc.*'  -> skip this rule
 /(^|[^\\]+)\\\*(?=.+)/g, function (match, p1) {
   // '*.js' matches '.js'
   // '*.js' doesn't match 'abc'
   return p1 + '[^\\/]*';
 }],
 
-// ending wildcard
-[/\\\*$/,
-// simply remove it
-function () {
-  return '';
+// trailing wildcard
+[/(\\\/)?\\\*$/, function (m, p1) {
+  return p1 === '\\/'
+  // 'a/*' does not match 'a/'
+  // 'a/*' matches 'a/a'
+  // 'a/'
+  ? '\\/[^/]+'
+
+  // or it will match everything after
+  : '';
 }], [
-// escape back
+// unescape
 /\\\\\\/g, function () {
   return '\\';
 }]];

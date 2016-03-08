@@ -82,13 +82,16 @@ class IgnoreBase {
       origin: pattern
     }
 
+    // > An optional prefix "!" which negates the pattern;
     if (pattern.indexOf('!') === 0) {
       rule_object.negative = true
       pattern = pattern.substr(1)
     }
 
     pattern = pattern
+      // > Put a backslash ("\") in front of the first "!" for patterns that begin with a literal "!", for example, `"\!important!.txt"`.
       .replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!')
+      // > Put a backslash ("\") in front of the first hash for patterns that begin with a hash.
       .replace(REGEX_LEADING_EXCAPED_HASH, '#')
 
     rule_object.pattern = pattern
@@ -130,6 +133,7 @@ class IgnoreBase {
       : this._test(path)
   }
 
+  // @returns {Boolean} true if a file is NOT ignored
   _test (path) {
     var matched
 
@@ -235,7 +239,7 @@ var REPLACERS = [
     // '**/foo' <-> 'foo'
     // just remove it
     function () {
-      return '(?:.*\\/)?'
+      return '^(?:.*\\/)?'
     }
   ],
 
@@ -266,7 +270,7 @@ var REPLACERS = [
 
   // starting
   [
-    // there will be no leading '/' (which has been replaced by the second replacer)
+    // there will be no leading '/' (which has been replaced by section "leading slash")
     // If starts with '**', adding a '^' to the regular expression also works
     /^(?=[^\^])/,
     function (match) {
@@ -282,15 +286,22 @@ var REPLACERS = [
 
   // two globstars
   [
-    // > A slash followed by two consecutive asterisks then a slash matches zero or more directories.
-    // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
-    // '/**/'
-    /\\\/\\\*\\\*\\\//g,
+    /\\\/\\\*\\\*(\\\/|$)/g,
 
     // Zero, one or several directories
     // should not use '*', or it will be replaced by the next replacer
-    function () {
-      return '(?:\\/[^\\/]+)*\\/'
+    function (m, p1) {
+      return p1 === '\\/'
+
+        // case: /**/
+        // > A slash followed by two consecutive asterisks then a slash matches zero or more directories.
+        // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
+        // '/**/'
+        ? '(?:\\/[^\\/]+)*\\/'
+
+        // case: /**
+        // > A trailing `"/**"` matches everything inside.
+        : '\\/'
     }
   ],
 
@@ -300,7 +311,7 @@ var REPLACERS = [
     // ignore rule '\*' will match the path '*'
 
     // 'abc.*/' -> go
-    // 'abc.*'  -> skip
+    // 'abc.*'  -> skip this rule
     /(^|[^\\]+)\\\*(?=.+)/g,
     function(match, p1) {
       // '*.js' matches '.js'
@@ -309,17 +320,23 @@ var REPLACERS = [
     }
   ],
 
-  // ending wildcard
+  // trailing wildcard
   [
-    /\\\*$/,
-    // simply remove it
-    function () {
-      return ''
+    /(\\\/)?\\\*$/,
+    function (m, p1) {
+      return p1 === '\\/'
+        // 'a/*' does not match 'a/'
+        // 'a/*' matches 'a/a'
+        // 'a/'
+        ? '\\/[^/]+'
+
+        // or it will match everything after
+        : ''
     }
   ],
 
   [
-    // escape back
+    // unescape
     /\\\\\\/g,
     function () {
       return '\\'

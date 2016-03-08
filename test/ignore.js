@@ -7,6 +7,32 @@ var expect = require('chai').expect
 var cases = [
   // description  patterns  paths/expect  only
   [
+    '#14, README example broken in `3.0.3`',
+    [
+      '.abc/*',
+      '!.abc/d/'
+    ],
+    {
+      '.abc/a.js': 1,
+      '.abc/d/e.js': 0
+    }
+  ],
+
+  [
+    '#14, README example broken in `3.0.3`, not negate parent folder',
+    [
+      '.abc/*',
+      // .abc/d will be ignored
+      '!.abc/d/*'
+    ],
+    {
+      '.abc/a.js': 1,
+      // so '.abc/d/e.js' will be ignored
+      '.abc/d/e.js': 1
+    }
+  ],
+
+  [
     'A blank line matches no files',
     [
       ''
@@ -119,13 +145,16 @@ var cases = [
   [
     'If the pattern does not contain a slash /, Git treats it as a shell glob pattern',
     [
-      'a.js'
+      'a.js',
+      'f/'
     ],
     {
       'a.js': 1,
       'b/a/a.js': 1,
       'a/a.js': 1,
-      'b/a.jsa': 0
+      'b/a.jsa': 0,
+      'f/': 1,
+      'g/f/': 1
     }
   ],
   [
@@ -374,7 +403,8 @@ describe("cases", function() {
     }
 
     it('.filter():       ' + description, function() {
-      var result = ignore()
+      var ig = ignore()
+      var result = ig
         .addPattern(patterns)
         .filter(paths)
 
