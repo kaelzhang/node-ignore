@@ -90,7 +90,9 @@ To upgrade `ignore@2.x` up to `3.x`, use
 ```js
 const fs = require('fs')
 
-ignore().add(fs.readFileSync(filename))
+if (fs.existsSync(filename)) {
+  ignore().add(fs.readFileSync(filename).toString())
+}
 ```
 
 instead.
