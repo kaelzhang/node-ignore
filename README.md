@@ -80,6 +80,11 @@ ignore().add('#abc').filter(['#abc'])   // ['#abc']
 ignore().add('\#abc').filter(['#abc'])  // []
 ```
 
+`pattern` could either be a line of ignore pattern or a string of multiple ignore patterns, which means we could just `ignore().add()` the content of a ignore file:
+
+```js
+ignore().add(fs.readFileSync(filenameOfGitignore).toString()).filter(filenames)
+```
 
 ### <strike>.addIgnoreFile(path)</strike>
 
