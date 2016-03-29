@@ -1,9 +1,9 @@
 'use strict'
 
-module.exports = (options = {}) => new IgnoreBase(options)
+module.exports = () => new IgnoreBase()
 
-var array_slice = Array.prototype.slice
 
+// A simple implementation of make-array
 function make_array (subject) {
   return Array.isArray(subject)
     ? subject
@@ -11,10 +11,10 @@ function make_array (subject) {
 }
 
 
-var REGEX_BLANK_LINE = /^\s+$/
-var REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/
-var REGEX_LEADING_EXCAPED_HASH = /^\\#/
-var SLASH = '/'
+const REGEX_BLANK_LINE = /^\s+$/
+const REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/
+const REGEX_LEADING_EXCAPED_HASH = /^\\#/
+const SLASH = '/'
 
 
 class IgnoreBase {
@@ -53,7 +53,7 @@ class IgnoreBase {
 
   _addPattern (pattern) {
     if (this._checkPattern(pattern)) {
-      var rule = this._createRule(pattern)
+      let rule = this._createRule(pattern)
       this._added = true
       this._rules.push(rule)
     }
@@ -78,7 +78,7 @@ class IgnoreBase {
   }
 
   _createRule (pattern) {
-    var rule_object = {
+    let rule_object = {
       origin: pattern
     }
 
@@ -135,7 +135,8 @@ class IgnoreBase {
 
   // @returns {Boolean} true if a file is NOT ignored
   _test (path) {
-    var matched
+    // Explicitly define variable type by setting matched to `0`
+    let matched = 0
 
     this._rules.forEach(rule => {
       // if matched = true, then we only test negative rules
@@ -161,7 +162,7 @@ class IgnoreBase {
 //      you could use option `mark: true` with `glob`
 
 // '`foo/`' should not continue with the '`..`'
-var REPLACERS = [
+const REPLACERS = [
 
   // > Trailing spaces are ignored unless they are quoted with backslash ("\")
   [
@@ -345,16 +346,17 @@ var REPLACERS = [
 ]
 
 
-var cache = {}
+// A simple cache, because an ignore rule only has only one certain meaning
+let cache = {}
 
 // @param {pattern}
 function regex (pattern) {
-  var r = cache[pattern]
+  let r = cache[pattern]
   if (r) {
     return r
   }
 
-  var source = REPLACERS.reduce((prev, current) => {
+  let source = REPLACERS.reduce((prev, current) => {
     return prev.replace(current[0], current[1].bind(pattern))
   }, pattern)
 

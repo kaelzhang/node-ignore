@@ -1,5 +1,6 @@
 'use strict'
 
+// For old node.js versions, we use es5
 var fs = require('fs')
 var ignore = require('../')
 var expect = require('chai').expect

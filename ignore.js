@@ -5,12 +5,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 module.exports = function () {
-  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-  return new IgnoreBase(options);
+  return new IgnoreBase();
 };
 
-var array_slice = Array.prototype.slice;
-
+// A simple implementation of make-array
 function make_array(subject) {
   return Array.isArray(subject) ? subject : [subject];
 }
@@ -162,7 +160,8 @@ var IgnoreBase = function () {
   }, {
     key: '_test',
     value: function _test(path) {
-      var matched;
+      // Explicitly define variable type by setting matched to `0`
+      var matched = 0;
 
       this._rules.forEach(function (rule) {
         // if matched = true, then we only test negative rules
@@ -341,6 +340,7 @@ function (m, p1) {
   return '\\';
 }]];
 
+// A simple cache, because an ignore rule only has only one certain meaning
 var cache = {};
 
 // @param {pattern}
