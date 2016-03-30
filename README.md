@@ -50,16 +50,16 @@ ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
 1. `ignore` is a standalone module, and is much simpler so that it could easy work with other programs, unlike [isaacs](https://npmjs.org/~isaacs)'s [fstream-ignore](https://npmjs.org/package/fstream-ignore) which must work with the modules of the fstream family.
 
 2. `ignore` only contains utility methods to filter paths according to the specified ignore rules, so
-
-- `ignore` never try to find out ignore rules by traversing directories or fetching from git configurations.
-
-- `ignore` don't cares about sub-modules of git projects.
+  - `ignore` never try to find out ignore rules by traversing directories or fetching from git configurations.
+  - `ignore` don't cares about sub-modules of git projects.
 
 3. Exactly according to [gitignore man page](http://git-scm.com/docs/gitignore), fixes some known matching issues of fstream-ignore, such as:
-	- '`/*.js`' should only match '`a.js`', but not '`abc/a.js`'.
-	- '`**/foo`' should match '`foo`' anywhere.
+  - '`/*.js`' should only match '`a.js`', but not '`abc/a.js`'.
+  - '`**/foo`' should match '`foo`' anywhere.
   - prevent re-including a file if a parent directory of that file is excluded.
-  - handle trailing whitespaces.
+  - handle trailing whitespaces:
+    - `'a '`(one space) should not match `'a  '`(two spaces).
+    - `'a \ '` matches `'a  '`
 
 ## Methods
 
@@ -155,3 +155,11 @@ glob('**', {
 Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
 
 Returns `function(path)` the filter function.
+
+****
+
+## Upgrade 2.x -> 3.x
+
+- All `options` of 2.x are unnecessary and removed, so just remove them.
+- `ignore()` instance is no longer an [`EventEmitter`](nodejs.org/api/events.html), and all events are unnecessary and removed.
+- `.addIgnoreFile()` is removed, see the [.addIgnoreFile](#addignorefilepath) section for details.
