@@ -32,18 +32,23 @@ var IgnoreBase = function () {
       this._cache = {};
     }
 
-    // @param {Array.<string>|string} pattern
+    // @param {Array.<string>|string|Ignore} pattern
 
   }, {
     key: 'add',
     value: function add(pattern) {
       this._added = false;
 
-      if (typeof pattern === 'string') {
-        pattern = pattern.split(/\r?\n/g);
-      }
+      if (pattern instanceof IgnoreBase) {
+        this._rules = this._rules.concat(pattern._rules);
+        this._added = true;
+      } else {
+        if (typeof pattern === 'string') {
+          pattern = pattern.split(/\r?\n/g);
+        }
 
-      make_array(pattern).forEach(this._addPattern, this);
+        make_array(pattern).forEach(this._addPattern, this);
+      }
 
       // Some rules have just added to the ignore,
       // making the behavior changed.
