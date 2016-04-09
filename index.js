@@ -34,6 +34,7 @@ class IgnoreBase {
     if (pattern instanceof IgnoreBase) {
       this._rules = this._rules.concat(pattern._rules)
       this._added = true;
+
     } else {
       if (typeof pattern === 'string') {
         pattern = pattern.split(/\r?\n/g)

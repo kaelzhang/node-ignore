@@ -464,12 +464,12 @@ describe("cases", function() {
 
     var paths = [
       '.abc/a.js',    // filtered out
-      '.abc/d/e.js',   // included
+      '.abc/d/e.js',  // included
       '.abc/e/e.js'   // included by b, filtered out by a
     ]
 
-    expect(a.filter(paths)).to.eql([ '.abc/d/e.js' ]);
-    expect(b.filter(paths)).to.eql([ '.abc/d/e.js', '.abc/e/e.js' ]);
+    expect(a.filter(paths)).to.eql(['.abc/d/e.js']);
+    expect(b.filter(paths)).to.eql(['.abc/d/e.js', '.abc/e/e.js']);
   })
 })
 
