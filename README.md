@@ -8,10 +8,16 @@
 
 Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does not work in the gitignore way. To filter filenames according to .gitignore file, I recommend this module.
 
-## Tested on
+##### Tested on
 
 - Linux + Node: `0.8` - `5.x`
 - Windows + Node: `0.10` - `5.x`, node < `0.10` is not tested due to the lack of support of appveyor.
+
+## Table Of Main Contents
+
+- [Usage](#usage)
+- [Guide for 2.x -> 3.x](#upgrade-2x---3x)
+- [Contributing](#contributing)
 
 ## Usage
 
@@ -66,7 +72,7 @@ ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
 ### .add(pattern)
 ### .add(patterns)
 
-- pattern `String` Ignore pattern.
+- pattern `String|Ignore` An ignore pattern string, or the `Ignore` instance(to inherit the rules of another `Ignore` instance) 
 - patterns `Array.<pattern>` Array of ignore patterns.
 
 Adds a rule or several rules to the current manager.
@@ -163,3 +169,18 @@ Returns `function(path)` the filter function.
 - All `options` of 2.x are unnecessary and removed, so just remove them.
 - `ignore()` instance is no longer an [`EventEmitter`](nodejs.org/api/events.html), and all events are unnecessary and removed.
 - `.addIgnoreFile()` is removed, see the [.addIgnoreFile](#addignorefilepath) section for details.
+
+****
+
+## Contributing
+
+The code of node-ignore is based on es6 and babel, but the dependency of babel and its preset is not included in the `dependencies` field of package.json, which makes the project succeed to run in older versions of node.
+
+So use `bash install.sh` to install dependencies and `bash test.sh` to run test cases in your local machine.
+
+#### Collaborators
+
+- [SamyPesse](https://github.com/SamyPesse) *Samy Pessé*
+- [azproduction](https://github.com/azproduction) *Mikhail Davydov*
+- [TrySound](https://github.com/TrySound) *Bogdan Chadkin*
+- [JanMattner](https://github.com/JanMattner) *Jan Mattner*
