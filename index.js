@@ -31,17 +31,11 @@ class IgnoreBase {
   add (pattern) {
     this._added = false
 
-    if (pattern instanceof IgnoreBase) {
-      this._rules = this._rules.concat(pattern._rules)
-      this._added = true;
-
-    } else {
-      if (typeof pattern === 'string') {
-        pattern = pattern.split(/\r?\n/g)
-      }
-
-      make_array(pattern).forEach(this._addPattern, this)
+    if (typeof pattern === 'string') {
+      pattern = pattern.split(/\r?\n/g)
     }
+
+    make_array(pattern).forEach(this._addPattern, this)
 
     // Some rules have just added to the ignore,
     // making the behavior changed.
@@ -58,6 +52,12 @@ class IgnoreBase {
   }
 
   _addPattern (pattern) {
+    if (pattern instanceof IgnoreBase) {
+      this._rules = this._rules.concat(pattern._rules)
+      this._added = true;
+      return
+    }
+
     if (this._checkPattern(pattern)) {
       let rule = this._createRule(pattern)
       this._added = true

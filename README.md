@@ -72,7 +72,7 @@ ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
 ### .add(pattern)
 ### .add(patterns)
 
-- pattern `String|Ignore` An ignore pattern string, or the `Ignore` instance(to inherit the rules of another `Ignore` instance) 
+- pattern `String|Ignore` An ignore pattern string, or the `Ignore` instance
 - patterns `Array.<pattern>` Array of ignore patterns.
 
 Adds a rule or several rules to the current manager.
@@ -91,6 +91,8 @@ ignore().add('\#abc').filter(['#abc'])  // []
 ```js
 ignore().add(fs.readFileSync(filenameOfGitignore).toString()).filter(filenames)
 ```
+
+`pattern` could also be an `ignore` instance, so that we could easily inherit the rules of another `Ignore` instance.
 
 ### <strike>.addIgnoreFile(path)</strike>
 
@@ -174,7 +176,7 @@ Returns `function(path)` the filter function.
 
 ## Contributing
 
-The code of `node-ignore` is based on es6 and babel, but the dependency of babel and its preset is not included in the `dependencies` field of package.json, so that the installation process of test cases will not fail in older versions of node.
+The code of `node-ignore` is based on es6 and babel, but babel and its preset is not included in the `dependencies` field of package.json, so that the installation process of test cases will not fail in older versions of node.
 
 So use `bash install.sh` to install dependencies and `bash test.sh` to run test cases in your local machine.
 

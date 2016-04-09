@@ -39,16 +39,11 @@ var IgnoreBase = function () {
     value: function add(pattern) {
       this._added = false;
 
-      if (pattern instanceof IgnoreBase) {
-        this._rules = this._rules.concat(pattern._rules);
-        this._added = true;
-      } else {
-        if (typeof pattern === 'string') {
-          pattern = pattern.split(/\r?\n/g);
-        }
-
-        make_array(pattern).forEach(this._addPattern, this);
+      if (typeof pattern === 'string') {
+        pattern = pattern.split(/\r?\n/g);
       }
+
+      make_array(pattern).forEach(this._addPattern, this);
 
       // Some rules have just added to the ignore,
       // making the behavior changed.
@@ -69,6 +64,12 @@ var IgnoreBase = function () {
   }, {
     key: '_addPattern',
     value: function _addPattern(pattern) {
+      if (pattern instanceof IgnoreBase) {
+        this._rules = this._rules.concat(pattern._rules);
+        this._added = true;
+        return;
+      }
+
       if (this._checkPattern(pattern)) {
         var rule = this._createRule(pattern);
         this._added = true;
