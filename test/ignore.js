@@ -457,6 +457,20 @@ describe("cases", function() {
       expect_result(result, make_win32)
     })
   })
+
+  it('.add(<Ignore>)', function() {
+    var a = ignore().add(['.abc/*', '!.abc/d/'])
+    var b = ignore().add(a).add('!.abc/e/')
+
+    var paths = [
+      '.abc/a.js',    // filtered out
+      '.abc/d/e.js',   // included
+      '.abc/e/e.js'   // included by b, filtered out by a
+    ]
+
+    expect(a.filter(paths)).to.eql([ '.abc/d/e.js' ]);
+    expect(b.filter(paths)).to.eql([ '.abc/d/e.js', '.abc/e/e.js' ]);
+  })
 })
 
 function make_win32 (path) {
