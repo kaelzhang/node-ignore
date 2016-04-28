@@ -6,6 +6,84 @@ var ignore = require('../')
 var expect = require('chai').expect
 
 var cases = [
+  [
+    '#21: unignore with 1 globstar, reversed order',
+    [
+      '!foo/bar.js',
+      'foo/*'
+    ],
+    {
+      'foo/bar.js': 1,
+      'foo/bar2.js': 1,
+      'foo/bar/bar.js': 1
+    }
+  ],
+
+  [
+    '#21: unignore with 2 globstars, reversed order',
+    [
+      '!foo/bar.js',
+      'foo/**'
+    ],
+    {
+      'foo/bar.js': 1,
+      'foo/bar2.js': 1,
+      'foo/bar/bar.js': 1
+    }
+  ],
+
+  [
+    '#21: unignore with several groups of 2 globstars, reversed order',
+    [
+      '!foo/bar.js',
+      'foo/**/**'
+    ],
+    {
+      'foo/bar.js': 1,
+      'foo/bar2.js': 1,
+      'foo/bar/bar.js': 1
+    }
+  ],
+
+  [
+    '#21: unignore with 1 globstar',
+    [
+      'foo/*',
+      '!foo/bar.js'
+    ],
+    {
+      'foo/bar.js': 0,
+      'foo/bar2.js': 1,
+      'foo/bar/bar.js': 1
+    }
+  ],
+
+  [
+    '#21: unignore with 2 globstars',
+    [
+      'foo/**',
+      '!foo/bar.js'
+    ],
+    {
+      'foo/bar.js': 0,
+      'foo/bar2.js': 1,
+      'foo/bar/bar.js': 1
+    }
+  ],
+
+  [
+    'related to #21: several groups of 2 globstars',
+    [
+      'foo/**/**',
+      '!foo/bar.js'
+    ],
+    {
+      'foo/bar.js': 0,
+      'foo/bar2.js': 1,
+      'foo/bar/bar.js': 1
+    }
+  ],
+
   // description  patterns  paths/expect  only
   [
     'ignore dot files',
