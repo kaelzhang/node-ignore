@@ -293,6 +293,7 @@ const REPLACERS = [
 
   // two globstars
   [
+    // Use lookahead assertions so that we could match more than one `'/**'`
     /\\\/\\\*\\\*(?=\\\/|$)/g,
 
     // Zero, one or several directories
