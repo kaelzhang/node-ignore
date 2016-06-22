@@ -23,13 +23,13 @@ Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does n
 
 ```js
 const ignore = require('ignore')
-var ig = ignore().add(['.abc/*', '!.abc/d/'])
+let ig = ignore().add(['.abc/*', '!.abc/d/'])
 ```
 
 ### Filter the given paths
 
 ```js
-var paths = [
+let paths = [
   '.abc/a.js',    // filtered out
   '.abc/d/e.js'   // included
 ]
@@ -153,7 +153,7 @@ glob('**', {
     return console.error(err)
   }
 
-  var filtered = ignore().add(patterns).filter(files)
+  let filtered = ignore().add(patterns).filter(files)
   console.log(filtered)
 })
 ```
