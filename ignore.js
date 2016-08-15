@@ -325,7 +325,7 @@ function (match, p1) {
   // 'a/*' does not match 'a/'
   // 'a/*' matches 'a/a'
   // 'a/'
-  ? '\\/[^/]+'
+  ? '\\/[^/]+(?=$|\\/$)'
 
   // or it will match everything after
   : '';

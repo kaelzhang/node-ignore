@@ -305,7 +305,7 @@ const DEFAULT_REPLACER_SUFFIX = [
       // 'a/*' does not match 'a/'
       // 'a/*' matches 'a/a'
       // 'a/'
-      ? '\\/[^/]+'
+      ? '\\/[^/]+(?=$|\\/$)'
 
       // or it will match everything after
       : ''

@@ -9,11 +9,13 @@ var cases = [
   [
     '#24: a negative pattern without a trailing wildcard',
     [
-      'node_modules/*',
-      '!node_modules'
+      '/node_modules/*',
+      '!/node_modules',
+      '!/node_modules/package'
     ],
     {
-      'node_modules/a/a.js': 1
+      'node_modules/a/a.js': 1,
+      'node_modules/package/a.js': 0
     }
   ],
   [
