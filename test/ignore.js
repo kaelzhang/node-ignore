@@ -7,6 +7,16 @@ var expect = require('chai').expect
 
 var cases = [
   [
+    '#24: a negative pattern without a trailing wildcard',
+    [
+      'node_modules/*',
+      '!node_modules'
+    ],
+    {
+      'node_modules/a/a.js': 1
+    }
+  ],
+  [
     '#21: unignore with 1 globstar, reversed order',
     [
       '!foo/bar.js',
