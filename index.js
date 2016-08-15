@@ -59,7 +59,7 @@ class IgnoreBase {
     }
 
     if (this._checkPattern(pattern)) {
-      let rule = this._createRule(pattern)
+      const rule = this._createRule(pattern)
       this._added = true
       this._rules.push(rule)
     }
@@ -84,13 +84,12 @@ class IgnoreBase {
   }
 
   _createRule (pattern) {
-    let rule_object = {
-      origin: pattern
-    }
+    const origin = pattern
+    let negative = false
 
     // > An optional prefix "!" which negates the pattern;
     if (pattern.indexOf('!') === 0) {
-      rule_object.negative = true
+      negative = true
       pattern = pattern.substr(1)
     }
 
@@ -100,10 +99,14 @@ class IgnoreBase {
       // > Put a backslash ("\") in front of the first hash for patterns that begin with a hash.
       .replace(REGEX_LEADING_EXCAPED_HASH, '#')
 
-    rule_object.pattern = pattern
-    rule_object.regex = regex(pattern)
+    const regex = make_regex(pattern, negative)
 
-    return rule_object
+    return {
+      origin,
+      pattern,
+      negative,
+      regex
+    }
   }
 
   _filter (path, slices) {
@@ -168,7 +171,7 @@ class IgnoreBase {
 //      you could use option `mark: true` with `glob`
 
 // '`foo/`' should not continue with the '`..`'
-const REPLACERS = [
+const DEFAULT_REPLACER_PREFIX = [
 
   // > Trailing spaces are ignored unless they are quoted with backslash ("\")
   [
@@ -176,19 +179,15 @@ const REPLACERS = [
     // (a  ) -> (a)
     // (a \ ) -> (a  )
     /\\?\s+$/,
-    function(match) {
-      return match.indexOf('\\') === 0
-        ? ' '
-        : ''
-    }
+    match => match.indexOf('\\') === 0
+      ? ' '
+      : ''
   ],
 
   // replace (\ ) with ' '
   [
     /\\\s/g,
-    function (match) {
-      return ' '
-    }
+    () => ' '
   ],
 
   // Escape metacharacters
@@ -210,9 +209,7 @@ const REPLACERS = [
   // > These special characters are often called "metacharacters".
   [
     /[\\\^$.|?*+()\[{]/g,
-    function(match) {
-      return '\\' + match
-    }
+    match => '\\' + match
   ],
 
   // leading slash
@@ -222,17 +219,13 @@ const REPLACERS = [
     // > For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
     // A leading slash matches the beginning of the pathname
     /^\//,
-    function () {
-      return '^'
-    }
+    () => '^'
   ],
 
   // replace special metacharacter slash after the leading slash
   [
     /\//g,
-    function () {
-      return '\\/'
-    }
+    () => '\\/'
   ],
 
   [
@@ -245,10 +238,89 @@ const REPLACERS = [
 
     // '**/foo' <-> 'foo'
     // just remove it
+    () => '^(?:.*\\/)?'
+  ]
+]
+
+
+const DEFAULT_REPLACER_SUFFIX = [
+  // starting
+  [
+    // there will be no leading '/' (which has been replaced by section "leading slash")
+    // If starts with '**', adding a '^' to the regular expression also works
+    /^(?=[^\^])/,
     function () {
-      return '^(?:.*\\/)?'
+      return !/\/(?!$)/.test(this)
+        // > If the pattern does not contain a slash /, Git treats it as a shell glob pattern
+        // Actually, if there is only a trailing slash, git also treats it as a shell glob pattern
+        ? '(?:^|\\/)'
+
+        // > Otherwise, Git treats the pattern as a shell glob suitable for consumption by fnmatch(3)
+        : '^'
     }
   ],
+
+  // two globstars
+  [
+    // Use lookahead assertions so that we could match more than one `'/**'`
+    /\\\/\\\*\\\*(?=\\\/|$)/g,
+
+    // Zero, one or several directories
+    // should not use '*', or it will be replaced by the next replacer
+
+    // Check if it is not the last `'/**'`
+    (match, index, str) => index + 6 < str.length
+
+      // case: /**/
+      // > A slash followed by two consecutive asterisks then a slash matches zero or more directories.
+      // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
+      // '/**/'
+      ? '(?:\\/[^\\/]+)*'
+
+      // case: /**
+      // > A trailing `"/**"` matches everything inside.
+
+      // #21: everything inside but it should not include the current folder
+      : '\\/.+'
+  ],
+
+  // intermediate wildcards
+  [
+    // Never replace escaped '*'
+    // ignore rule '\*' will match the path '*'
+
+    // 'abc.*/' -> go
+    // 'abc.*'  -> skip this rule
+    /(^|[^\\]+)\\\*(?=.+)/g,
+
+    // '*.js' matches '.js'
+    // '*.js' doesn't match 'abc'
+    (match, p1) => p1 + '[^\\/]*'
+  ],
+
+  // trailing wildcard
+  [
+    /(\\\/)?\\\*$/,
+    (match, p1) => p1 === '\\/'
+      // 'a/*' does not match 'a/'
+      // 'a/*' matches 'a/a'
+      // 'a/'
+      ? '\\/[^/]+'
+
+      // or it will match everything after
+      : ''
+  ],
+
+  [
+    // unescape
+    /\\\\\\/g,
+    () => '\\'
+  ]
+]
+
+
+const POSITIVE_REPLACERS = [
+  ...DEFAULT_REPLACER_PREFIX,
 
   // 'f'
   // matches
@@ -267,107 +339,52 @@ const REPLACERS = [
     // 'js' will not match 'js.'
     // 'ab' will not match 'abc'
     /(?:[^*\/])$/,
-    function(match) {
-      // 'js*' will not match 'a.js'
-      // 'js/' will not match 'a.js'
-      // 'js' will match 'a.js' and 'a.js/'
-      return match + '(?=$|\\/)'
-    }
+
+    // 'js*' will not match 'a.js'
+    // 'js/' will not match 'a.js'
+    // 'js' will match 'a.js' and 'a.js/'
+    match => match + '(?=$|\\/)'
   ],
 
-  // starting
-  [
-    // there will be no leading '/' (which has been replaced by section "leading slash")
-    // If starts with '**', adding a '^' to the regular expression also works
-    /^(?=[^\^])/,
-    function (match) {
-      return !/\/(?!$)/.test(this)
-        // > If the pattern does not contain a slash /, Git treats it as a shell glob pattern
-        // Actually, if there is only a trailing slash, git also treats it as a shell glob pattern
-        ? '(?:^|\\/)'
+  ...DEFAULT_REPLACER_SUFFIX
+]
 
-        // > Otherwise, Git treats the pattern as a shell glob suitable for consumption by fnmatch(3)
-        : '^'
-    }
+
+const NEGATIVE_REPLACERS = [
+  ...DEFAULT_REPLACER_PREFIX,
+
+  // #24
+  // The MISSING rule of [gitignore docs](https://git-scm.com/docs/gitignore)
+  // A negative pattern without a trailing wildcard should not
+  // re-include the things inside that directory.
+
+  // eg:
+  // ['node_modules/*', '!node_modules']
+  // should ignore `node_modules/a.js`
+  [
+    /(?:[^*\/])$/,
+    match => match + '(?=$|\\/$)'
   ],
 
-  // two globstars
-  [
-    // Use lookahead assertions so that we could match more than one `'/**'`
-    /\\\/\\\*\\\*(?=\\\/|$)/g,
-
-    // Zero, one or several directories
-    // should not use '*', or it will be replaced by the next replacer
-    function (m, index, str) {
-
-      // Check if it is not the last `'/**'`
-      return index + 6 < str.length
-
-        // case: /**/
-        // > A slash followed by two consecutive asterisks then a slash matches zero or more directories.
-        // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
-        // '/**/'
-        ? '(?:\\/[^\\/]+)*'
-
-        // case: /**
-        // > A trailing `"/**"` matches everything inside.
-
-        // #21: everything inside but it should not include the current folder
-        : '\\/.+'
-    }
-  ],
-
-  // intermediate wildcards
-  [
-    // Never replace escaped '*'
-    // ignore rule '\*' will match the path '*'
-
-    // 'abc.*/' -> go
-    // 'abc.*'  -> skip this rule
-    /(^|[^\\]+)\\\*(?=.+)/g,
-    function(match, p1) {
-      // '*.js' matches '.js'
-      // '*.js' doesn't match 'abc'
-      return p1 + '[^\\/]*'
-    }
-  ],
-
-  // trailing wildcard
-  [
-    /(\\\/)?\\\*$/,
-    function (m, p1) {
-      return p1 === '\\/'
-        // 'a/*' does not match 'a/'
-        // 'a/*' matches 'a/a'
-        // 'a/'
-        ? '\\/[^/]+'
-
-        // or it will match everything after
-        : ''
-    }
-  ],
-
-  [
-    // unescape
-    /\\\\\\/g,
-    function () {
-      return '\\'
-    }
-  ]
+  ...DEFAULT_REPLACER_SUFFIX
 ]
 
 
 // A simple cache, because an ignore rule only has only one certain meaning
-let cache = {}
+const cache = {}
 
 // @param {pattern}
-function regex (pattern) {
-  let r = cache[pattern]
+function make_regex (pattern, negative) {
+  const r = cache[pattern]
   if (r) {
     return r
   }
 
-  let source = REPLACERS.reduce((prev, current) => {
+  const replacers = negative
+    ? NEGATIVE_REPLACERS
+    : POSITIVE_REPLACERS
+
+  const source = replacers.reduce((prev, current) => {
     return prev.replace(current[0], current[1].bind(pattern))
   }, pattern)
 
@@ -382,8 +399,8 @@ if (
   || process.platform === 'win32'
 ) {
 
-  let filter = IgnoreBase.prototype._filter
-  let make_posix = str => /^\\\\\?\\/.test(str)
+  const filter = IgnoreBase.prototype._filter
+  const make_posix = str => /^\\\\\?\\/.test(str)
     || /[^\x00-\x80]+/.test(str)
       ? str
       : str.replace(/\\/g, '/')
