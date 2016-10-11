@@ -529,6 +529,14 @@ describe("cases", function() {
       expect_result(result)
     })
 
+    it('.ignores(path):   ' + description, function () {
+      var ig = ignore().addPattern(patterns)
+
+      Object.keys(paths_object).forEach((path) => {
+        expect(ig.ignores(path)).to.equal(!!paths_object[path])
+      })
+    })
+
     if (
       !process.env.IGNORE_TEST_WIN32
       && process.platform !== 'win32'

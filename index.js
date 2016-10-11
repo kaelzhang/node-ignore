@@ -83,6 +83,10 @@ class IgnoreBase {
     return path => this._filter(path)
   }
 
+  ignores (path) {
+    return !this._filter(path)
+  }
+
   _createRule (pattern) {
     const origin = pattern
     let negative = false
@@ -109,6 +113,7 @@ class IgnoreBase {
     }
   }
 
+  // @returns `Boolean` true if the `path` is NOT ignored
   _filter (path, slices) {
     if (!path) {
       return false
