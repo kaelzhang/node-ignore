@@ -532,7 +532,7 @@ describe("cases", function() {
     it('.ignores(path):   ' + description, function () {
       var ig = ignore().addPattern(patterns)
 
-      Object.keys(paths_object).forEach((path) => {
+      Object.keys(paths_object).forEach(function (path) {
         expect(ig.ignores(path)).to.equal(!!paths_object[path])
       })
     })
