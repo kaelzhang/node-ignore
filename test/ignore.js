@@ -7,6 +7,39 @@ var expect = require('chai').expect
 
 var cases = [
   [
+    'wildcard: special case, escaped wildcard',
+    [
+      '*.html',
+      '!a/b/\*/index.html'
+    ],
+    {
+      'a/b/*/index.html': 0,
+      'a/b/index.html': 1
+    }
+  ],
+  [
+    'wildcard: treated as a shell glob suitable for consumption by fnmatch(3)',
+    [
+      '*.html',
+      '!b/\*/index.html'
+    ],
+    {
+      'a/b/*/index.html': 1,
+      'a/b/index.html': 1
+    }
+  ],
+  [
+    'wildcard: with no escape',
+    [
+      '*.html',
+      '!a/b/*/index.html'
+    ],
+    {
+      'a/b/*/index.html': 0,
+      'a/b/index.html': 1
+    }
+  ],
+  [
     '#24: a negative pattern without a trailing wildcard',
     [
       '/node_modules/*',
