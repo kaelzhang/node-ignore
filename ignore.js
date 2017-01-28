@@ -267,7 +267,6 @@ var DEFAULT_REPLACER_PREFIX = [
 /^\^*\\\*\\\*\\\//,
 
 // '**/foo' <-> 'foo'
-// just remove it
 function () {
   return '^(?:.*\\/)?';
 }]];
@@ -330,10 +329,14 @@ function (match, p1) {
 // trailing wildcard
 [/(\^|\\\/)?\\\*$/, function (match, p1) {
   return (p1
+  // '\^':
   // '/*' does not match ''
   // '/*' does not match everything
+
+  // '\\\/':
   // 'abc/*' does not match 'abc/'
   ? p1 + '[^/]+'
+
   // 'a*' matches 'a'
   // 'a*' matches 'aa'
   : '[^/]*') + '(?=$|\\/$)';

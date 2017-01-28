@@ -13,6 +13,8 @@ Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does n
 - Linux + Node: `0.8` - `7.x`
 - Windows + Node: `0.10` - `7.x`, node < `0.10` is not tested due to the lack of support of appveyor.
 
+Actually, `ignore` does not rely on any versions of node specially.
+
 ## Table Of Main Contents
 
 - [Usage](#usage)

@@ -242,7 +242,6 @@ const DEFAULT_REPLACER_PREFIX = [
     /^\^*\\\*\\\*\\\//,
 
     // '**/foo' <-> 'foo'
-    // just remove it
     () => '^(?:.*\\/)?'
   ]
 ]
@@ -308,10 +307,14 @@ const DEFAULT_REPLACER_SUFFIX = [
     /(\^|\\\/)?\\\*$/,
     (match, p1) => (
       p1
+        // '\^':
         // '/*' does not match ''
         // '/*' does not match everything
+
+        // '\\\/':
         // 'abc/*' does not match 'abc/'
         ? p1 + '[^/]+'
+
         // 'a*' matches 'a'
         // 'a*' matches 'aa'
         : '[^/]*'

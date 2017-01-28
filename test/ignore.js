@@ -367,7 +367,8 @@ var cases = [
       'foo': 1,
       'a/foo': 1,
       'foo/a': 1,
-      'a/foo/a': 1
+      'a/foo/a': 1,
+      'a/b/c/foo/a': 1
     }
   ],
 
