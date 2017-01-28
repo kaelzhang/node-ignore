@@ -7,6 +7,23 @@ var expect = require('chai').expect
 
 var cases = [
   [
+    '#26: .gitignore man page sample',
+    [
+      '# exclude everything except directory foo/bar',
+      '/*',
+      '!/foo',
+      '/foo/*',
+      '!/foo/bar'
+    ],
+    {
+      'no.js': 1,
+      'foo/no.js': 1,
+      'foo/bar/yes.js': 0,
+      'foo/bar/baz/yes.js': 0,
+      'boo/no.js': 1
+    }
+  ],
+  [
     'wildcard: special case, escaped wildcard',
     [
       '*.html',
