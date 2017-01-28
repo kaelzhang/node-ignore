@@ -305,15 +305,18 @@ const DEFAULT_REPLACER_SUFFIX = [
 
   // trailing wildcard
   [
-    /(\\\/)?\\\*$/,
-    (match, p1) => p1 === '\\/'
-      // 'a/*' does not match 'a/'
-      // 'a/*' matches 'a/a'
-      // 'a/'
-      ? '\\/[^/]+(?=$|\\/$)'
+    /(\^|\\\/)?\\\*$/,
+    (match, p1) => (
+      p1
+        // '/*' does not match ''
+        // '/*' does not match everything
+        // 'abc/*' does not match 'abc/'
+        ? p1 + '[^/]+'
+        // 'a*' matches 'a'
+        // 'a*' matches 'aa'
+        : '[^/]*'
 
-      // or it will match everything after
-      : ''
+    ) + '(?=$|\\/$)'
   ],
 
   [
