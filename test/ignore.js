@@ -7,6 +7,19 @@ var expect = require('chai').expect
 
 var cases = [
   [
+    '#25',
+    [
+      '.git/*',
+      '!.git/config',
+      '.ftpconfig'
+    ],
+    {
+      '.ftpconfig': 1,
+      '.git/config': 0,
+      '.git/description': 1
+    }
+  ],
+  [
     '#26: .gitignore man page sample',
     [
       '# exclude everything except directory foo/bar',
