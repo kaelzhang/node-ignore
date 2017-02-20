@@ -1,8 +1,30 @@
-[![Build Status](https://travis-ci.org/kaelzhang/node-ignore.svg?branch=master)](https://travis-ci.org/kaelzhang/node-ignore)
-[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/kaelzhang/node-ignore?branch=master&svg=true)](https://ci.appveyor.com/project/kaelzhang/node-ignore)
-[![npm module downloads per month](http://img.shields.io/npm/dm/ignore.svg)](https://www.npmjs.org/package/ignore)
-[![codecov](https://codecov.io/gh/kaelzhang/node-ignore/branch/master/graph/badge.svg)](https://codecov.io/gh/kaelzhang/node-ignore)
-
+<table><thead>
+  <tr>
+    <th>Linux</th>
+    <th>OS X</th>
+    <th>Windows</th>
+    <th>Coverage</th>
+  </tr>
+</thead><tbody><tr>
+  <td colspan="2" align="center">
+    <a href="https://travis-ci.org/kaelzhang/node-ignore">
+    <img
+      src="https://travis-ci.org/kaelzhang/node-ignore.svg?branch=master"
+      alt="Build Status" /></a>
+  </td>
+  <td align="center">
+    <a href="https://ci.appveyor.com/project/kaelzhang/node-ignore">
+    <img
+      src="https://ci.appveyor.com/api/projects/status/github/kaelzhang/node-ignore?branch=master&svg=true"
+      alt="Windows Build Status" /></a>
+  </td>
+  <td align="center">
+    <a href="https://codecov.io/gh/kaelzhang/node-ignore">
+    <img
+      src="https://codecov.io/gh/kaelzhang/node-ignore/branch/master/graph/badge.svg"
+      alt="Coverage Status" /></a>
+  </td>
+</tr></tbody></table>
 
 # ignore
 
