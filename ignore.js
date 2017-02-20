@@ -408,18 +408,17 @@ function make_regex(pattern, negative) {
 
 // Windows
 // --------------------------------------------------------------
+/* istanbul ignore if  */
 if (process.env.IGNORE_TEST_WIN32 || process.platform === 'win32') {
-  (function () {
 
-    var filter = IgnoreBase.prototype._filter;
-    var make_posix = function make_posix(str) {
-      return (/^\\\\\?\\/.test(str) || /[^\x00-\x80]+/.test(str) ? str : str.replace(/\\/g, '/')
-      );
-    };
+  var filter = IgnoreBase.prototype._filter;
+  var make_posix = function make_posix(str) {
+    return (/^\\\\\?\\/.test(str) || /[^\x00-\x80]+/.test(str) ? str : str.replace(/\\/g, '/')
+    );
+  };
 
-    IgnoreBase.prototype._filter = function (path, slices) {
-      path = make_posix(path);
-      return filter.call(this, path, slices);
-    };
-  })();
+  IgnoreBase.prototype._filter = function (path, slices) {
+    path = make_posix(path);
+    return filter.call(this, path, slices);
+  };
 }

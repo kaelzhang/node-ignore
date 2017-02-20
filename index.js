@@ -405,6 +405,7 @@ function make_regex (pattern, negative) {
 
 // Windows
 // --------------------------------------------------------------
+/* istanbul ignore if  */
 if (
   process.env.IGNORE_TEST_WIN32
   || process.platform === 'win32'

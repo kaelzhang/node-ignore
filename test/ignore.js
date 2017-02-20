@@ -7,6 +7,29 @@ var expect = require('chai').expect
 
 var cases = [
   [
+    'intermediate "\ " should be unescaped to " "',
+    [
+      'abc\\ d',
+      'abc e',
+      'a\\ b\\ c'
+    ],
+    {
+      'abc d': 1,
+      'abc e': 1,
+      'abc/abc d': 1,
+      'abc/abc e': 1,
+      'abc/a b c': 1
+    }
+  ],
+  [
+    'special cases: invalid empty paths, just ignore',
+    [
+    ],
+    {
+      '': 1
+    }
+  ],
+  [
     '#25',
     [
       '.git/*',
@@ -638,3 +661,18 @@ describe("cases", function() {
 function make_win32 (path) {
   return path.replace(/\//g, '\\')
 }
+
+
+describe('for coverage', function () {
+  it('fixes babel class', function () {
+    var constructor = ignore().constructor
+
+    try {
+      constructor()
+    } catch (e) {
+      return
+    }
+
+    expect('there should be an error').to.equal('no error found')
+  })
+})

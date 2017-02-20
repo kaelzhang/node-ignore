@@ -1,6 +1,8 @@
 [![Build Status](https://travis-ci.org/kaelzhang/node-ignore.svg?branch=master)](https://travis-ci.org/kaelzhang/node-ignore)
 [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/kaelzhang/node-ignore?branch=master&svg=true)](https://ci.appveyor.com/project/kaelzhang/node-ignore)
 [![npm module downloads per month](http://img.shields.io/npm/dm/ignore.svg)](https://www.npmjs.org/package/ignore)
+[![codecov](https://codecov.io/gh/kaelzhang/node-ignore/branch/master/graph/badge.svg)](https://codecov.io/gh/kaelzhang/node-ignore)
+
 
 # ignore
 
