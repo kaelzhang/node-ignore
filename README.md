@@ -4,6 +4,7 @@
     <th>OS X</th>
     <th>Windows</th>
     <th>Coverage</th>
+    <th>Downloads</th>
   </tr>
 </thead><tbody><tr>
   <td colspan="2" align="center">
@@ -23,6 +24,12 @@
     <img
       src="https://codecov.io/gh/kaelzhang/node-ignore/branch/master/graph/badge.svg"
       alt="Coverage Status" /></a>
+  </td>
+  <td align="center">
+    <a href="https://www.npmjs.org/package/ignore">
+    <img
+      src="http://img.shields.io/npm/dm/ignore.svg"
+      alt="npm module downloads per month" /></a>
   </td>
 </tr></tbody></table>
 
