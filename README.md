@@ -67,7 +67,8 @@ const paths = [
   '.abc/d/e.js'   // included
 ]
 
-ig.filter(paths)  // ['.abc/d/e.js']
+ig.filter(paths)        // ['.abc/d/e.js']
+ig.ignores('.abc/a.js') // true
 ```
 
 ### As the filter function
