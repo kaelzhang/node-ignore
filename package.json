@@ -5,6 +5,7 @@
   "main": "./ignore.js",
   "files": [
     "ignore.js",
+    "index.d.ts",
     "LICENSE-MIT"
   ],
   "scripts": {
