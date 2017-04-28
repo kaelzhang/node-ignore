@@ -33,6 +33,9 @@ interface Ignore {
   ignores(pathname: string): boolean
 }
 
+/**
+ * Creates new ignore manager.
+ */
 declare function ignore(): Ignore
 
 export = ignore 
