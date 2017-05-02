@@ -23,7 +23,7 @@ interface Ignore {
    * Creates a filter function which could filter 
    * an array of paths with Array.prototype.filter.
    */
-  createFilter(): (path: string) => IngnoreBase
+  createFilter(): (path: string) => Ignore
 
   /**
    * Returns Boolean whether pathname should be ignored.
