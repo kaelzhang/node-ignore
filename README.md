@@ -35,7 +35,7 @@
 
 # ignore
 
-`ignore` is a manager and filter which implemented in pure JavaScript according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
+`ignore` is a manager, filter and parser which implemented in pure JavaScript according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
 Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does not work in the gitignore way. To filter filenames according to .gitignore file, I recommend this module.
 
@@ -51,6 +51,7 @@ Actually, `ignore` does not rely on any versions of node specially.
 - [Usage](#usage)
 - [Guide for 2.x -> 3.x](#upgrade-2x---3x)
 - [Contributing](#contributing)
+- [Related Packages](#related)
 
 ## Usage
 
