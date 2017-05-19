@@ -235,4 +235,4 @@ So use `bash install.sh` to install dependencies and `bash test.sh` to run test 
 
 ## Related
 
-- [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matching files using patterns and filter out according to gitignore rules.
+- [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matches files using patterns and filters them according to gitignore rules.
