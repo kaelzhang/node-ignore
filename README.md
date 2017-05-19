@@ -232,3 +232,7 @@ So use `bash install.sh` to install dependencies and `bash test.sh` to run test 
 - [azproduction](https://github.com/azproduction) *Mikhail Davydov*
 - [TrySound](https://github.com/TrySound) *Bogdan Chadkin*
 - [JanMattner](https://github.com/JanMattner) *Jan Mattner*
+
+## Related
+
+- [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matching files using patterns and filter out according to gitignore rules.
