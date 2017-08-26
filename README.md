@@ -179,8 +179,7 @@ ig.ignores('abc')
 ig.ignores(path.join('./abc'))  // path.join('./abc') -> 'abc'
 ```
 
-- Each `pathname` here should be a relative path to the directory of git ignore rules.
-
+- In other words, each `pathname` here should be a relative path to the directory of the git ignore rules.
 
 Suppose the dir structure is:
 
