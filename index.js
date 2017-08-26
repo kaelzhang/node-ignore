@@ -407,8 +407,12 @@ function make_regex (pattern, negative) {
 // --------------------------------------------------------------
 /* istanbul ignore if  */
 if (
-  process.env.IGNORE_TEST_WIN32
-  || process.platform === 'win32'
+  // Detect `process` so that it can run in browsers.
+  typeof process !== 'undefined'
+  && (
+    process.env && process.env.IGNORE_TEST_WIN32
+    || process.platform === 'win32'
+  )
 ) {
 
   const filter = IgnoreBase.prototype._filter
