@@ -12,7 +12,7 @@
 
 /sharedTools/external/*
 
-Thumbs.db
+thumbs.db
 
 /packs
 
@@ -59,4 +59,3 @@ Thumbs.db
 .sonar/*
 
 .*.sw?
-
