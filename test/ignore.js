@@ -274,7 +274,9 @@ var cases = [
       'cde  ': 1,
       'cde ': 0,
       'cde   ': 0
-    }
+    },
+    false,
+    true
   ],
   [
     'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
@@ -587,6 +589,7 @@ describe("cases", function() {
     var description = c[0]
     var patterns = c[1]
     var paths_object = c[2]
+    var skip_test_test = c[4]
 
     if (typeof patterns === 'string') {
       patterns = readPatterns(patterns)
@@ -640,8 +643,11 @@ describe("cases", function() {
     })
 
 
+    // In some platform, the behavior of git command about trailing spaces
+    // is not implemented as documented, so skip test
+    !skip_test_test
     // Tired to handle test cases for test cases for windows
-    !IS_WINDOWS
+    && !IS_WINDOWS
     // `git check-ignore` could only handles non-empty filenames
     && paths.some(Boolean)
     // `git check-ignore` will by default ignore .git/ directory
