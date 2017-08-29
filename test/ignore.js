@@ -4,6 +4,17 @@
 var fs = require('fs')
 var ignore = require('../')
 var expect = require('chai').expect
+var spawn = require('spawn-sync')
+var tmp = require('tmp').dirSync
+var mkdirp = require('mkdirp').sync
+var path = require('path')
+var rm = require('rimraf').sync
+var removeEnding = require('pre-suf').removeEnding
+
+
+var IS_WINDOWS = process.platform === 'win32'
+var SHOULD_TEST_WINDOWS = !process.env.IGNORE_TEST_WIN32
+  && IS_WINDOWS
 
 var cases = [
   [
@@ -63,7 +74,7 @@ var cases = [
     'wildcard: special case, escaped wildcard',
     [
       '*.html',
-      '!a/b/\*/index.html'
+      '!a/b/\\*/index.html'
     ],
     {
       'a/b/*/index.html': 0,
@@ -227,7 +238,6 @@ var cases = [
     ],
     {
       'a': 0,
-      '/a': 0,
       'a/b/c': 0
     }
   ],
@@ -263,7 +273,8 @@ var cases = [
       'cde  ': 1,
       'cde ': 0,
       'cde   ': 0
-    }
+    },
+    true
   ],
   [
     'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
@@ -567,13 +578,12 @@ function readPatterns(file) {
   return fs.readFileSync(file).toString()
 }
 
-describe("cases", function() {
-  (
-    cases_to_test_only.length
-      ? cases_to_test_only
-      : cases
+var real_cases = cases_to_test_only.length
+  ? cases_to_test_only
+  : cases
 
-  ).forEach(function(c) {
+describe("cases", function() {
+  real_cases.forEach(function(c) {
     var description = c[0]
     var patterns = c[1]
     var paths_object = c[2]
@@ -582,10 +592,15 @@ describe("cases", function() {
       patterns = readPatterns(patterns)
     }
 
+    // All paths to test
     var paths = Object.keys(paths_object)
-    var expected = paths.filter(function(p) {
+
+    // paths that NOT ignored
+    var expected = paths
+    .filter(function(p) {
       return !paths_object[p]
     })
+    .sort()
 
     function expect_result(result, mapper) {
       if (mapper) {
@@ -624,14 +639,22 @@ describe("cases", function() {
       })
     })
 
-    if (
-      !process.env.IGNORE_TEST_WIN32
-      && process.platform !== 'win32'
-    ) {
-      return
-    }
 
-    it('win32: .filter(): ' + description, function() {
+    // Tired to handle test cases for test cases for windows
+    !IS_WINDOWS
+    // `git check-ignore` could only handles non-empty filenames
+    && paths.some(Boolean)
+    // `git check-ignore` will by default ignore .git/ directory
+    // which `node-ignore` should not do as well
+    && expected.every(notGitBuiltin)
+    && it('test for test:    ' + description, function () {
+      var result = getNativeGitIgnoreResults(patterns, paths).sort()
+
+      console.log(JSON.stringify(result, null, 2), JSON.stringify(expected, null, 2))
+      expect_result(result)
+    })
+
+    SHOULD_TEST_WINDOWS && it('win32: .filter(): ' + description, function() {
       var win_paths = paths.map(make_win32)
 
       var ig = ignore()
@@ -676,3 +699,106 @@ describe('for coverage', function () {
     expect('there should be an error').to.equal('no error found')
   })
 })
+
+
+var tmpCount = 0
+var tmpRoot = tmp().name
+
+
+function createUniqueTmp () {
+  var dir = path.join(tmpRoot, String(tmpCount ++))
+  // Make sure the dir not exists,
+  // clean up dirty things
+  rm(dir)
+  console.log('exists', fs.existsSync(dir))
+  mkdirp(dir)
+  return dir
+}
+
+
+function getNativeGitIgnoreResults (rules, paths) {
+  var dir = createUniqueTmp()
+
+  var gitignore = rules.join('\n')
+console.log('gitignore', gitignore)
+  touch(dir, '.gitignore', gitignore)
+console.log('dir', dir)
+  var content = fs.readFileSync(path.join(dir, '.gitignore')).toString()
+console.log('.gitignore content', fs.readFileSync(path.join(dir, '.gitignore')).toString(), content === gitignore)
+
+  paths.forEach(function (path, i) {
+    if (path === '.gitignore') {
+      return
+    }
+
+    // We do not know if a path is NOT a file,
+    // if we:
+    // `touch a`
+    // and then `touch a/b`, then boooom!
+    if (containsInOthers(path, i, paths)) {
+      return
+    }
+
+    touch(dir, path)
+  })
+
+  spawn('git', ['init'], {
+    cwd: dir
+  })
+
+  spawn('git', ['add', '-A'], {
+    cwd: dir
+  })
+
+  return paths
+  .filter(function (path) {
+    var out = spawn('git', [
+      'check-ignore',
+      // `spawn` will escape the special cases for us
+      path
+    ], {
+      cwd: dir
+    }).stdout.toString().trim()
+
+console.log('out:', out, path)
+    var ignored = out === path
+    return !ignored
+  })
+}
+
+
+function touch (root, file, content) {
+  // file = specialCharInFileOrDir(file)
+
+  var dirs = file.split('/')
+  var basename = dirs.pop()
+
+  var dir = dirs.join('/')
+
+  if (dir) {
+    mkdirp(path.posix.join(root, dir))
+  }
+
+console.log(path.join(root, file), content)
+  fs.writeFileSync(path.join(root, file), content || '')
+}
+
+
+function containsInOthers (path, index, paths) {
+  path = removeEnding(path, '/')
+
+  return paths.some((p, i) => {
+    if (index === i) {
+      return
+    }
+
+    p = removeEnding(p, '/')
+
+    return p.indexOf(path) === 0 && p[path.length] === '/'
+  })
+}
+
+
+function notGitBuiltin (filename) {
+  return filename.indexOf('.git/') !== 0
+}
