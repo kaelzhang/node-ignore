@@ -793,7 +793,7 @@ function touch (root, file, content) {
 function containsInOthers (path, index, paths) {
   path = removeEnding(path, '/')
 
-  return paths.some((p, i) => {
+  return paths.some(function (p, i) {
     if (index === i) {
       return
     }
