@@ -101,6 +101,7 @@ ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
   - Handle trailing whitespaces:
     - `'a '`(one space) should not match `'a  '`(two spaces).
     - `'a \ '` matches `'a  '`
+  - All test cases are verified with the result of `git check-ignore`.
 
 ## Methods
 

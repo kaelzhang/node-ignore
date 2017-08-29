@@ -260,9 +260,10 @@ var cases = [
     [
       'abc\\  ', // only one space left -> (abc )
       'bcd  ',   // no space left -> (bcd)
-      'cde \\ '  // -> (cde  )
+      'cde \\ '  // two spaces -> (cde  )
     ],
     {
+      // nothing to do with backslashes
       'abc\\  ': 0,
       'abc  ': 0,
       'abc ': 1,
@@ -273,8 +274,7 @@ var cases = [
       'cde  ': 1,
       'cde ': 0,
       'cde   ': 0
-    },
-    true
+    }
   ],
   [
     'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
@@ -650,7 +650,6 @@ describe("cases", function() {
     && it('test for test:    ' + description, function () {
       var result = getNativeGitIgnoreResults(patterns, paths).sort()
 
-      console.log(JSON.stringify(result, null, 2), JSON.stringify(expected, null, 2))
       expect_result(result)
     })
 
@@ -710,7 +709,6 @@ function createUniqueTmp () {
   // Make sure the dir not exists,
   // clean up dirty things
   rm(dir)
-  console.log('exists', fs.existsSync(dir))
   mkdirp(dir)
   return dir
 }
@@ -719,12 +717,11 @@ function createUniqueTmp () {
 function getNativeGitIgnoreResults (rules, paths) {
   var dir = createUniqueTmp()
 
-  var gitignore = rules.join('\n')
-console.log('gitignore', gitignore)
+  var gitignore = typeof rules === 'string'
+    ? rules
+    : rules.join('\n')
+
   touch(dir, '.gitignore', gitignore)
-console.log('dir', dir)
-  var content = fs.readFileSync(path.join(dir, '.gitignore')).toString()
-console.log('.gitignore content', fs.readFileSync(path.join(dir, '.gitignore')).toString(), content === gitignore)
 
   paths.forEach(function (path, i) {
     if (path === '.gitignore') {
@@ -758,9 +755,10 @@ console.log('.gitignore content', fs.readFileSync(path.join(dir, '.gitignore')).
       path
     ], {
       cwd: dir
-    }).stdout.toString().trim()
+    }).stdout.toString()
 
-console.log('out:', out, path)
+    out = removeEnding(out, '\n')
+
     var ignored = out === path
     return !ignored
   })
@@ -779,8 +777,10 @@ function touch (root, file, content) {
     mkdirp(path.posix.join(root, dir))
   }
 
-console.log(path.join(root, file), content)
-  fs.writeFileSync(path.join(root, file), content || '')
+  // abc/ -> should not create file, but only dir
+  if (basename) {
+    fs.writeFileSync(path.join(root, file), content || '')
+  }
 }
 
 
@@ -792,9 +792,8 @@ function containsInOthers (path, index, paths) {
       return
     }
 
-    p = removeEnding(p, '/')
-
-    return p.indexOf(path) === 0 && p[path.length] === '/'
+    return p === path
+    || p.indexOf(path) === 0 && p[path.length] === '/'
   })
 }
 
