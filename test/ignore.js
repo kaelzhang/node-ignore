@@ -780,7 +780,7 @@ function touch (root, file, content) {
   var dir = dirs.join('/')
 
   if (dir) {
-    mkdirp(path.posix.join(root, dir))
+    mkdirp(path.join(root, dir))
   }
 
   // abc/ -> should not create file, but only dir
