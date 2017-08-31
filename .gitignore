@@ -22,6 +22,7 @@ index.php
 *.vi
 *~
 *.sass-cache
+package-lock.json
 
 # OS or Editor folders
 .DS_Store
@@ -50,5 +51,3 @@ combo/
 reference/
 jscoverage_lib/
 temp/
-
-
