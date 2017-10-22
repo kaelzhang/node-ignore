@@ -6,6 +6,8 @@ abort() {
   exit 1
 }
 
+rm -rf ./coverage
+
 type babel && babel -o ignore.js index.js || abort 'warn: babel failed'
 
-./node_modules/.bin/mocha --reporter spec ./test/ignore.js || abort 'test failed'
+npm test

@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "3.3.5",
+  "version": "3.3.6",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "./ignore.js",
   "files": [
@@ -44,7 +44,7 @@
     "mkdirp": "^0.5.1",
     "mocha": "~1.13.0",
     "pre-suf": "^1.0.4",
-    "rimraf": "^2.6.1",
+    "rimraf": "^2.6.2",
     "spawn-sync": "^1.0.15",
     "tmp": "0.0.33"
   }

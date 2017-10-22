@@ -83,7 +83,7 @@ var IgnoreBase = function () {
       return pattern && typeof pattern === 'string' && !REGEX_BLANK_LINE.test(pattern)
 
       // > A line starting with # serves as a comment.
-       && pattern.indexOf('#') !== 0;
+      && pattern.indexOf('#') !== 0;
     }
   }, {
     key: 'filter',
@@ -409,7 +409,9 @@ function make_regex(pattern, negative) {
 // Windows
 // --------------------------------------------------------------
 /* istanbul ignore if  */
-if (process.env.IGNORE_TEST_WIN32 || process.platform === 'win32') {
+if (
+// Detect `process` so that it can run in browsers.
+typeof process !== 'undefined' && (process.env && process.env.IGNORE_TEST_WIN32 || process.platform === 'win32')) {
 
   var filter = IgnoreBase.prototype._filter;
   var make_posix = function make_posix(str) {
