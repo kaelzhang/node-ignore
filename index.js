@@ -17,6 +17,7 @@ const REGEX_LEADING_EXCAPED_HASH = /^\\#/
 const SLASH = '/'
 const KEY_IGNORE = typeof Symbol !== 'undefined'
   ? Symbol.for('node-ignore')
+  /* istanbul ignore next */
   : 'node-ignore'
 
 
