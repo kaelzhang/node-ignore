@@ -706,6 +706,32 @@ describe('for coverage', function () {
 })
 
 
+describe('github issues', function () {
+  it('#32', function () {
+    var KEY_IGNORE = typeof Symbol !== 'undefined'
+      ? Symbol.for('node-ignore')
+      : 'node-ignore';
+
+    var a = ignore().add(['.abc/*', '!.abc/d/'])
+
+    // aa is actually not an IgnoreBase instance
+    var aa = {}
+    aa._rules = a._rules.slice()
+    aa[KEY_IGNORE] = true
+
+    var b = ignore().add(aa).add('!.abc/e/')
+
+    var paths = [
+      '.abc/a.js',    // filtered out
+      '.abc/d/e.js',  // included
+      '.abc/e/e.js'   // included by b, filtered out by a
+    ]
+
+    expect(a.filter(paths)).to.eql(['.abc/d/e.js']);
+    expect(b.filter(paths)).to.eql(['.abc/d/e.js', '.abc/e/e.js']);
+  })
+})
+
 var tmpCount = 0
 var tmpRoot = tmp().name
 

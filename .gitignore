@@ -1,6 +1,7 @@
 # coverage
 coverage
 .nyc_output
+/ignore.js
 
 # yarn
 *.lock
@@ -23,6 +24,9 @@ index.php
 *~
 *.sass-cache
 package-lock.json
+
+# npm package
+*.tgz
 
 # OS or Editor folders
 .DS_Store

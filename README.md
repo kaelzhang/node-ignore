@@ -51,7 +51,8 @@ Actually, `ignore` does not rely on any versions of node specially.
 - [Usage](#usage)
 - [Guide for 2.x -> 3.x](#upgrade-2x---3x)
 - [Contributing](#contributing)
-- [Related Packages](#related)
+- Related Packages
+  - [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matches files using patterns and filters them according to gitignore rules.
 
 ## Usage
 
@@ -251,7 +252,3 @@ So use `bash install.sh` to install dependencies and `bash test.sh` to run test 
 - [azproduction](https://github.com/azproduction) *Mikhail Davydov*
 - [TrySound](https://github.com/TrySound) *Bogdan Chadkin*
 - [JanMattner](https://github.com/JanMattner) *Jan Mattner*
-
-## Related
-
-- [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matches files using patterns and filters them according to gitignore rules.

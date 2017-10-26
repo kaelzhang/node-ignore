@@ -15,11 +15,15 @@ const REGEX_BLANK_LINE = /^\s+$/
 const REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/
 const REGEX_LEADING_EXCAPED_HASH = /^\\#/
 const SLASH = '/'
+const KEY_IGNORE = typeof Symbol !== 'undefined'
+  ? Symbol.for('node-ignore')
+  : 'node-ignore'
 
 
 class IgnoreBase {
   constructor () {
     this._rules = []
+    this[KEY_IGNORE] = true
     this._initCache()
   }
 
@@ -52,7 +56,8 @@ class IgnoreBase {
   }
 
   _addPattern (pattern) {
-    if (pattern instanceof IgnoreBase) {
+    // #32
+    if (pattern && pattern[KEY_IGNORE]) {
       this._rules = this._rules.concat(pattern._rules)
       this._added = true;
       return

@@ -1,12 +1,11 @@
 {
   "name": "ignore",
-  "version": "3.3.6",
+  "version": "3.3.7",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "./ignore.js",
   "files": [
     "ignore.js",
-    "index.d.ts",
-    "LICENSE-MIT"
+    "index.d.ts"
   ],
   "scripts": {
     "test": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec ./test/ignore.js && codecov",
