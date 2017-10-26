@@ -174,6 +174,14 @@ Filters the given array of pathnames, and returns the filtered array.
 // WRONG
 ig.ignores('./abc')
 
+// WRONG, for it will never happen.
+// If the gitignore rule locates at the root directory,
+// `'/abc'` should be changed to `'abc'`.
+// ```
+// path.relative('/', '/abc')  -> 'abc'
+// ```
+ig.ignores('/abc')
+
 // Right
 ig.ignores('abc')
 

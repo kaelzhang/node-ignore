@@ -133,12 +133,6 @@ class IgnoreBase {
       // path/to/a.js
       // ['path', 'to', 'a.js']
       slices = path.split(SLASH)
-
-      // '/b/a.js' -> ['', 'b', 'a.js'] -> ['']
-      if (slices.length && !slices[0]) {
-        slices = slices.slice(1)
-        slices[0] = SLASH + slices[0]
-      }
     }
 
     slices.pop()
