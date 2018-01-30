@@ -10,10 +10,10 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "babel -o ignore.js index.js",
-    "tsc": "tsc ./test/ts/simple.ts",
-    "test": "npm run tsc && npm run build && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec ./test/ignore.js && codecov",
-    "test-no-cov": "npm run tsc && npm run build && mocha --reporter spec ./test/ignore.js",
-    "cov-report": "istanbul report"
+    "test": "npm run build && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec ./test/ignore.js && codecov",
+    "test-no-cov": "npm run build && mocha --reporter spec ./test/ignore.js",
+    "test:tsc": "tsc ./test/ts/simple.ts",
+    "test:git": "mocha --reporter spec ./test/git-check-ignore.js"
   },
   "repository": {
     "type": "git",
