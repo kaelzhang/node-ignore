@@ -19,12 +19,15 @@ const KEY_IGNORE = typeof Symbol !== 'undefined'
   ? Symbol.for('node-ignore')
   /* istanbul ignore next */
   : 'node-ignore'
-
+const {defineProperty} = Object
+const define = typeof defineProperty === 'function'
+  ? (object, key, value) => defineProperty(object, key, {value})
+  : object[key] = value
 
 class IgnoreBase {
   constructor () {
     this._rules = []
-    this[KEY_IGNORE] = true
+    define(this, KEY_IGNORE, true)
     this._initCache()
   }
 
