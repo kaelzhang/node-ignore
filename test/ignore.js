@@ -18,6 +18,20 @@ var SHOULD_TEST_WINDOWS = !process.env.IGNORE_TEST_WIN32
 
 var cases = [
   [
+    '#38',
+    [
+      '*',
+      '!*/',
+      '!foo/bar'
+    ],
+    {
+      'a': 1,
+      'b/c': 1,
+      'foo/bar': 0,
+      'foo/e': 1
+    }
+  ],
+  [
     'intermediate "\ " should be unescaped to " "',
     [
       'abc\\ d',
@@ -653,9 +667,8 @@ describe("cases", function() {
     // `git check-ignore` will by default ignore .git/ directory
     // which `node-ignore` should not do as well
     && expected.every(notGitBuiltin)
-    && it('test for test:    ' + description, function () {
+    && it('git check-ignore: ' + description, function () {
       var result = getNativeGitIgnoreResults(patterns, paths).sort()
-
       expect_result(result)
     })
 
@@ -779,7 +792,7 @@ function getNativeGitIgnoreResults (rules, paths) {
     cwd: dir
   })
 
-  return paths
+  const p = paths
   .filter(function (path) {
     var out = spawn('git', [
       'check-ignore',
@@ -794,6 +807,8 @@ function getNativeGitIgnoreResults (rules, paths) {
     var ignored = out === path
     return !ignored
   })
+
+  return p
 }
 
 

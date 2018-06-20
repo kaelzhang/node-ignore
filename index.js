@@ -364,7 +364,7 @@ const POSITIVE_REPLACERS = [
 const NEGATIVE_REPLACERS = [
   ...DEFAULT_REPLACER_PREFIX,
 
-  // #24
+  // #24, #38
   // The MISSING rule of [gitignore docs](https://git-scm.com/docs/gitignore)
   // A negative pattern without a trailing wildcard should not
   // re-include the things inside that directory.
@@ -373,7 +373,7 @@ const NEGATIVE_REPLACERS = [
   // ['node_modules/*', '!node_modules']
   // should ignore `node_modules/a.js`
   [
-    /(?:[^*\/])$/,
+    /(?:[^*])$/,
     match => match + '(?=$|\\/$)'
   ],
 
