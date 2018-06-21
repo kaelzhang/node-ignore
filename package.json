@@ -2,18 +2,20 @@
   "name": "ignore",
   "version": "3.3.10",
   "description": "Ignore is a manager and filter for .gitignore rules.",
-  "main": "./ignore.js",
   "files": [
-    "ignore.js",
+    "legacy.js",
+    "index.js",
     "index.d.ts"
   ],
   "scripts": {
     "prepublish": "npm run build",
-    "build": "babel -o ignore.js index.js",
-    "test": "npm run build && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec ./test/ignore.js && codecov",
-    "test-no-cov": "npm run build && mocha --reporter spec ./test/ignore.js",
+    "build": "babel -o legacy.js index.js",
     "test:tsc": "tsc ./test/ts/simple.ts",
-    "test:git": "mocha --reporter spec ./test/git-check-ignore.js"
+    "test:git": "tap test/git-check-ignore.js",
+    "test:ignore": "tap test/ignore.js --coverage",
+    "test-no-cov": "npm run build && npm run test:tsc && npm run test:git && npm run test:ignore",
+    "test": "npm run test-no-cov",
+    "posttest": "tap --coverage-report=text-lcov && codecov"
   },
   "repository": {
     "type": "git",
@@ -50,5 +52,8 @@
     "tap": "^12.0.1",
     "tmp": "0.0.33",
     "typescript": "^2.9.2"
+  },
+  "engines": {
+    "node": ">= 4"
   }
 }

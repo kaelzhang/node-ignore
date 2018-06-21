@@ -1,4 +1,4 @@
-var expect = require('chai').expect
+var test = require('tap').test
 var spawn = require('spawn-sync')
 var tmp = require('tmp').dirSync
 var mkdirp = require('mkdirp').sync
@@ -9,34 +9,6 @@ var removeEnding = require('pre-suf').removeEnding
 var cases = require('./fixtures/cases')
 
 var IS_WINDOWS = process.platform === 'win32'
-
-describe("cases", function() {
-  cases(function (
-    description,
-    patterns,
-    paths_object,
-    skip_test_test,
-    paths,
-    expected,
-    expect_result
-  ) {
-    // In some platform, the behavior of git command about trailing spaces
-    // is not implemented as documented, so skip test
-    !skip_test_test
-    // Tired to handle test cases for test cases for windows
-    && !IS_WINDOWS
-    // `git check-ignore` could only handles non-empty filenames
-    && paths.some(Boolean)
-    // `git check-ignore` will by default ignore .git/ directory
-    // which `node-ignore` should not do as well
-    && expected.every(notGitBuiltin)
-    && it('test for test:    ' + description, function () {
-      var result = getNativeGitIgnoreResults(patterns, paths).sort()
-
-      expect_result(result)
-    })
-  })
-})
 
 function getNativeGitIgnoreResults (rules, paths) {
   var dir = createUniqueTmp()
@@ -134,3 +106,30 @@ function containsInOthers (path, index, paths) {
 function notGitBuiltin (filename) {
   return filename.indexOf('.git/') !== 0
 }
+
+cases(function (
+  description,
+  patterns,
+  paths_object,
+  skip_test_test,
+  paths,
+  expected,
+  expect_result
+) {
+  // In some platform, the behavior of git command about trailing spaces
+  // is not implemented as documented, so skip test
+  !skip_test_test
+  // Tired to handle test cases for test cases for windows
+  && !IS_WINDOWS
+  // `git check-ignore` could only handles non-empty filenames
+  && paths.some(Boolean)
+  // `git check-ignore` will by default ignore .git/ directory
+  // which `node-ignore` should not do as well
+  && expected.every(notGitBuiltin)
+  && test('test for test:    ' + description, function (t) {
+    var result = getNativeGitIgnoreResults(patterns, paths).sort()
+
+    expect_result(t, result)
+    t.end()
+  })
+})

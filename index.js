@@ -20,9 +20,7 @@ const KEY_IGNORE = typeof Symbol !== 'undefined'
   /* istanbul ignore next */
   : 'node-ignore'
 const {defineProperty} = Object
-const define = typeof defineProperty === 'function'
-  ? (object, key, value) => defineProperty(object, key, {value})
-  : object[key] = value
+const define = (object, key, value) => defineProperty(object, key, {value})
 
 class IgnoreBase {
   constructor () {

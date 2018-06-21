@@ -1,6 +1,5 @@
 var fs = require('fs')
 var path = require('path')
-var expect = require('chai').expect
 
 function readPatterns(file) {
   file = path.join(__dirname, file)
@@ -615,12 +614,12 @@ module.exports = function (iteratee) {
     })
     .sort()
 
-    function expect_result(result, mapper) {
+    function expect_result(t, result, mapper) {
       if (mapper) {
         expected = expected.map(mapper)
       }
 
-      expect(result.sort()).to.deep.equal(expected.sort())
+      t.deepEqual(result.sort(), expected.sort())
     }
 
     iteratee(
