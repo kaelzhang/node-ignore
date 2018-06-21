@@ -17,6 +17,20 @@ const KEY_IGNORE = typeof Symbol !== 'undefined'
 const define = (object, key, value) =>
   Object.defineProperty(object, key, {value})
 
+const REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g
+
+// Sanitize the range of a regular expression
+// The cases are complicated, see test cases for details
+const sanitizeRange = range => {
+  return range.replace(
+    REGEX_REGEXP_RANGE,
+    (match, from, to) => from.charCodeAt(0) <= to.charCodeAt(0)
+      ? match
+      // Invalid range (out of order), then sanitize it
+      : ''
+  )
+}
+
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
 // > but it would only find a match with a directory.
@@ -74,7 +88,7 @@ const DEFAULT_REPLACER_PREFIX = [
     // >    (in this case a, b, or c);
     /\[([^\]/]*)($|\])/g,
     (match, p1, p2) => p2 === ']'
-      ? `[${p1}]`
+      ? `[${sanitizeRange(p1)}]`
       : `\\${match}`
   ],
 
@@ -255,7 +269,7 @@ const NEGATIVE_REPLACERS = [
 const cache = {}
 
 // @param {pattern}
-const make_regex = (pattern, negative) => {
+const make_regex = (pattern, negative, ignorecase) => {
   const r = cache[pattern]
   if (r) {
     return r
@@ -270,7 +284,9 @@ const make_regex = (pattern, negative) => {
     pattern
   )
 
-  return cache[pattern] = new RegExp(source, 'i')
+  return cache[pattern] = ignorecase
+    ? new RegExp(source, 'i')
+    : new RegExp(source)
 }
 
 // > A blank line matches no files, so it can serve as a separator for readability.
@@ -281,7 +297,7 @@ const checkPattern = pattern => pattern
   // > A line starting with # serves as a comment.
   && pattern.indexOf('#') !== 0
 
-const createRule = pattern => {
+const createRule = (pattern, ignorecase) => {
   const origin = pattern
   let negative = false
 
@@ -299,7 +315,7 @@ const createRule = pattern => {
   // >   begin with a hash.
   .replace(REGEX_LEADING_EXCAPED_HASH, '#')
 
-  const regex = make_regex(pattern, negative)
+  const regex = make_regex(pattern, negative, ignorecase)
 
   return {
     origin,
@@ -310,8 +326,11 @@ const createRule = pattern => {
 }
 
 class IgnoreBase {
-  constructor () {
+  constructor ({
+    ignorecase = true
+  } = {}) {
     this._rules = []
+    this._ignorecase = ignorecase
     define(this, KEY_IGNORE, true)
     this._initCache()
   }
@@ -353,7 +372,7 @@ class IgnoreBase {
     }
 
     if (checkPattern(pattern)) {
-      const rule = createRule(pattern)
+      const rule = createRule(pattern, this._ignorecase)
       this._added = true
       this._rules.push(rule)
     }

@@ -132,6 +132,70 @@ const cases = [
     }
   ],
   [
+    // [0-z] represents 0-0A-Za-z
+    'special range: [0-z]',
+    [
+      '*.[0-z]'
+    ],
+    {
+      'a.0': 1,
+      'a.9': 1,
+      'a.00': 0,
+      'a.a': 1,
+      'a.z': 1,
+      'a.zz': 0
+    }
+  ],
+  [
+    // If range is out of order, then omitted
+    'special case: range out of order: [a-9]',
+    [
+      '*.[a-9]'
+    ],
+    {
+      'a.0': 0,
+      'a.-': 0,
+      'a.9': 0
+    }
+  ],
+  [
+    // Just treat it as normal character set
+    'special case: range-like character set',
+    [
+      '*.[a-]'
+    ],
+    {
+      'a.a': 1,
+      'a.-': 1,
+      'a.b': 0
+    }
+  ],
+  [
+    'special case: the combination of range and set',
+    [
+      '*.[a-z01]'
+    ],
+    {
+      'a.a': 1,
+      'a.b': 1,
+      'a.z': 1,
+      'a.0': 1,
+      'a.1': 1,
+      'a.2': 0
+    }
+  ],
+  [
+    'special case: 1 step range',
+    [
+      '*.[0-0]'
+    ],
+    {
+      'a.0': 1,
+      'a.1': 0,
+      'a.-': 0
+    }
+  ],
+  [
     'related to #38',
     [
       '*',
