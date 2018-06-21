@@ -56,3 +56,16 @@ test('#32', t => {
   t.deepEqual(b.filter(paths), ['.abc/d/e.js', '.abc/e/e.js'])
   t.end()
 })
+
+test('options.ignorecase', t => {
+  const ig = ignore({
+    ignorecase: false
+  })
+
+  ig.add('*.[jJ][pP]g')
+
+  t.is(ig.ignores('a.jpg'), true)
+  t.is(ig.ignores('a.JPg'), true)
+  t.is(ig.ignores('a.JPG'), false)
+  t.end()
+})

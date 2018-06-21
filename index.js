@@ -21,15 +21,14 @@ const REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g
 
 // Sanitize the range of a regular expression
 // The cases are complicated, see test cases for details
-const sanitizeRange = range => {
-  return range.replace(
-    REGEX_REGEXP_RANGE,
-    (match, from, to) => from.charCodeAt(0) <= to.charCodeAt(0)
-      ? match
-      // Invalid range (out of order), then sanitize it
-      : ''
-  )
-}
+const sanitizeRange = range => range.replace(
+  REGEX_REGEXP_RANGE,
+  (match, from, to) => from.charCodeAt(0) <= to.charCodeAt(0)
+    ? match
+    // Invalid range (out of order) which is ok for gitignore rules but
+    //   fatal for JavaScript regular expression, so eliminate it.
+    : ''
+)
 
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
@@ -95,7 +94,7 @@ const DEFAULT_REPLACER_PREFIX = [
   [
     // > a question mark (?) matches a single character
     /(?!\\)\?/g,
-    match => '[^/]'
+    () => '[^/]'
   ],
 
   // leading slash
@@ -461,4 +460,4 @@ if (
   }
 }
 
-module.exports = () => new IgnoreBase()
+module.exports = options => new IgnoreBase(options)
