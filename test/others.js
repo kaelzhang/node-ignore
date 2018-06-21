@@ -56,5 +56,3 @@ test('#32', t => {
   t.deepEqual(b.filter(paths), ['.abc/d/e.js', '.abc/e/e.js'])
   t.end()
 })
-
-test('')
