@@ -4,7 +4,7 @@ test/ts/*.js
 # coverage
 coverage
 .nyc_output
-/ignore.js
+/legacy.js
 
 # yarn
 *.lock

@@ -46,6 +46,8 @@ Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does n
 
 Actually, `ignore` does not rely on any versions of node specially.
 
+Since `4.0.0`, ignore will no longer support `node < 6`, to use in node < 6, `require('ignore/legacy')`.
+
 ## Table Of Main Contents
 
 - [Usage](#usage)
@@ -57,7 +59,7 @@ Actually, `ignore` does not rely on any versions of node specially.
 ## Usage
 
 ```js
-const ignore = require('ignore')
+import ignore from 'ignore'
 const ig = ignore().add(['.abc/*', '!.abc/d/'])
 ```
 
@@ -140,7 +142,7 @@ REMOVED in `3.x` for now.
 To upgrade `ignore@2.x` up to `3.x`, use
 
 ```js
-const fs = require('fs')
+import fs from 'fs'
 
 if (fs.existsSync(filename)) {
   ignore().add(fs.readFileSync(filename).toString())
@@ -217,7 +219,7 @@ Then the `paths` might be like this:
 Usually, you could use [`glob`](http://npmjs.org/package/glob) with `option.mark = true` to fetch the structure of the current directory:
 
 ```js
-const glob = require('glob')
+import glob from 'glob'
 
 glob('**', {
   // Adds a / character to directory matches.
@@ -246,17 +248,23 @@ Returns `function(path)` the filter function.
 - `ignore()` instance is no longer an [`EventEmitter`](nodejs.org/api/events.html), and all events are unnecessary and removed.
 - `.addIgnoreFile()` is removed, see the [.addIgnoreFile](#addignorefilepath) section for details.
 
+## Upgrade 3.x -> 4.x
+
+Since `4.0.0`, `ignore` will no longer support node < 6, to use `ignore` in node < 6:
+
+```js
+var ignore = require('ignore/legacy')
+```
+
 ****
-
-## Contributing
-
-The code of `node-ignore` is based on es6 and babel, but babel and its preset is not included in the `dependencies` field of package.json, so that the installation process of test cases will not fail in older versions of node.
-
-So use `bash install.sh` to install dependencies and `bash test.sh` to run test cases in your local machine.
 
 #### Collaborators
 
+- [whitecolor](https://github.com/whitecolor) *Alex*
 - [SamyPesse](https://github.com/SamyPesse) *Samy Pessé*
 - [azproduction](https://github.com/azproduction) *Mikhail Davydov*
 - [TrySound](https://github.com/TrySound) *Bogdan Chadkin*
 - [JanMattner](https://github.com/JanMattner) *Jan Mattner*
+- [ntwb](https://github.com/ntwb) *Stephen Edgar*
+- [kasperisager](https://github.com/kasperisager) *Kasper Isager*
+- [sandersn](https://github.com/sandersn) *Nathan Shively-Sanders*
