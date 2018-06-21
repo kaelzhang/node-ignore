@@ -18,6 +18,18 @@ var SHOULD_TEST_WINDOWS = !process.env.IGNORE_TEST_WIN32
 
 var cases = [
   [
+    'related to #38',
+    [
+      '*',
+      '!abc*'
+    ],
+    {
+      'a': 1,
+      'abc': 0,
+      'abcd': 0
+    }
+  ],
+  [
     '#38',
     [
       '*',
