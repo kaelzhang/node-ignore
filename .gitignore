@@ -1,3 +1,6 @@
+# test
+test/ts/*.js
+
 # coverage
 coverage
 .nyc_output

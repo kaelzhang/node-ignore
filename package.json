@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "3.3.9",
+  "version": "3.3.10",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "main": "./ignore.js",
   "files": [
@@ -10,8 +10,9 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "babel -o ignore.js index.js",
-    "test": "npm run build && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec ./test/ignore.js && codecov",
-    "test-no-cov": "npm run build && mocha --reporter spec ./test/ignore.js",
+    "tsc": "tsc ./test/ts/simple.ts",
+    "test": "npm run tsc && npm run build && istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec ./test/ignore.js && codecov",
+    "test-no-cov": "npm run tsc && npm run build && mocha --reporter spec ./test/ignore.js",
     "cov-report": "istanbul report"
   },
   "repository": {
@@ -49,6 +50,7 @@
     "pre-suf": "^1.0.4",
     "rimraf": "^2.6.2",
     "spawn-sync": "^1.0.15",
-    "tmp": "0.0.33"
+    "tmp": "0.0.33",
+    "typescript": "^2.9.2"
   }
 }
