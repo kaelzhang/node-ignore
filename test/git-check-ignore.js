@@ -1,26 +1,26 @@
-var test = require('tap').test
-var spawn = require('spawn-sync')
-var tmp = require('tmp').dirSync
-var mkdirp = require('mkdirp').sync
-var rm = require('rimraf').sync
-var fs = require('fs')
-var path = require('path')
-var removeEnding = require('pre-suf').removeEnding
-var cases = require('./fixtures/cases')
+const {test} = require('tap')
+const spawn = require('spawn-sync')
+const tmp = require('tmp').dirSync
+const mkdirp = require('mkdirp').sync
+const rm = require('rimraf').sync
+const fs = require('fs')
+const path = require('path')
+const {removeEnding} = require('pre-suf')
+const cases = require('./fixtures/cases')
 
-var IS_WINDOWS = process.platform === 'win32'
+const IS_WINDOWS = process.platform === 'win32'
 
 function getNativeGitIgnoreResults (rules, paths) {
-  var dir = createUniqueTmp()
+  const dir = createUniqueTmp()
 
-  var gitignore = typeof rules === 'string'
+  const gitignore = typeof rules === 'string'
     ? rules
     : rules.join('\n')
 
   touch(dir, '.gitignore', gitignore)
 
-  paths.forEach(function (path, i) {
-    if (path === '.gitignore') {
+  paths.forEach((p, i) => {
+    if (p === '.gitignore') {
       return
     }
 
@@ -28,11 +28,11 @@ function getNativeGitIgnoreResults (rules, paths) {
     // if we:
     // `touch a`
     // and then `touch a/b`, then boooom!
-    if (containsInOthers(path, i, paths)) {
+    if (containsInOthers(p, i, paths)) {
       return
     }
 
-    touch(dir, path)
+    touch(dir, p)
   })
 
   spawn('git', ['init'], {
@@ -44,29 +44,27 @@ function getNativeGitIgnoreResults (rules, paths) {
   })
 
   return paths
-  .filter(function (path) {
-    var out = spawn('git', [
+  .filter(p => {
+    let out = spawn('git', [
       'check-ignore',
       // `spawn` will escape the special cases for us
-      path
+      p
     ], {
       cwd: dir
     }).stdout.toString()
 
     out = removeEnding(out, '\n')
 
-    var ignored = out === path
+    const ignored = out === p
     return !ignored
   })
 }
 
 function touch (root, file, content) {
-  // file = specialCharInFileOrDir(file)
+  const dirs = file.split('/')
+  const basename = dirs.pop()
 
-  var dirs = file.split('/')
-  var basename = dirs.pop()
-
-  var dir = dirs.join('/')
+  const dir = dirs.join('/')
 
   if (dir) {
     mkdirp(path.join(root, dir))
@@ -78,11 +76,11 @@ function touch (root, file, content) {
   }
 }
 
-var tmpCount = 0
-var tmpRoot = tmp().name
+let tmpCount = 0
+const tmpRoot = tmp().name
 
 function createUniqueTmp () {
-  var dir = path.join(tmpRoot, String(tmpCount ++))
+  const dir = path.join(tmpRoot, String(tmpCount ++))
   // Make sure the dir not exists,
   // clean up dirty things
   rm(dir)
@@ -90,16 +88,18 @@ function createUniqueTmp () {
   return dir
 }
 
-function containsInOthers (path, index, paths) {
-  path = removeEnding(path, '/')
+function containsInOthers (_path, index, paths) {
+  _path = removeEnding(_path, '/')
 
-  return paths.some(function (p, i) {
+  return paths.some((p, i) => {
     if (index === i) {
-      return
+      return false
     }
 
     return p === path
-    || p.indexOf(path) === 0 && p[path.length] === '/'
+    || (
+      p.indexOf(path) === 0 && p[_path.length] === '/'
+    )
   })
 }
 
@@ -107,7 +107,7 @@ function notGitBuiltin (filename) {
   return filename.indexOf('.git/') !== 0
 }
 
-cases(function (
+cases((
   description,
   patterns,
   paths_object,
@@ -115,19 +115,24 @@ cases(function (
   paths,
   expected,
   expect_result
-) {
-  // In some platform, the behavior of git command about trailing spaces
-  // is not implemented as documented, so skip test
-  !skip_test_test
-  // Tired to handle test cases for test cases for windows
-  && !IS_WINDOWS
-  // `git check-ignore` could only handles non-empty filenames
-  && paths.some(Boolean)
-  // `git check-ignore` will by default ignore .git/ directory
-  // which `node-ignore` should not do as well
-  && expected.every(notGitBuiltin)
-  && test('test for test:    ' + description, function (t) {
-    var result = getNativeGitIgnoreResults(patterns, paths).sort()
+) => {
+  if (
+    // In some platform, the behavior of git command about trailing spaces
+    // is not implemented as documented, so skip test
+    skip_test_test
+    // Tired to handle test cases for test cases for windows
+    || IS_WINDOWS
+    // `git check-ignore` could only handles non-empty filenames
+    || !paths.some(Boolean)
+    // `git check-ignore` will by default ignore .git/ directory
+    // which `node-ignore` should not do as well
+    || !expected.every(notGitBuiltin)
+  ) {
+    return
+  }
+
+  test(`test for test:    ${description}`, t => {
+    const result = getNativeGitIgnoreResults(patterns, paths).sort()
 
     expect_result(t, result)
     t.end()

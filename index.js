@@ -1,8 +1,3 @@
-'use strict'
-
-module.exports = () => new IgnoreBase()
-
-
 // A simple implementation of make-array
 function make_array (subject) {
   return Array.isArray(subject)
@@ -10,161 +5,17 @@ function make_array (subject) {
     : [subject]
 }
 
-
 const REGEX_BLANK_LINE = /^\s+$/
-const REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\\!/
+const REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_LEADING_EXCAPED_HASH = /^\\#/
 const SLASH = '/'
 const KEY_IGNORE = typeof Symbol !== 'undefined'
   ? Symbol.for('node-ignore')
   /* istanbul ignore next */
   : 'node-ignore'
-const {defineProperty} = Object
-const define = (object, key, value) => defineProperty(object, key, {value})
 
-class IgnoreBase {
-  constructor () {
-    this._rules = []
-    define(this, KEY_IGNORE, true)
-    this._initCache()
-  }
-
-  _initCache () {
-    this._cache = {}
-  }
-
-  // @param {Array.<string>|string|Ignore} pattern
-  add (pattern) {
-    this._added = false
-
-    if (typeof pattern === 'string') {
-      pattern = pattern.split(/\r?\n/g)
-    }
-
-    make_array(pattern).forEach(this._addPattern, this)
-
-    // Some rules have just added to the ignore,
-    // making the behavior changed.
-    if (this._added) {
-      this._initCache()
-    }
-
-    return this
-  }
-
-  // legacy
-  addPattern (pattern) {
-    return this.add(pattern)
-  }
-
-  _addPattern (pattern) {
-    // #32
-    if (pattern && pattern[KEY_IGNORE]) {
-      this._rules = this._rules.concat(pattern._rules)
-      this._added = true;
-      return
-    }
-
-    if (this._checkPattern(pattern)) {
-      const rule = this._createRule(pattern)
-      this._added = true
-      this._rules.push(rule)
-    }
-  }
-
-  _checkPattern (pattern) {
-    // > A blank line matches no files, so it can serve as a separator for readability.
-    return pattern
-      && typeof pattern === 'string'
-      && !REGEX_BLANK_LINE.test(pattern)
-
-      // > A line starting with # serves as a comment.
-      && pattern.indexOf('#') !== 0
-  }
-
-  filter (paths) {
-    return make_array(paths).filter(path => this._filter(path))
-  }
-
-  createFilter () {
-    return path => this._filter(path)
-  }
-
-  ignores (path) {
-    return !this._filter(path)
-  }
-
-  _createRule (pattern) {
-    const origin = pattern
-    let negative = false
-
-    // > An optional prefix "!" which negates the pattern;
-    if (pattern.indexOf('!') === 0) {
-      negative = true
-      pattern = pattern.substr(1)
-    }
-
-    pattern = pattern
-      // > Put a backslash ("\") in front of the first "!" for patterns that begin with a literal "!", for example, `"\!important!.txt"`.
-      .replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!')
-      // > Put a backslash ("\") in front of the first hash for patterns that begin with a hash.
-      .replace(REGEX_LEADING_EXCAPED_HASH, '#')
-
-    const regex = make_regex(pattern, negative)
-
-    return {
-      origin,
-      pattern,
-      negative,
-      regex
-    }
-  }
-
-  // @returns `Boolean` true if the `path` is NOT ignored
-  _filter (path, slices) {
-    if (!path) {
-      return false
-    }
-
-    if (path in this._cache) {
-      return this._cache[path]
-    }
-
-    if (!slices) {
-      // path/to/a.js
-      // ['path', 'to', 'a.js']
-      slices = path.split(SLASH)
-    }
-
-    slices.pop()
-
-    return this._cache[path] = slices.length
-      // > It is not possible to re-include a file if a parent directory of that file is excluded.
-      // If the path contains a parent directory, check the parent first
-      ? this._filter(slices.join(SLASH) + SLASH, slices)
-        && this._test(path)
-
-      // Or only test the path
-      : this._test(path)
-  }
-
-  // @returns {Boolean} true if a file is NOT ignored
-  _test (path) {
-    // Explicitly define variable type by setting matched to `0`
-    let matched = 0
-
-    this._rules.forEach(rule => {
-      // if matched = true, then we only test negative rules
-      // if matched = false, then we test non-negative rules
-      if (!(matched ^ rule.negative)) {
-        matched = rule.negative ^ rule.regex.test(path)
-      }
-    })
-
-    return !matched
-  }
-}
-
+const define = (object, key, value) =>
+  Object.defineProperty(object, key, {value})
 
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
@@ -214,8 +65,8 @@ const DEFAULT_REPLACER_PREFIX = [
   // > - the opening curly brace {,
   // > These special characters are often called "metacharacters".
   [
-    /[\\\^$.|?*+()\[{]/g,
-    match => '\\' + match
+    /[\\^$.|?*+()[{]/g,
+    match => `\\${match}`
   ],
 
   // leading slash
@@ -238,7 +89,8 @@ const DEFAULT_REPLACER_PREFIX = [
     // > A leading "**" followed by a slash means match in all directories.
     // > For example, "**/foo" matches file or directory "foo" anywhere,
     // > the same as pattern "foo".
-    // > "**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo".
+    // > "**/foo/bar" matches file or directory "bar" anywhere that is directly
+    // >   under directory "foo".
     // Notice that the '*'s have been replaced as '\\*'
     /^\^*\\\*\\\*\\\//,
 
@@ -247,22 +99,23 @@ const DEFAULT_REPLACER_PREFIX = [
   ]
 ]
 
-
 const DEFAULT_REPLACER_SUFFIX = [
   // starting
   [
-    // there will be no leading '/' (which has been replaced by section "leading slash")
+    // there will be no leading '/'
+    //   (which has been replaced by section "leading slash")
     // If starts with '**', adding a '^' to the regular expression also works
-    /^(?=[^\^])/,
-    function () {
-      return !/\/(?!$)/.test(this)
-        // > If the pattern does not contain a slash /, Git treats it as a shell glob pattern
-        // Actually, if there is only a trailing slash, git also treats it as a shell glob pattern
-        ? '(?:^|\\/)'
+    /^(?=[^^])/,
+    () => !/\/(?!$)/.test(this)
+      // > If the pattern does not contain a slash /,
+      // >   Git treats it as a shell glob pattern
+      // Actually, if there is only a trailing slash,
+      //   git also treats it as a shell glob pattern
+      ? '(?:^|\\/)'
 
-        // > Otherwise, Git treats the pattern as a shell glob suitable for consumption by fnmatch(3)
-        : '^'
-    }
+      // > Otherwise, Git treats the pattern as a shell glob suitable for
+      // >   consumption by fnmatch(3)
+      : '^'
   ],
 
   // two globstars
@@ -277,7 +130,8 @@ const DEFAULT_REPLACER_SUFFIX = [
     (match, index, str) => index + 6 < str.length
 
       // case: /**/
-      // > A slash followed by two consecutive asterisks then a slash matches zero or more directories.
+      // > A slash followed by two consecutive asterisks then a slash matches
+      // >   zero or more directories.
       // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
       // '/**/'
       ? '(?:\\/[^\\/]+)*'
@@ -300,27 +154,28 @@ const DEFAULT_REPLACER_SUFFIX = [
 
     // '*.js' matches '.js'
     // '*.js' doesn't match 'abc'
-    (match, p1) => p1 + '[^\\/]*'
+    (match, p1) => `${p1}[^\\/]*`
   ],
 
   // trailing wildcard
   [
     /(\^|\\\/)?\\\*$/,
-    (match, p1) => (
-      p1
+    (match, p1) => {
+      const prefix = p1
         // '\^':
         // '/*' does not match ''
         // '/*' does not match everything
 
         // '\\\/':
         // 'abc/*' does not match 'abc/'
-        ? p1 + '[^/]+'
+        ? `${p1}[^/]+`
 
         // 'a*' matches 'a'
         // 'a*' matches 'aa'
         : '[^/]*'
 
-    ) + '(?=$|\\/$)'
+      return `${prefix}(?=$|\\/$)`
+    }
   ],
 
   [
@@ -329,7 +184,6 @@ const DEFAULT_REPLACER_SUFFIX = [
     () => '\\'
   ]
 ]
-
 
 const POSITIVE_REPLACERS = [
   ...DEFAULT_REPLACER_PREFIX,
@@ -350,17 +204,16 @@ const POSITIVE_REPLACERS = [
   [
     // 'js' will not match 'js.'
     // 'ab' will not match 'abc'
-    /(?:[^*\/])$/,
+    /(?:[^*/])$/,
 
     // 'js*' will not match 'a.js'
     // 'js/' will not match 'a.js'
     // 'js' will match 'a.js' and 'a.js/'
-    match => match + '(?=$|\\/)'
+    match => `${match}(?=$|\\/)`
   ],
 
   ...DEFAULT_REPLACER_SUFFIX
 ]
-
 
 const NEGATIVE_REPLACERS = [
   ...DEFAULT_REPLACER_PREFIX,
@@ -375,18 +228,17 @@ const NEGATIVE_REPLACERS = [
   // should ignore `node_modules/a.js`
   [
     /(?:[^*])$/,
-    match => match + '(?=$|\\/$)'
+    match => `${match}(?=$|\\/$)`
   ],
 
   ...DEFAULT_REPLACER_SUFFIX
 ]
 
-
 // A simple cache, because an ignore rule only has only one certain meaning
 const cache = {}
 
 // @param {pattern}
-function make_regex (pattern, negative) {
+const make_regex = (pattern, negative) => {
   const r = cache[pattern]
   if (r) {
     return r
@@ -396,13 +248,157 @@ function make_regex (pattern, negative) {
     ? NEGATIVE_REPLACERS
     : POSITIVE_REPLACERS
 
-  const source = replacers.reduce((prev, current) => {
-    return prev.replace(current[0], current[1].bind(pattern))
-  }, pattern)
+  const source = replacers.reduce(
+    (prev, current) => prev.replace(current[0], current[1].bind(pattern)),
+    pattern
+  )
 
   return cache[pattern] = new RegExp(source, 'i')
 }
 
+// > A blank line matches no files, so it can serve as a separator for readability.
+const checkPattern = pattern => pattern
+  && typeof pattern === 'string'
+  && !REGEX_BLANK_LINE.test(pattern)
+
+  // > A line starting with # serves as a comment.
+  && pattern.indexOf('#') !== 0
+
+const createRule = pattern => {
+  const origin = pattern
+  let negative = false
+
+  // > An optional prefix "!" which negates the pattern;
+  if (pattern.indexOf('!') === 0) {
+    negative = true
+    pattern = pattern.substr(1)
+  }
+
+  pattern = pattern
+  // > Put a backslash ("\") in front of the first "!" for patterns that
+  // >   begin with a literal "!", for example, `"\!important!.txt"`.
+  .replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!')
+  // > Put a backslash ("\") in front of the first hash for patterns that
+  // >   begin with a hash.
+  .replace(REGEX_LEADING_EXCAPED_HASH, '#')
+
+  const regex = make_regex(pattern, negative)
+
+  return {
+    origin,
+    pattern,
+    negative,
+    regex
+  }
+}
+
+class IgnoreBase {
+  constructor () {
+    this._rules = []
+    define(this, KEY_IGNORE, true)
+    this._initCache()
+  }
+
+  _initCache () {
+    this._cache = {}
+  }
+
+  // @param {Array.<string>|string|Ignore} pattern
+  add (pattern) {
+    this._added = false
+
+    if (typeof pattern === 'string') {
+      pattern = pattern.split(/\r?\n/g)
+    }
+
+    make_array(pattern).forEach(this._addPattern, this)
+
+    // Some rules have just added to the ignore,
+    // making the behavior changed.
+    if (this._added) {
+      this._initCache()
+    }
+
+    return this
+  }
+
+  // legacy
+  addPattern (pattern) {
+    return this.add(pattern)
+  }
+
+  _addPattern (pattern) {
+    // #32
+    if (pattern && pattern[KEY_IGNORE]) {
+      this._rules = this._rules.concat(pattern._rules)
+      this._added = true
+      return
+    }
+
+    if (checkPattern(pattern)) {
+      const rule = createRule(pattern)
+      this._added = true
+      this._rules.push(rule)
+    }
+  }
+
+  filter (paths) {
+    return make_array(paths).filter(path => this._filter(path))
+  }
+
+  createFilter () {
+    return path => this._filter(path)
+  }
+
+  ignores (path) {
+    return !this._filter(path)
+  }
+
+  // @returns `Boolean` true if the `path` is NOT ignored
+  _filter (path, slices) {
+    if (!path) {
+      return false
+    }
+
+    if (path in this._cache) {
+      return this._cache[path]
+    }
+
+    if (!slices) {
+      // path/to/a.js
+      // ['path', 'to', 'a.js']
+      slices = path.split(SLASH)
+    }
+
+    slices.pop()
+
+    return this._cache[path] = slices.length
+      // > It is not possible to re-include a file if a parent directory of
+      // >   that file is excluded.
+      // If the path contains a parent directory, check the parent first
+      ? this._filter(slices.join(SLASH) + SLASH, slices)
+        && this._test(path)
+
+      // Or only test the path
+      : this._test(path)
+  }
+
+  // @returns {Boolean} true if a file is NOT ignored
+  _test (path) {
+    // Explicitly define variable type by setting matched to `0`
+    let matched = 0
+
+    this._rules.forEach(rule => {
+      // if matched = true, then we only test negative rules
+      // if matched = false, then we test non-negative rules
+      if (!(matched ^ rule.negative)) {
+        matched = rule.negative ^ rule.regex.test(path)
+      }
+    })
+
+    return !matched
+  }
+}
 
 // Windows
 // --------------------------------------------------------------
@@ -415,15 +411,18 @@ if (
     || process.platform === 'win32'
   )
 ) {
-
   const filter = IgnoreBase.prototype._filter
-  const make_posix = str => /^\\\\\?\\/.test(str)
-    || /[^\x00-\x80]+/.test(str)
-      ? str
-      : str.replace(/\\/g, '/')
 
-  IgnoreBase.prototype._filter = function (path, slices) {
+  /* eslint no-control-regex: "off" */
+  const make_posix = str => /^\\\\\?\\/.test(str)
+  || /[^\x00-\x80]+/.test(str)
+    ? str
+    : str.replace(/\\/g, '/')
+
+  IgnoreBase.prototype._filter = function filterWin32 (path, slices) {
     path = make_posix(path)
     return filter.call(this, path, slices)
   }
 }
+
+module.exports = () => new IgnoreBase()

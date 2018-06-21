@@ -1,12 +1,13 @@
-var fs = require('fs')
-var path = require('path')
+/* eslint quote-props: ["off"] */
+const fs = require('fs')
+const path = require('path')
 
-function readPatterns(file) {
+function readPatterns (file) {
   file = path.join(__dirname, file)
   return fs.readFileSync(file).toString()
 }
 
-var cases = [
+const cases = [
   [
     'related to #38',
     [
@@ -34,7 +35,7 @@ var cases = [
     }
   ],
   [
-    'intermediate "\ " should be unescaped to " "',
+    'intermediate "\\ " should be unescaped to " "',
     [
       'abc\\ d',
       'abc e',
@@ -101,7 +102,7 @@ var cases = [
     'wildcard: treated as a shell glob suitable for consumption by fnmatch(3)',
     [
       '*.html',
-      '!b/\*/index.html'
+      '!b/\\*/index.html'
     ],
     {
       'a/b/*/index.html': 1,
@@ -272,7 +273,7 @@ var cases = [
     }
   ],
   [
-    'Trailing spaces are ignored unless they are quoted with backslash ("\")',
+    'Trailing spaces are ignored unless they are quoted with backslash ("\\")',
     [
       'abc\\  ', // only one space left -> (abc )
       'bcd  ',   // no space left -> (bcd)
@@ -516,7 +517,7 @@ var cases = [
   ],
   [
     'file ended with "*"', [
-      'abc.js*',
+      'abc.js*'
     ], {
       'abc.js/': 1,
       'abc.js/abc': 1,
@@ -589,32 +590,28 @@ var cases = [
 ]
 
 
-var cases_to_test_only = cases.filter(function (c) {
-  return c[3]
-})
+const cases_to_test_only = cases.filter(c => c[3])
 
-var real_cases = cases_to_test_only.length
+const real_cases = cases_to_test_only.length
   ? cases_to_test_only
   : cases
 
-module.exports = function (iteratee) {
-  real_cases.forEach(function (c) {
-    var description = c[0]
-    var patterns = c[1]
-    var paths_object = c[2]
-    var skip_test_test = c[4]
+module.exports = iteratee => {
+  real_cases.forEach(c => {
+    const description = c[0]
+    const patterns = c[1]
+    const paths_object = c[2]
+    const skip_test_test = c[4]
 
     // All paths to test
-    var paths = Object.keys(paths_object)
+    const paths = Object.keys(paths_object)
 
     // paths that NOT ignored
-    var expected = paths
-    .filter(function(p) {
-      return !paths_object[p]
-    })
+    let expected = paths
+    .filter(p => !paths_object[p])
     .sort()
 
-    function expect_result(t, result, mapper) {
+    function expect_result (t, result, mapper) {
       if (mapper) {
         expected = expected.map(mapper)
       }
