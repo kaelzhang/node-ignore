@@ -248,15 +248,13 @@ Returns `function(path)` the filter function.
 
 ****
 
-## Contributing
-
-The code of `node-ignore` is based on es6 and babel, but babel and its preset is not included in the `dependencies` field of package.json, so that the installation process of test cases will not fail in older versions of node.
-
-So use `bash install.sh` to install dependencies and `bash test.sh` to run test cases in your local machine.
-
 #### Collaborators
 
+- [whitecolor](https://github.com/whitecolor) *Alex*
 - [SamyPesse](https://github.com/SamyPesse) *Samy Pessé*
 - [azproduction](https://github.com/azproduction) *Mikhail Davydov*
 - [TrySound](https://github.com/TrySound) *Bogdan Chadkin*
 - [JanMattner](https://github.com/JanMattner) *Jan Mattner*
+- [ntwb](https://github.com/ntwb) *Stephen Edgar*
+- [kasperisager](https://github.com/kasperisager) *Kasper Isager*
+- [sandersn](https://github.com/sandersn) *Nathan Shively-Sanders*
