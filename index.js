@@ -65,8 +65,23 @@ const DEFAULT_REPLACER_PREFIX = [
   // > - the opening curly brace {,
   // > These special characters are often called "metacharacters".
   [
-    /[\\^$.|?*+()[{]/g,
+    /[\\^$.|*+(){]/g,
     match => `\\${match}`
+  ],
+
+  [
+    // > [abc] matches any character inside the brackets
+    // >    (in this case a, b, or c);
+    /\[([^\]/]*)($|\])/g,
+    (match, p1, p2) => p2 === ']'
+      ? `[${p1}]`
+      : `\\${match}`
+  ],
+
+  [
+    // > a question mark (?) matches a single character
+    /(?!\\)\?/g,
+    match => '[^/]'
   ],
 
   // leading slash

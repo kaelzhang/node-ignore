@@ -9,6 +9,129 @@ function readPatterns (file) {
 
 const cases = [
   [
+    'ending question mark',
+    [
+      '*.web?'
+    ],
+    {
+      'a.webp': 1,
+      'a.webm': 1,
+      // only match one characters
+      'a.webam': 0,
+      'a.png': 0
+    }
+  ],
+  [
+    'intermediate question mark',
+    [
+      'a?c'
+    ],
+    {
+      'abc': 1,
+      'acc': 1,
+      'ac': 0,
+      'abbc': 0
+    }
+  ],
+  [
+    'multiple question marks',
+    [
+      'a?b??'
+    ],
+    {
+      'acbdd': 1,
+      'acbddd': 0
+    }
+  ],
+  [
+    'normal *.[oa]',
+    [
+      '*.[oa]'
+    ],
+    {
+      'a.js': 0,
+      'a.a': 1,
+      // test ending
+      'a.aa': 0,
+      'a.o': 1,
+      'a.0': 0
+    }
+  ],
+  [
+    'multiple brackets',
+    [
+      '*.[ab][cd][ef]'
+    ],
+    {
+      'a.ace': 1,
+      'a.bdf': 1,
+      'a.bce': 1,
+      'a.abc': 0,
+      'a.aceg': 0
+    }
+  ],
+  [
+    'special case: []',
+    [
+      '*.[]'
+    ],
+    {
+      'a.[]': 0,
+      'a.[]a': 0
+    }
+  ],
+  [
+    'mixed with numbers, characters and symbols: *.[0a_]',
+    [
+      '*.[0a_]'
+    ],
+    {
+      'a.0': 1,
+      'a.1': 0,
+      'a.a': 1,
+      'a.b': 0,
+      'a._': 1,
+      'a.=': 0
+    }
+  ],
+  [
+    'range: [a-z]',
+    [
+      '*.pn[a-z]'
+    ],
+    {
+      'a.pn1': 0,
+      'a.pn2': 0,
+      'a.png': 1,
+      'a.pna': 1
+    }
+  ],
+  [
+    'range: [0-9]',
+    [
+      '*.pn[0-9]'
+    ],
+    {
+      'a.pn1': 1,
+      'a.pn2': 1,
+      'a.png': 0,
+      'a.pna': 0
+    }
+  ],
+  [
+    'multiple ranges: [0-9a-z]',
+    [
+      '*.pn[0-9a-z]'
+    ],
+    {
+      'a.pn1': 1,
+      'a.pn2': 1,
+      'a.png': 1,
+      'a.pna': 1,
+      'a.pn-': 0
+    }
+  ],
+  [
     'related to #38',
     [
       '*',
