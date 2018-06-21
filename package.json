@@ -14,7 +14,7 @@
     "test:tsc": "tsc ./test/ts/simple.ts",
     "test:git": "tap test/git-check-ignore.js",
     "test:ignore": "tap test/ignore.js --coverage",
-    "test-no-cov": "npm run build && npm run test:tsc && npm run test:git && npm run test:ignore",
+    "test-no-cov": "npm run test:tsc && tap test/*.js --coverage",
     "test": "npm run test-no-cov",
     "posttest": "tap --coverage-report=text-lcov && codecov"
   },

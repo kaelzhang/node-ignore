@@ -106,16 +106,18 @@ const DEFAULT_REPLACER_SUFFIX = [
     //   (which has been replaced by section "leading slash")
     // If starts with '**', adding a '^' to the regular expression also works
     /^(?=[^^])/,
-    () => !/\/(?!$)/.test(this)
-      // > If the pattern does not contain a slash /,
-      // >   Git treats it as a shell glob pattern
-      // Actually, if there is only a trailing slash,
-      //   git also treats it as a shell glob pattern
-      ? '(?:^|\\/)'
+    function startingReplacer () {
+      return !/\/(?!$)/.test(this)
+        // > If the pattern does not contain a slash /,
+        // >   Git treats it as a shell glob pattern
+        // Actually, if there is only a trailing slash,
+        //   git also treats it as a shell glob pattern
+        ? '(?:^|\\/)'
 
-      // > Otherwise, Git treats the pattern as a shell glob suitable for
-      // >   consumption by fnmatch(3)
-      : '^'
+        // > Otherwise, Git treats the pattern as a shell glob suitable for
+        // >   consumption by fnmatch(3)
+        : '^'
+    }
   ],
 
   // two globstars
