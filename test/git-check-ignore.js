@@ -96,10 +96,8 @@ function containsInOthers (_path, index, paths) {
       return false
     }
 
-    return p === path
-    || (
-      p.indexOf(path) === 0 && p[_path.length] === '/'
-    )
+    return p === _path
+    || p.indexOf(_path) === 0 && p[_path.length] === '/'
   })
 }
 
