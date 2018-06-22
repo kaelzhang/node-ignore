@@ -196,6 +196,18 @@ const cases = [
     }
   ],
   [
+    'special case: similar, but not a character set',
+    [
+      '*.[a-'
+    ],
+    {
+      'a.': 0,
+      'a.[': 0,
+      'a.a': 0,
+      'a.-': 0
+    }
+  ],
+  [
     'related to #38',
     [
       '*',

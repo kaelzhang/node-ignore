@@ -52,7 +52,7 @@ Since `4.0.0`, ignore will no longer support `node < 6` by default, to use in no
 
 - [Usage](#usage)
 - [Guide for 2.x -> 3.x](#upgrade-2x---3x)
-- [Contributing](#contributing)
+- [Guide for 3.x -> 4.x](#upgrade-3x---4x)
 - Related Packages
   - [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matches files using patterns and filters them according to gitignore rules.
 
@@ -272,13 +272,13 @@ var ignore = require('ignore/legacy')
 
 ****
 
-#### Collaborators
+## Collaborators
 
-- [whitecolor](https://github.com/whitecolor) *Alex*
-- [SamyPesse](https://github.com/SamyPesse) *Samy Pessé*
-- [azproduction](https://github.com/azproduction) *Mikhail Davydov*
-- [TrySound](https://github.com/TrySound) *Bogdan Chadkin*
-- [JanMattner](https://github.com/JanMattner) *Jan Mattner*
-- [ntwb](https://github.com/ntwb) *Stephen Edgar*
-- [kasperisager](https://github.com/kasperisager) *Kasper Isager*
-- [sandersn](https://github.com/sandersn) *Nathan Shively-Sanders*
+- [@whitecolor](https://github.com/whitecolor) *Alex*
+- [@SamyPesse](https://github.com/SamyPesse) *Samy Pessé*
+- [@azproduction](https://github.com/azproduction) *Mikhail Davydov*
+- [@TrySound](https://github.com/TrySound) *Bogdan Chadkin*
+- [@JanMattner](https://github.com/JanMattner) *Jan Mattner*
+- [@ntwb](https://github.com/ntwb) *Stephen Edgar*
+- [@kasperisager](https://github.com/kasperisager) *Kasper Isager*
+- [@sandersn](https://github.com/sandersn) *Nathan Shively-Sanders*
