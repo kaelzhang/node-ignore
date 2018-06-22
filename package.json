@@ -16,7 +16,7 @@
     "test:ignore": "tap test/ignore.js --coverage",
     "test-no-cov": "npm run test:lint && npm run test:tsc && tap test/*.js --coverage",
     "test": "npm run test-no-cov",
-    "posttest": "tap --coverage-report=text-lcov && codecov"
+    "posttest": "tap --coverage-report=html && codecov"
   },
   "repository": {
     "type": "git",
