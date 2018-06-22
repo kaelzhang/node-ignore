@@ -46,7 +46,7 @@ Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does n
 
 Actually, `ignore` does not rely on any versions of node specially.
 
-Since `4.0.0`, ignore will no longer support `node < 6`, to use in node < 6, `require('ignore/legacy')`.
+Since `4.0.0`, ignore will no longer support `node < 6` by default, to use in node < 6, `require('ignore/legacy')`. For details, see [CHANGELOG](https://github.com/kaelzhang/node-ignore/blob/master/CHANGELOG.md).
 
 ## Table Of Main Contents
 
@@ -239,6 +239,20 @@ glob('**', {
 Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
 
 Returns `function(path)` the filter function.
+
+## `options.ignorecase` since 4.0.0
+
+Similar as the `core.ignorecase` option of [git-config](https://git-scm.com/docs/git-config), `node-ignore` will be case insensitive if `options.ignorecase` is set to `true` (default value), otherwise case sensitive.
+
+```js
+const ig = ignore({
+  ignorecase: false
+})
+
+ig.add('*.png')
+
+ig.ignores('*.PNG')  // false
+```
 
 ****
 
