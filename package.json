@@ -1,11 +1,12 @@
 {
   "name": "ignore",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "files": [
     "legacy.js",
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "LICENSE-MIT"
   ],
   "scripts": {
     "prepublish": "npm run build",
