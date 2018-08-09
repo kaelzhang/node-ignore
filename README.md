@@ -51,11 +51,11 @@ Since `4.0.0`, ignore will no longer support `node < 6` by default, to use in no
 ## Table Of Main Contents
 
 - [Usage](#usage)
+- [`Pathname` Conventions](#pathname-conventions)
 - [Guide for 2.x -> 3.x](#upgrade-2x---3x)
 - [Guide for 3.x -> 4.x](#upgrade-3x---4x)
 - See Also:
   - [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matches files using patterns and filters them according to gitignore rules.
-- [`Pathname` Conventions](#pathname-conventions)
 
 ## Usage
 
@@ -162,7 +162,7 @@ Filters the given array of pathnames, and returns the filtered array.
 
 - **paths** `Array.<Pathname>` The array of `pathname`s to be filtered.
 
-### `Pathname` Convention:
+### `Pathname` Conventions:
 
 #### 1. `Pathname` should be a `path.relative()`d pathname
 

@@ -10,6 +10,6 @@
 - **FEATURE**: supports question mark which matches a single character.
 - **PATCH**: fixes typescript declaration.
 
-## ~ 2018-08-09, Version 4.0.1 - 4.0.4
+## ~ 2018-08-09, Version 4.0.1 - 4.0.5
 
 - **PATCH**: updates README.md about frequent asked quesions from github issues.
