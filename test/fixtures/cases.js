@@ -9,6 +9,21 @@ function readPatterns (file) {
 
 const cases = [
   [
+    'a and a/',
+    [
+      'a',
+      'a2',
+      'b/',
+      'b2/'
+    ],
+    {
+      'a': 1,
+      'a2/': 1,
+      'b': 0,
+      'b2/': 1
+    }
+  ],
+  [
     'ending question mark',
     [
       '*.web?'

@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "files": [
     "legacy.js",
