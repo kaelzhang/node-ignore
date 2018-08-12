@@ -9,6 +9,20 @@ function readPatterns (file) {
 
 const cases = [
   [
+    'object prototype',
+    [
+      '*',
+      '!hasOwnProperty',
+      '!a'
+    ],
+    {
+      'hasOwnProperty': 0,
+      'a/hasOwnProperty': 0,
+      'toString': 1,
+      'a/toString': 1
+    }
+  ],
+  [
     'a and a/',
     [
       'a',

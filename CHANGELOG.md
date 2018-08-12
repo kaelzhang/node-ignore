@@ -13,3 +13,7 @@
 ## ~ 2018-08-09, Version 4.0.1 - 4.0.5
 
 - **PATCH**: updates README.md about frequent asked quesions from github issues.
+
+## 2018-08-12, Version 4.0.6
+
+- **PATCH**: `Object.prototype` methods will not ruin the result any more.

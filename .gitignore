@@ -40,9 +40,9 @@ package-lock.json
 .tmproj
 *.esproj
 *.sublime-project
-*.sublime-workspace
 nbproject
 thumbs.db
+*.*-workspace
 
 # Folders to ignore
 .hg
