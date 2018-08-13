@@ -9,6 +9,11 @@ const REGEX_TEST_BLANK_LINE = /^\s+$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
 const REGEX_SPLITALL_CRLF = /\r?\n/g
+// /foo,
+// ./foo,
+// ../foo,
+// .
+// ..
 const REGEX_TEST_INVALID_PATH = /^\.*\/|^\.+$/
 
 const SLASH = '/'
@@ -489,7 +494,7 @@ class Ignore {
     return makeArray(paths).filter(this.createFilter())
   }
 
-  // Returns {ignored: boolean, unignored: boolean}
+  // // Returns {ignored: boolean, unignored: boolean}
   // test (path) {
 
   // }

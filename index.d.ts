@@ -1,5 +1,10 @@
 type Pathname = string
 
+interface TestResult {
+  ignored: boolean
+  unignored: boolean
+}
+
 interface Ignore {
   /**
    * Adds a rule rules to the current manager.
@@ -45,7 +50,7 @@ interface Options {
 declare function ignore(options?: Options): Ignore
 
 declare namespace ignore {
-  export function isValidPath (pathname: string): boolean
+  export function isPathValid (pathname: string): boolean
 }
 
 export default ignore
