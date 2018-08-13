@@ -278,14 +278,6 @@ const cases = [
     }
   ],
   [
-    'special cases: invalid empty paths, just ignore',
-    [
-    ],
-    {
-      '': 1
-    }
-  ],
-  [
     '#25',
     [
       '.git/*',
@@ -847,7 +839,7 @@ module.exports = iteratee => {
       t.deepEqual(result.sort(), expected.sort())
     }
 
-    iteratee(
+    iteratee({
       description,
       patterns,
       paths_object,
@@ -855,6 +847,6 @@ module.exports = iteratee => {
       paths,
       expected,
       expect_result
-    )
+    })
   })
 }

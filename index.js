@@ -1,13 +1,21 @@
 // A simple implementation of make-array
-function make_array (subject) {
+function makeArray (subject) {
   return Array.isArray(subject)
     ? subject
     : [subject]
 }
 
-const REGEX_BLANK_LINE = /^\s+$/
-const REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\!/
-const REGEX_LEADING_EXCAPED_HASH = /^\\#/
+const REGEX_TEST_BLANK_LINE = /^\s+$/
+const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
+const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
+const REGEX_SPLITALL_CRLF = /\r?\n/g
+// /foo,
+// ./foo,
+// ../foo,
+// .
+// ..
+const REGEX_TEST_INVALID_PATH = /^\.*\/|^\.+$/
+
 const SLASH = '/'
 const KEY_IGNORE = typeof Symbol !== 'undefined'
   ? Symbol.for('node-ignore')
@@ -157,7 +165,7 @@ const DEFAULT_REPLACER_SUFFIX = [
     // should not use '*', or it will be replaced by the next replacer
 
     // Check if it is not the last `'/**'`
-    (match, index, str) => index + 6 < str.length
+    (_, index, str) => index + 6 < str.length
 
       // case: /**/
       // > A slash followed by two consecutive asterisks then a slash matches
@@ -184,13 +192,13 @@ const DEFAULT_REPLACER_SUFFIX = [
 
     // '*.js' matches '.js'
     // '*.js' doesn't match 'abc'
-    (match, p1) => `${p1}[^\\/]*`
+    (_, p1) => `${p1}[^\\/]*`
   ],
 
   // trailing wildcard
   [
     /(\^|\\\/)?\\\*$/,
-    (match, p1) => {
+    (_, p1) => {
       const prefix = p1
         // '\^':
         // '/*' does not match ''
@@ -265,11 +273,11 @@ const NEGATIVE_REPLACERS = [
 ]
 
 // A simple cache, because an ignore rule only has only one certain meaning
-const cache = Object.create(null)
+const regexCache = Object.create(null)
 
 // @param {pattern}
-const make_regex = (pattern, negative, ignorecase) => {
-  const r = cache[pattern]
+const makeRegex = (pattern, negative, ignorecase) => {
+  const r = regexCache[pattern]
   if (r) {
     return r
   }
@@ -283,18 +291,36 @@ const make_regex = (pattern, negative, ignorecase) => {
     pattern
   )
 
-  return cache[pattern] = ignorecase
+  return regexCache[pattern] = ignorecase
     ? new RegExp(source, 'i')
     : new RegExp(source)
 }
 
+const isString = subject => typeof subject === 'string'
+
 // > A blank line matches no files, so it can serve as a separator for readability.
 const checkPattern = pattern => pattern
-  && typeof pattern === 'string'
-  && !REGEX_BLANK_LINE.test(pattern)
+  && isString(pattern)
+  && !REGEX_TEST_BLANK_LINE.test(pattern)
 
   // > A line starting with # serves as a comment.
   && pattern.indexOf('#') !== 0
+
+const splitPattern = pattern => pattern.split(REGEX_SPLITALL_CRLF)
+
+class IgnoreRule {
+  constructor (
+    origin,
+    pattern,
+    negative,
+    regex
+  ) {
+    this.origin = origin
+    this.pattern = pattern
+    this.negative = negative
+    this.regex = regex
+  }
+}
 
 const createRule = (pattern, ignorecase) => {
   const origin = pattern
@@ -309,22 +335,53 @@ const createRule = (pattern, ignorecase) => {
   pattern = pattern
   // > Put a backslash ("\") in front of the first "!" for patterns that
   // >   begin with a literal "!", for example, `"\!important!.txt"`.
-  .replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!')
+  .replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, '!')
   // > Put a backslash ("\") in front of the first hash for patterns that
   // >   begin with a hash.
-  .replace(REGEX_LEADING_EXCAPED_HASH, '#')
+  .replace(REGEX_REPLACE_LEADING_EXCAPED_HASH, '#')
 
-  const regex = make_regex(pattern, negative, ignorecase)
+  const regex = makeRegex(pattern, negative, ignorecase)
 
-  return {
+  return new IgnoreRule(
     origin,
     pattern,
     negative,
     regex
-  }
+  )
 }
 
-class IgnoreBase {
+const throwError = (message, Ctor) => {
+  throw new Ctor(message)
+}
+
+const returnFalse = () => false
+
+const checkPath = (path, doThrow) => {
+  if (!isString(path)) {
+    return doThrow(
+      `path must be a string, but got \`${path}\``,
+      TypeError
+    )
+  }
+
+  // We don't know if we should ignore '', so throw
+  if (!path) {
+    return doThrow(`path must not be empty`, TypeError)
+  }
+
+  //
+  if (REGEX_TEST_INVALID_PATH.test(path)) {
+    const r = '`path.relative()`d'
+    return doThrow(
+      `path should be a ${r} string, but got "${path}"`,
+      RangeError
+    )
+  }
+
+  return true
+}
+
+class Ignore {
   constructor ({
     ignorecase = true
   } = {}) {
@@ -335,31 +392,8 @@ class IgnoreBase {
   }
 
   _initCache () {
-    this._cache = Object.create(null)
-  }
-
-  // @param {Array.<string>|string|Ignore} pattern
-  add (pattern) {
-    this._added = false
-
-    if (typeof pattern === 'string') {
-      pattern = pattern.split(/\r?\n/g)
-    }
-
-    make_array(pattern).forEach(this._addPattern, this)
-
-    // Some rules have just added to the ignore,
-    // making the behavior changed.
-    if (this._added) {
-      this._initCache()
-    }
-
-    return this
-  }
-
-  // legacy
-  addPattern (pattern) {
-    return this.add(pattern)
+    this._ignoreCache = Object.create(null)
+    this._testCache = Object.create(null)
   }
 
   _addPattern (pattern) {
@@ -377,26 +411,79 @@ class IgnoreBase {
     }
   }
 
-  filter (paths) {
-    return make_array(paths).filter(path => this._filter(path))
-  }
+  // @param {Array<string> | string | Ignore} pattern
+  add (pattern) {
+    this._added = false
 
-  createFilter () {
-    return path => this._filter(path)
-  }
+    makeArray(
+      isString(pattern)
+        ? splitPattern(pattern)
+        : pattern
+    ).forEach(this._addPattern, this)
 
-  ignores (path) {
-    return !this._filter(path)
-  }
-
-  // @returns `Boolean` true if the `path` is NOT ignored
-  _filter (path, slices) {
-    if (!path) {
-      return false
+    // Some rules have just added to the ignore,
+    // making the behavior changed.
+    if (this._added) {
+      this._initCache()
     }
 
-    if (path in this._cache) {
-      return this._cache[path]
+    return this
+  }
+
+  // legacy
+  addPattern (pattern) {
+    return this.add(pattern)
+  }
+
+
+  //          |           ignored:unignored
+  // negative |   0:0   |   0:1   |   1:0   |   1:1
+  // -------- | ------- | ------- | ------- | --------
+  //     0    |  TEST   |  TEST   |  SKIP   |    X
+  //     1    |  TESTIF |  SKIP   |  TEST   |    X
+
+  // - SKIP: always skip
+  // - TEST: always test
+  // - TESTIF: only test if checkUnignored
+
+  // @param {boolean} whether should check if the path is unignored,
+  //   setting `checkUnignored` to `false` could reduce additional
+  //   path matching.
+
+  // @returns {TestResult} true if a file is ignored
+  _testOne (path, checkUnignored) {
+    let ignored = false
+    let unignored = false
+
+    this._rules.forEach(rule => {
+      const {negative} = rule
+      if (
+        unignored === negative && ignored !== unignored
+        || negative && !ignored && !unignored && !checkUnignored
+      ) {
+        return
+      }
+
+      const matched = rule.regex.test(path)
+
+      if (matched) {
+        ignored = !negative
+        unignored = negative
+      }
+    })
+
+    return {
+      ignored,
+      unignored
+    }
+  }
+
+  // @returns {TestResult}
+  _test (path, cache, checkUnignored, slices) {
+    checkPath(path, throwError)
+
+    if (path in cache) {
+      return cache[path]
     }
 
     if (!slices) {
@@ -407,31 +494,41 @@ class IgnoreBase {
 
     slices.pop()
 
-    return this._cache[path] = slices.length
+    // If the path has no parent directory, just test it
+    if (!slices.length) {
+      return cache[path] = this._testOne(path, checkUnignored)
+    }
+
+    const parent = this._test(
+      slices.join(SLASH) + SLASH,
+      cache,
+      checkUnignored,
+      slices
+    )
+
+    // If the path contains a parent directory, check the parent first
+    return cache[path] = parent.ignored
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
-      // If the path contains a parent directory, check the parent first
-      ? this._filter(slices.join(SLASH) + SLASH, slices)
-        && this._test(path)
-
-      // Or only test the path
-      : this._test(path)
+      ? parent
+      : this._testOne(path, checkUnignored)
   }
 
-  // @returns {Boolean} true if a file is NOT ignored
-  _test (path) {
-    // Explicitly define variable type by setting matched to `0`
-    let matched = 0
+  ignores (path) {
+    return this._test(path, this._ignoreCache, false).ignored
+  }
 
-    this._rules.forEach(rule => {
-      // if matched = true, then we only test negative rules
-      // if matched = false, then we test non-negative rules
-      if (!(matched ^ rule.negative)) {
-        matched = rule.negative ^ rule.regex.test(path)
-      }
-    })
+  createFilter () {
+    return path => !this.ignores(path)
+  }
 
-    return !matched
+  filter (paths) {
+    return makeArray(paths).filter(this.createFilter())
+  }
+
+  // Returns {ignored: boolean, unignored: boolean}
+  test (path) {
+    return this._test(path, this._testCache, true)
   }
 }
 
@@ -446,7 +543,7 @@ if (
     || process.platform === 'win32'
   )
 ) {
-  const filter = IgnoreBase.prototype._filter
+  const filter = Ignore.prototype._filter
 
   /* eslint no-control-regex: "off" */
   const make_posix = str => /^\\\\\?\\/.test(str)
@@ -454,10 +551,14 @@ if (
     ? str
     : str.replace(/\\/g, '/')
 
-  IgnoreBase.prototype._filter = function filterWin32 (path, slices) {
+  Ignore.prototype._filter = function filterWin32 (path, slices) {
     path = make_posix(path)
     return filter.call(this, path, slices)
   }
 }
 
-module.exports = options => new IgnoreBase(options)
+const factory = options => new Ignore(options)
+
+factory.isPathValid = path => checkPath(path, returnFalse)
+
+module.exports = factory

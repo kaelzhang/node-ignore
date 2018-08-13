@@ -52,10 +52,9 @@ Since `4.0.0`, ignore will no longer support `node < 6` by default, to use in no
 
 - [Usage](#usage)
 - [`Pathname` Conventions](#pathname-conventions)
-- [Guide for 2.x -> 3.x](#upgrade-2x---3x)
-- [Guide for 3.x -> 4.x](#upgrade-3x---4x)
 - See Also:
   - [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matches files using patterns and filters them according to gitignore rules.
+- [Upgrade Guide](#upgrade-guide)
 
 ## Usage
 
@@ -152,7 +151,7 @@ if (fs.existsSync(filename)) {
 
 instead.
 
-## .filter(paths: Array<Pathname>): Array<Pathname>
+## .filter(paths: Array&lt;Pathname&gt;): Array&lt;Pathname&gt;
 
 ```ts
 type Pathname = string
@@ -166,13 +165,13 @@ Filters the given array of pathnames, and returns the filtered array.
 
 #### 1. `Pathname` should be a `path.relative()`d pathname
 
-`Pathname` should be a string that have been `path.join()`ed, or the return value of `path.relative()` to the current directory.
+`Pathname` should be a string that have been `path.join()`ed, or the return value of `path.relative()` to the current directory,
 
 ```js
-// WRONG
+// WRONG, an error will be thrown
 ig.ignores('./abc')
 
-// WRONG, for it will never happen.
+// WRONG, for it will never happen, and an error will be thrown
 // If the gitignore rule locates at the root directory,
 // `'/abc'` should be changed to `'abc'`.
 // ```
@@ -212,6 +211,26 @@ Then the `paths` might be like this:
 ]
 ```
 
+#### 2. filenames and dirnames
+
+`node-ignore` does NO `fs.stat` during path matching, so for the example below:
+
+```js
+// First, we add a ignore pattern to ignore a directory
+ig.add('config/')
+
+// `ig` does NOT know if 'config', in the real world,
+//   is a normal file, directory or something.
+
+ig.ignores('config')
+// `ig` treats `config` as a file, so it returns `false`
+
+ig.ignores('config/')
+// returns `true`
+```
+
+Specially for people who develop some library based on `node-ignore`, it is important to understand that.
+
 Usually, you could use [`glob`](http://npmjs.org/package/glob) with `option.mark = true` to fetch the structure of the current directory:
 
 ```js
@@ -230,21 +249,6 @@ glob('**', {
 })
 ```
 
-#### 2. filenames and dirnames
-
-`node-ignore` does NO `fs.stat` during path matching, so for the example below:
-
-```js
-ig.add('config/')
-
-// `ig` does NOT know if 'config' is a normal file, directory or something
-ig.ignores('config')    // And it returns `false`
-
-ig.ignores('config/')   // returns `true`
-```
-
-Specially for people who develop some library based on `node-ignore`, it is important to understand that.
-
 ## .ignores(pathname: Pathname): boolean
 
 > new in 3.2.0
@@ -261,9 +265,21 @@ Creates a filter function which could filter an array of paths with `Array.proto
 
 Returns `function(path)` the filter function.
 
+## .test(pathname: Pathname) since 5.0.0
+
+Returns `TestResult`
+
+```ts
+interface TestResult {
+  ignored: boolean
+  // true if the `pathname` is finally unignored by some negative pattern
+  unignored: boolean
+}
+```
+
 ## `options.ignorecase` since 4.0.0
 
-Similar as the `core.ignorecase` option of [git-config](https://git-scm.com/docs/git-config), `node-ignore` will be case insensitive if `options.ignorecase` is set to `true` (default value), otherwise case sensitive.
+Similar as the `core.ignorecase` option of [git-config](https://git-scm.com/docs/git-config), `node-ignore` will be case insensitive if `options.ignorecase` is set to `true` (the default value), otherwise case sensitive.
 
 ```js
 const ig = ignore({
@@ -275,15 +291,56 @@ ig.add('*.png')
 ig.ignores('*.PNG')  // false
 ```
 
+## static `ignore.isPathValid(pathname): boolean` since 5.0.0
+
+Check whether the `pathname` is valid according to the [convention](#1-pathname-should-be-a-pathrelatived-pathname).
+
+```js
+ignore.isPathValid('./foo')  // false
+```
+
 ****
 
 # Upgrade Guide
 
-## Upgrade 2.x -> 3.x
+## Upgrade 4.x -> 5.x
 
-- All `options` of 2.x are unnecessary and removed, so just remove them.
-- `ignore()` instance is no longer an [`EventEmitter`](nodejs.org/api/events.html), and all events are unnecessary and removed.
-- `.addIgnoreFile()` is removed, see the [.addIgnoreFile](#addignorefilepath) section for details.
+Since `5.0.0`, if an invalid `Pathname` passed into `ig.ignores()`, an error will be thrown, while `ignore < 5.0.0` did not make sure what the return value was, as well as
+
+```ts
+.ignores(pathname: Pathname): boolean
+
+.filter(pathnames: Array<Pathname>): Array<Pathname>
+
+.createFilter(): (pathname: Pathname) => boolean
+
+.test(pathname: Pathname): {ignored: boolean, unignored: boolean}
+```
+
+See the convention [here](#1-pathname-should-be-a-pathrelatived-pathname) for details.
+
+If there are invalid pathnames, the conversion and filtration should be done by users.
+
+```js
+const path = require('path')
+const {isPathValid} = require('ignore') // introduced in 5.0.0
+
+const paths = [
+  // invalid
+  //////////////////
+  '',
+  false,
+  '../foo',
+  '.',
+  //////////////////
+
+  // valid
+  'foo'
+]
+.filter(isValidPath)
+
+ig.filter(paths)
+```
 
 ## Upgrade 3.x -> 4.x
 
@@ -292,6 +349,12 @@ Since `4.0.0`, `ignore` will no longer support node < 6, to use `ignore` in node
 ```js
 var ignore = require('ignore/legacy')
 ```
+
+## Upgrade 2.x -> 3.x
+
+- All `options` of 2.x are unnecessary and removed, so just remove them.
+- `ignore()` instance is no longer an [`EventEmitter`](nodejs.org/api/events.html), and all events are unnecessary and removed.
+- `.addIgnoreFile()` is removed, see the [.addIgnoreFile](#addignorefilepath) section for details.
 
 ****
 

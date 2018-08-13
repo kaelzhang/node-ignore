@@ -8,17 +8,36 @@ const SHOULD_TEST_WINDOWS = !process.env.IGNORE_TEST_WIN32
   && IS_WINDOWS
 
 const make_win32 = path => path.replace(/\//g, '\\')
+const ENV_KEYS = [
+  'IGNORE_ONLY_FILTER',
+  'IGNORE_ONLY_CREATE_FILTER',
+  'IGNORE_ONLY_IGNORES'
+]
 
-cases((
+const envs = {}
+let hasOnly = false
+ENV_KEYS.forEach(key => {
+  const value = !!process.env[key]
+  envs[key] = value
+
+  if (value) {
+    hasOnly = true
+  }
+})
+
+const checkSpec = key => hasOnly
+  ? !!envs[key]
+  : true
+
+cases(({
   description,
   patterns,
   paths_object,
-  skip_test_test,
   paths,
-  expected,
   expect_result
-) => {
-  test(`.filter():        ${description}`, t => {
+}) => {
+  checkSpec('IGNORE_ONLY_FILTER')
+  && test(`.filter():        ${description}`, t => {
     const ig = ignore()
     const result = ig
     .addPattern(patterns)
@@ -28,7 +47,8 @@ cases((
     t.end()
   })
 
-  test(`.createFilter():  ${description}`, t => {
+  checkSpec('IGNORE_ONLY_CREATE_FILTER')
+  && test(`.createFilter():  ${description}`, t => {
     const result = paths.filter(
       ignore()
       .addPattern(patterns)
@@ -41,11 +61,12 @@ cases((
     t.end()
   })
 
-  test(`.ignores(path):   ${description}`, t => {
+  checkSpec('IGNORE_ONLY_IGNORES')
+  && test(`.ignores(path):   ${description}`, t => {
     const ig = ignore().addPattern(patterns)
 
     Object.keys(paths_object).forEach(path => {
-      t.is(ig.ignores(path), !!paths_object[path])
+      t.is(ig.ignores(path), !!paths_object[path], `path: "${path}"`)
     })
     t.end()
   })

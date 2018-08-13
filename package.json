@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "4.0.6",
+  "version": "5.0.0",
   "description": "Ignore is a manager and filter for .gitignore rules.",
   "files": [
     "legacy.js",
@@ -14,9 +14,11 @@
     "test:lint": "eslint .",
     "test:tsc": "tsc ./test/ts/simple.ts",
     "test:git": "tap test/git-check-ignore.js",
-    "test:ignore": "tap test/ignore.js --coverage",
-    "test-no-cov": "npm run test:lint && npm run test:tsc && tap test/*.js --coverage",
-    "test": "npm run test-no-cov",
+    "test:ignore": "tap test/ignore.js",
+    "test:others": "tap test/others.js",
+    "test:cases": "tap test/*.js --coverage",
+    "test-no-report": "npm run test:lint && npm run test:tsc && npm run test:cases",
+    "test": "npm run test-no-report",
     "posttest": "tap --coverage-report=html && codecov"
   },
   "repository": {

@@ -30,3 +30,13 @@ ig2 = ig2.add([ig3, ig4])
 const ig5 = ignore({
   ignorecase: false
 })
+
+const isValid = ignore.isPathValid('./foo')
+
+const {
+  ignored,
+  unignored
+}: {
+  ignored: boolean,
+  unignored: boolean
+} = ig4.test('foo')
