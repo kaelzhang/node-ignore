@@ -105,13 +105,14 @@ function notGitBuiltin (filename) {
   return filename.indexOf('.git/') !== 0
 }
 
-cases((
+cases(({
   description,
   patterns,
   skip_test_test,
   paths,
+  expected,
   expect_result
-) => {
+}) => {
   if (
     // In some platform, the behavior of git command about trailing spaces
     // is not implemented as documented, so skip test

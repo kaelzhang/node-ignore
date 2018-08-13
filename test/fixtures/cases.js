@@ -743,8 +743,7 @@ const cases = [
       'abc.js/abc': 1,
       'abc.jsa/': 1,
       'abc.jsa/abc': 1
-    },
-    true
+    }
   ],
   [
     'wildcard as filename', [
@@ -836,11 +835,11 @@ module.exports = iteratee => {
       if (mapper) {
         expected = expected.map(mapper)
       }
-console.log(result, expected)
+
       t.deepEqual(result.sort(), expected.sort())
     }
 
-    iteratee(
+    iteratee({
       description,
       patterns,
       paths_object,
@@ -848,6 +847,6 @@ console.log(result, expected)
       paths,
       expected,
       expect_result
-    )
+    })
   })
 }

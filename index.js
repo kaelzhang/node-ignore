@@ -324,11 +324,11 @@ class IgnoreRule {
 
 const createRule = (pattern, ignorecase) => {
   const origin = pattern
-  let negative = 0
+  let negative = false
 
   // > An optional prefix "!" which negates the pattern;
   if (pattern.indexOf('!') === 0) {
-    negative = 1
+    negative = true
     pattern = pattern.substr(1)
   }
 
@@ -446,17 +446,17 @@ class Ignore {
   // - TEST: always test
   // - TESTIF: only test if checkUnignored
 
-  // @returns {integer} true if a file is ignored
+  // @returns {TestResult} true if a file is ignored
   _justIgnores (path, checkUnignored) {
     // Explicitly define variable type by setting matched to `0`
-    let ignored = 0
-    let unignored = 0
+    let ignored = false
+    let unignored = false
 
     this._rules.forEach(rule => {
       const {negative} = rule
       if (
         unignored === negative && ignored !== unignored
-        || negative && ignored === 0 && unignored === 0 && !checkUnignored
+        || negative && !ignored && !unignored && !checkUnignored
       ) {
         return
       }
@@ -464,9 +464,7 @@ class Ignore {
       const matched = rule.regex.test(path)
 
       if (matched) {
-        ignored = negative
-          ? 0
-          : 1
+        ignored = !negative
         unignored = negative
       }
     })
@@ -477,12 +475,7 @@ class Ignore {
     }
   }
 
-  // interface IntegerTestResult {
-  //   ignored: integer,
-  //   unignored: integer
-  // }
-
-  // @returns `IntegerTestResult` true if the `path` is NOT ignored
+  // @returns `boolean` true if the `path` is NOT ignored
   _ignores (path, slices) {
     checkPath(path, throwError)
 
@@ -502,7 +495,7 @@ class Ignore {
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
       // If the path contains a parent directory, check the parent first
-      ? this._ignores(slices.join(SLASH) + SLASH, slices).ignored
+      ? this._ignores(slices.join(SLASH) + SLASH, slices)
         || this._justIgnores(path).ignored
 
       // Or only test the path
@@ -510,7 +503,7 @@ class Ignore {
   }
 
   ignores (path) {
-    return !!this._ignores(path)
+    return this._ignores(path)
   }
 
   createFilter () {
@@ -521,10 +514,10 @@ class Ignore {
     return makeArray(paths).filter(this.createFilter())
   }
 
-  // Returns {ignored: boolean, unignored: boolean}
-  test (path) {
+  // // Returns {ignored: boolean, unignored: boolean}
+  // test (path) {
 
-  }
+  // }
 }
 
 // Windows
