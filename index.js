@@ -273,11 +273,11 @@ const NEGATIVE_REPLACERS = [
 ]
 
 // A simple cache, because an ignore rule only has only one certain meaning
-const cache = Object.create(null)
+const regexCache = Object.create(null)
 
 // @param {pattern}
 const makeRegex = (pattern, negative, ignorecase) => {
-  const r = cache[pattern]
+  const r = regexCache[pattern]
   if (r) {
     return r
   }
@@ -291,7 +291,7 @@ const makeRegex = (pattern, negative, ignorecase) => {
     pattern
   )
 
-  return cache[pattern] = ignorecase
+  return regexCache[pattern] = ignorecase
     ? new RegExp(source, 'i')
     : new RegExp(source)
 }
@@ -446,9 +446,12 @@ class Ignore {
   // - TEST: always test
   // - TESTIF: only test if checkUnignored
 
+  // @param {boolean} whether should check if the path is unignored,
+  //   setting `checkUnignored` to `false` could reduce additional
+  //   path matching.
+
   // @returns {TestResult} true if a file is ignored
-  _justIgnores (path, checkUnignored) {
-    // Explicitly define variable type by setting matched to `0`
+  _testOne (path, checkUnignored) {
     let ignored = false
     let unignored = false
 
@@ -475,12 +478,12 @@ class Ignore {
     }
   }
 
-  // @returns `boolean` true if the `path` is NOT ignored
-  _ignores (path, slices) {
+  // @returns {TestResult}
+  _test (path, cache, checkUnignored, slices) {
     checkPath(path, throwError)
 
-    if (path in this._ignoreCache) {
-      return this._ignoreCache[path]
+    if (path in cache) {
+      return cache[path]
     }
 
     if (!slices) {
@@ -491,33 +494,42 @@ class Ignore {
 
     slices.pop()
 
-    return this._ignoreCache[path] = slices.length
+    // If the path has no parent directory, just test it
+    if (!slices.length) {
+      return cache[path] = this._testOne(path)
+    }
+
+    const parent = this._test(
+      slices.join(SLASH) + SLASH,
+      cache,
+      checkUnignored,
+      slices
+    )
+
+    // If the path contains a parent directory, check the parent first
+    return cache[path] = parent.ignored
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
-      // If the path contains a parent directory, check the parent first
-      ? this._ignores(slices.join(SLASH) + SLASH, slices)
-        || this._justIgnores(path).ignored
-
-      // Or only test the path
-      : this._justIgnores(path).ignored
+      ? parent
+      : this._testOne(path)
   }
 
   ignores (path) {
-    return this._ignores(path)
+    return this._test(path, this._ignoreCache, false).ignored
   }
 
   createFilter () {
-    return path => !this._ignores(path)
+    return path => !this.ignores(path)
   }
 
   filter (paths) {
     return makeArray(paths).filter(this.createFilter())
   }
 
-  // // Returns {ignored: boolean, unignored: boolean}
-  // test (path) {
-
-  // }
+  // Returns {ignored: boolean, unignored: boolean}
+  test (path) {
+    return this._test(path, this._testCache, true)
+  }
 }
 
 // Windows

@@ -33,5 +33,10 @@ const ig5 = ignore({
 
 const isValid = ignore.isPathValid('./foo')
 
-// const {Ignore} = ignore
-// const ig6 = new Ignore()
+const {
+  ignored,
+  unignored
+}: {
+  ignored: boolean,
+  unignored: boolean
+} = ig4.test('foo')
