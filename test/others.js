@@ -113,3 +113,57 @@ test('isPathValid', t => {
 
   t.end()
 })
+
+const IGNORE_TEST_CASES = [
+  [
+    'test: no rule',
+    null,
+    'foo',
+    [false, false]
+  ],
+  [
+    'test: has rule, no match',
+    'bar',
+    'foo',
+    [false, false]
+  ],
+  [
+    'test: only negative',
+    '!foo',
+    'foo',
+    [false, true]
+  ],
+  [
+    'test: ignored then unignored',
+    ['foo', '!foo'],
+    'foo',
+    [false, true]
+  ],
+  [
+    'test: dir ignored then unignored -> not matched',
+    ['foo', '!foo'],
+    'foo/bar',
+    [false, false]
+  ],
+  [
+    'test: ignored by wildcard, then unignored',
+    ['*.js', '!a/a.js'],
+    'a/a.js',
+    [false, true]
+  ]
+]
+
+IGNORE_TEST_CASES.forEach(([d, patterns, path, [ignored, unignored]]) => {
+  test(d, t => {
+    const ig = ignore()
+    if (patterns) {
+      ig.add(patterns)
+    }
+
+    t.deepEqual(ig.test(path), {
+      ignored, unignored
+    })
+
+    t.end()
+  })
+})

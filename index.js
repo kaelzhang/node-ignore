@@ -496,7 +496,7 @@ class Ignore {
 
     // If the path has no parent directory, just test it
     if (!slices.length) {
-      return cache[path] = this._testOne(path)
+      return cache[path] = this._testOne(path, checkUnignored)
     }
 
     const parent = this._test(
@@ -511,7 +511,7 @@ class Ignore {
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
       ? parent
-      : this._testOne(path)
+      : this._testOne(path, checkUnignored)
   }
 
   ignores (path) {

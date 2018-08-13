@@ -267,6 +267,16 @@ Returns `function(path)` the filter function.
 
 ## .test(pathname: Pathname) since 5.0.0
 
+Returns `TestResult`
+
+```ts
+interface TestResult {
+  ignored: boolean
+  // true if the `pathname` is finally unignored by some negative pattern
+  unignored: boolean
+}
+```
+
 ## `options.ignorecase` since 4.0.0
 
 Similar as the `core.ignorecase` option of [git-config](https://git-scm.com/docs/git-config), `node-ignore` will be case insensitive if `options.ignorecase` is set to `true` (the default value), otherwise case sensitive.

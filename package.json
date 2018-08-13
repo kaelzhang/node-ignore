@@ -15,6 +15,7 @@
     "test:tsc": "tsc ./test/ts/simple.ts",
     "test:git": "tap test/git-check-ignore.js",
     "test:ignore": "tap test/ignore.js",
+    "test:others": "tap test/others.js",
     "test:cases": "tap test/*.js --coverage",
     "test-no-report": "npm run test:lint && npm run test:tsc && npm run test:cases",
     "test": "npm run test-no-report",
