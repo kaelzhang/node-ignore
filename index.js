@@ -435,7 +435,6 @@ class Ignore {
     return this.add(pattern)
   }
 
-
   //          |           ignored:unignored
   // negative |   0:0   |   0:1   |   1:0   |   1:1
   // -------- | ------- | ------- | ------- | --------
@@ -526,7 +525,7 @@ class Ignore {
     return makeArray(paths).filter(this.createFilter())
   }
 
-  // Returns {ignored: boolean, unignored: boolean}
+  // @returns {TestResult}
   test (path) {
     return this._test(path, this._testCache, true)
   }

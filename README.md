@@ -322,8 +322,7 @@ See the convention [here](#1-pathname-should-be-a-pathrelatived-pathname) for de
 If there are invalid pathnames, the conversion and filtration should be done by users.
 
 ```js
-const path = require('path')
-const {isPathValid} = require('ignore') // introduced in 5.0.0
+import {isPathValid} from 'ignore' // introduced in 5.0.0
 
 const paths = [
   // invalid
