@@ -1,13 +1,16 @@
 // A simple implementation of make-array
-function make_array (subject) {
+function makeArray (subject) {
   return Array.isArray(subject)
     ? subject
     : [subject]
 }
 
-const REGEX_BLANK_LINE = /^\s+$/
-const REGEX_LEADING_EXCAPED_EXCLAMATION = /^\\!/
-const REGEX_LEADING_EXCAPED_HASH = /^\\#/
+const REGEX_TEST_BLANK_LINE = /^\s+$/
+const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
+const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
+const REGEX_SPLITALL_CRLF = /\r?\n/g
+const REGEX_TEST_INVALID_PATH = /^\.*\//
+
 const SLASH = '/'
 const KEY_IGNORE = typeof Symbol !== 'undefined'
   ? Symbol.for('node-ignore')
@@ -157,7 +160,7 @@ const DEFAULT_REPLACER_SUFFIX = [
     // should not use '*', or it will be replaced by the next replacer
 
     // Check if it is not the last `'/**'`
-    (match, index, str) => index + 6 < str.length
+    (_, index, str) => index + 6 < str.length
 
       // case: /**/
       // > A slash followed by two consecutive asterisks then a slash matches
@@ -184,13 +187,13 @@ const DEFAULT_REPLACER_SUFFIX = [
 
     // '*.js' matches '.js'
     // '*.js' doesn't match 'abc'
-    (match, p1) => `${p1}[^\\/]*`
+    (_, p1) => `${p1}[^\\/]*`
   ],
 
   // trailing wildcard
   [
     /(\^|\\\/)?\\\*$/,
-    (match, p1) => {
+    (_, p1) => {
       const prefix = p1
         // '\^':
         // '/*' does not match ''
@@ -268,7 +271,7 @@ const NEGATIVE_REPLACERS = [
 const cache = Object.create(null)
 
 // @param {pattern}
-const make_regex = (pattern, negative, ignorecase) => {
+const makeRegex = (pattern, negative, ignorecase) => {
   const r = cache[pattern]
   if (r) {
     return r
@@ -293,10 +296,12 @@ const isString = subject => typeof subject === 'string'
 // > A blank line matches no files, so it can serve as a separator for readability.
 const checkPattern = pattern => pattern
   && isString(pattern)
-  && !REGEX_BLANK_LINE.test(pattern)
+  && !REGEX_TEST_BLANK_LINE.test(pattern)
 
   // > A line starting with # serves as a comment.
   && pattern.indexOf('#') !== 0
+
+const splitPattern = pattern => pattern.split(REGEX_SPLITALL_CRLF)
 
 const createRule = (pattern, ignorecase) => {
   const origin = pattern
@@ -311,18 +316,39 @@ const createRule = (pattern, ignorecase) => {
   pattern = pattern
   // > Put a backslash ("\") in front of the first "!" for patterns that
   // >   begin with a literal "!", for example, `"\!important!.txt"`.
-  .replace(REGEX_LEADING_EXCAPED_EXCLAMATION, '!')
+  .replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, '!')
   // > Put a backslash ("\") in front of the first hash for patterns that
   // >   begin with a hash.
-  .replace(REGEX_LEADING_EXCAPED_HASH, '#')
+  .replace(REGEX_REPLACE_LEADING_EXCAPED_HASH, '#')
 
-  const regex = make_regex(pattern, negative, ignorecase)
+  const regex = makeRegex(pattern, negative, ignorecase)
 
   return {
     origin,
     pattern,
     negative,
     regex
+  }
+}
+
+const stringify = s => isString(s)
+  ? `"${s}"`
+  : `\`${s}\``
+
+const checkPath = path => {
+  if (!isString(path)) {
+    throw new TypeError(`path must be a string, but got ${stringify(path)}`)
+  }
+
+  // We don't know if we should ignore '', so throw
+  if (!path) {
+    throw new TypeError(`path must not be empty`)
+  }
+
+  //
+  if (REGEX_TEST_INVALID_PATH.test(path)) {
+    const r = '`path.relative()`d'
+    throw new RangeError(`path should be a ${r} string, but got "${path}"`)
   }
 }
 
@@ -360,11 +386,11 @@ class Ignore {
   add (pattern) {
     this._added = false
 
-    if (isString(pattern)) {
-      pattern = pattern.split(/\r?\n/g)
-    }
-
-    make_array(pattern).forEach(this._addPattern, this)
+    makeArray(
+      isString(pattern)
+        ? splitPattern(pattern)
+        : pattern
+    ).forEach(this._addPattern, this)
 
     // Some rules have just added to the ignore,
     // making the behavior changed.
@@ -380,12 +406,7 @@ class Ignore {
     return this.add(pattern)
   }
 
-  // // Returns {ignored: boolean, unignored: boolean}
-  // test (path) {
-
-  // }
-
-  // @returns {boolean} true if a file is ignored
+  // @returns {integer} true if a file is ignored
   _justIgnores (path) {
     // Explicitly define variable type by setting matched to `0`
     let ignored = 0
@@ -403,9 +424,7 @@ class Ignore {
 
   // @returns `Boolean` true if the `path` is NOT ignored
   _ignores (path, slices) {
-    if (!path) {
-      return true
-    }
+    checkPath(path)
 
     if (path in this._ignoreCache) {
       return this._ignoreCache[path]
@@ -443,8 +462,13 @@ class Ignore {
   }
 
   filter (paths) {
-    return make_array(paths).filter(this.createFilter())
+    return makeArray(paths).filter(this.createFilter())
   }
+
+  // Returns {ignored: boolean, unignored: boolean}
+  // test (path) {
+
+  // }
 }
 
 // Windows

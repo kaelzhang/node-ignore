@@ -69,3 +69,27 @@ test('options.ignorecase', t => {
   t.is(ig.ignores('a.JPG'), false)
   t.end()
 })
+
+test('special case: invalid paths, throw', t => {
+  const ig = ignore()
+
+  const emptyMessage = 'path must be a string, but got ""'
+
+  t.throws(() => ig.ignores(''), emptyMessage)
+
+  t.throws(
+    () => ig.ignores(false),
+    'path must be a string, but got `false`'
+  )
+
+  t.throws(
+    () => ig.ignores('/a'),
+    'path must be `path.relative()`d, but got "/a"'
+  )
+
+  t.throws(() => ig.filter(['']), emptyMessage)
+
+  t.throws(() => [''].filter(ig.createFilter()), emptyMessage)
+
+  t.end()
+})

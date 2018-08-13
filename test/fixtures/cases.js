@@ -278,14 +278,6 @@ const cases = [
     }
   ],
   [
-    'special cases: invalid empty paths, just ignore',
-    [
-    ],
-    {
-      '': 1
-    }
-  ],
-  [
     '#25',
     [
       '.git/*',
