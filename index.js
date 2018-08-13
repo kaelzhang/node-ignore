@@ -9,7 +9,7 @@ const REGEX_TEST_BLANK_LINE = /^\s+$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
 const REGEX_SPLITALL_CRLF = /\r?\n/g
-const REGEX_TEST_INVALID_PATH = /^\.*\//
+const REGEX_TEST_INVALID_PATH = /^\.*\/|^\.+$/
 
 const SLASH = '/'
 const KEY_IGNORE = typeof Symbol !== 'undefined'
@@ -303,6 +303,20 @@ const checkPattern = pattern => pattern
 
 const splitPattern = pattern => pattern.split(REGEX_SPLITALL_CRLF)
 
+class IgnoreRule {
+  constructor (
+    origin,
+    pattern,
+    negative,
+    regex
+  ) {
+    this.origin = origin
+    this.pattern = pattern
+    this.negative = negative
+    this.regex = regex
+  }
+}
+
 const createRule = (pattern, ignorecase) => {
   const origin = pattern
   let negative = false
@@ -323,33 +337,43 @@ const createRule = (pattern, ignorecase) => {
 
   const regex = makeRegex(pattern, negative, ignorecase)
 
-  return {
+  return new IgnoreRule(
     origin,
     pattern,
     negative,
     regex
-  }
+  )
 }
 
-const stringify = s => isString(s)
-  ? `"${s}"`
-  : `\`${s}\``
+const throwError = (message, Ctor) => {
+  throw new Ctor(message)
+}
 
-const checkPath = path => {
+const returnFalse = () => false
+
+const checkPath = (path, doThrow) => {
   if (!isString(path)) {
-    throw new TypeError(`path must be a string, but got ${stringify(path)}`)
+    return doThrow(
+      `path must be a string, but got \`${path}\``,
+      TypeError
+    )
   }
 
   // We don't know if we should ignore '', so throw
   if (!path) {
-    throw new TypeError(`path must not be empty`)
+    return doThrow(`path must not be empty`, TypeError)
   }
 
   //
   if (REGEX_TEST_INVALID_PATH.test(path)) {
     const r = '`path.relative()`d'
-    throw new RangeError(`path should be a ${r} string, but got "${path}"`)
+    return doThrow(
+      `path should be a ${r} string, but got "${path}"`,
+      RangeError
+    )
   }
+
+  return true
 }
 
 class Ignore {
@@ -424,7 +448,7 @@ class Ignore {
 
   // @returns `Boolean` true if the `path` is NOT ignored
   _ignores (path, slices) {
-    checkPath(path)
+    checkPath(path, throwError)
 
     if (path in this._ignoreCache) {
       return this._ignoreCache[path]
@@ -496,4 +520,8 @@ if (
   }
 }
 
-module.exports = options => new Ignore(options)
+const factory = options => new Ignore(options)
+
+factory.isPathValid = path => checkPath(path, returnFalse)
+
+module.exports = factory

@@ -1,5 +1,7 @@
-const ignore = require('..')
 const {test} = require('tap')
+const ignore = require('..')
+
+const {isPathValid} = ignore
 
 test('.add(<Ignore>)', t => {
   const a = ignore().add(['.abc/*', '!.abc/d/'])
@@ -90,6 +92,24 @@ test('special case: invalid paths, throw', t => {
   t.throws(() => ig.filter(['']), emptyMessage)
 
   t.throws(() => [''].filter(ig.createFilter()), emptyMessage)
+
+  t.end()
+})
+
+test('isPathValid', t => {
+  t.deepEqual(
+    [
+      '.',
+      './foo',
+      '../foo',
+      '/foo',
+      false,
+      'foo'
+    ].filter(isPathValid),
+    [
+      'foo'
+    ]
+  )
 
   t.end()
 })

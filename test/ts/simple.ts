@@ -30,3 +30,8 @@ ig2 = ig2.add([ig3, ig4])
 const ig5 = ignore({
   ignorecase: false
 })
+
+const isValid = ignore.isValidPath('./foo')
+
+// const {Ignore} = ignore
+// const ig6 = new Ignore()
