@@ -18,7 +18,7 @@ test_script:
   - node --version
   - npm --version
   # run tests
-  - npm run test-no-cov
+  - npm run test-no-report
 
 # Don't actually build.
 build: off
