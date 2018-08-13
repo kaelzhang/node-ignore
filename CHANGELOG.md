@@ -2,10 +2,11 @@
 
 # 5.x
 
-## 2018-08-?, Version 5.0.0
+## 2018-08-13, Version 5.0.0
 
 - **SEMVER-MAJOR**: [#20](https://github.com/kaelzhang/node-ignore/issues/20): it will throw if an invalid pathname passes into `.ignores(pathname)`, see [Upgrade 4.x -> 5.x](https://github.com/kaelzhang/node-ignore#upgrade-4x---5x).
-- **FEATURE**: [#31](https://github.com/kaelzhang/node-ignore/issues/31): adds a new method `.test(pathname)`.
+- **FEATURE**: [#31](https://github.com/kaelzhang/node-ignore/issues/31): adds a new method [`.test(pathname)`](https://github.com/kaelzhang/node-ignore#testpathname-pathname-since-500).
+- **BENCHMARK**: improves performance by 26%.
 
 # 4.x
 
