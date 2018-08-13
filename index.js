@@ -324,11 +324,11 @@ class IgnoreRule {
 
 const createRule = (pattern, ignorecase) => {
   const origin = pattern
-  let negative = false
+  let negative = 0
 
   // > An optional prefix "!" which negates the pattern;
   if (pattern.indexOf('!') === 0) {
-    negative = true
+    negative = 1
     pattern = pattern.substr(1)
   }
 
@@ -435,33 +435,60 @@ class Ignore {
     return this.add(pattern)
   }
 
+
+  //          |           ignored:unignored
+  // negative |   0:0   |   0:1   |   1:0   |   1:1
+  // -------- | ------- | ------- | ------- | --------
+  //     0    |  TEST   |  TEST   |  SKIP   |    X
+  //     1    |  TESTIF |  SKIP   |  TEST   |    X
+
+  // - SKIP: always skip
+  // - TEST: always test
+  // - TESTIF: only test if checkUnignored
+
   // @returns {integer} true if a file is ignored
-  _justIgnores (path) {
+  _justIgnores (path, checkUnignored) {
     // Explicitly define variable type by setting matched to `0`
     let ignored = 0
+    let unignored = 0
 
     this._rules.forEach(rule => {
-      // if ignored === 1, then we only test negative rules
-      // if ignored === 0, then we test non-negative rules
-      if (!(ignored ^ rule.negative)) {
-        ignored = rule.negative ^ rule.regex.test(path)
+      const {negative} = rule
+      if (
+        unignored === negative && ignored !== unignored
+        || negative && ignored === 0 && unignored === 0 && !checkUnignored
+      ) {
+        return
+      }
+
+      const matched = rule.regex.test(path)
+
+      if (matched) {
+        ignored = negative
+          ? 0
+          : 1
+        unignored = negative
       }
     })
 
-    return !!ignored
+    return {
+      ignored,
+      unignored
+    }
   }
 
-  // @returns `Boolean` true if the `path` is NOT ignored
+  // interface IntegerTestResult {
+  //   ignored: integer,
+  //   unignored: integer
+  // }
+
+  // @returns `IntegerTestResult` true if the `path` is NOT ignored
   _ignores (path, slices) {
     checkPath(path, throwError)
 
     if (path in this._ignoreCache) {
       return this._ignoreCache[path]
     }
-
-    // if (path in this._testCache) {
-    //   return this._testCache[path].ignored
-    // }
 
     if (!slices) {
       // path/to/a.js
@@ -475,15 +502,15 @@ class Ignore {
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
       // If the path contains a parent directory, check the parent first
-      ? this._ignores(slices.join(SLASH) + SLASH, slices)
-        || this._justIgnores(path)
+      ? this._ignores(slices.join(SLASH) + SLASH, slices).ignored
+        || this._justIgnores(path).ignored
 
       // Or only test the path
-      : this._justIgnores(path)
+      : this._justIgnores(path).ignored
   }
 
   ignores (path) {
-    return this._ignores(path)
+    return !!this._ignores(path)
   }
 
   createFilter () {
@@ -494,10 +521,10 @@ class Ignore {
     return makeArray(paths).filter(this.createFilter())
   }
 
-  // // Returns {ignored: boolean, unignored: boolean}
-  // test (path) {
+  // Returns {ignored: boolean, unignored: boolean}
+  test (path) {
 
-  // }
+  }
 }
 
 // Windows

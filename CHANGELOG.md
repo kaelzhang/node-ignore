@@ -1,6 +1,21 @@
-# `node-ignore` 4 ChangeLog
+# `node-ignore` 5 ChangeLog
+
+# 5.x
+
+## 2018-08-?, Version 5.0.0
+
+- **SEMVER-MAJOR**: [#20](https://github.com/kaelzhang/node-ignore/issues/20): it will throw if an invalid pathname passes into `.ignores(pathname)`, see [Upgrade 4.x -> 5.x](https://github.com/kaelzhang/node-ignore#upgrade-4x---5x).
+- **FEATURE**: [#31](https://github.com/kaelzhang/node-ignore/issues/31): adds a new method `.test(pathname)`.
 
 # 4.x
+
+## 2018-08-12, Version 4.0.6
+
+- **PATCH**: `Object.prototype` methods will not ruin the result any more.
+
+## ~ 2018-08-09, Version 4.0.1 - 4.0.5
+
+- **PATCH**: updates README.md about frequent asked quesions from github issues.
 
 ## 2018-06-22, Version 4.0.0
 
@@ -9,11 +24,3 @@
 - **FEATURE**: new option: `ignorecase` to make `ignore` case sensitive.
 - **FEATURE**: supports question mark which matches a single character.
 - **PATCH**: fixes typescript declaration.
-
-## ~ 2018-08-09, Version 4.0.1 - 4.0.5
-
-- **PATCH**: updates README.md about frequent asked quesions from github issues.
-
-## 2018-08-12, Version 4.0.6
-
-- **PATCH**: `Object.prototype` methods will not ruin the result any more.

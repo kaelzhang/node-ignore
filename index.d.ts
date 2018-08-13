@@ -38,6 +38,13 @@ interface Ignore {
    * @returns boolean
    */
   ignores(pathname: Pathname): boolean
+
+  /**
+   * Returns whether pathname should be ignored or unignored
+   * @param  {string} pathname a path to check
+   * @returns TestResult
+   */
+  test(pathname: Pathname): TestResult
 }
 
 interface Options {

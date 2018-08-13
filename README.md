@@ -151,7 +151,7 @@ if (fs.existsSync(filename)) {
 
 instead.
 
-## .filter(paths: Array<Pathname>): Array<Pathname>
+## .filter(paths: Array&lt;Pathname&gt;): Array&lt;Pathname&gt;
 
 ```ts
 type Pathname = string
@@ -211,6 +211,26 @@ Then the `paths` might be like this:
 ]
 ```
 
+#### 2. filenames and dirnames
+
+`node-ignore` does NO `fs.stat` during path matching, so for the example below:
+
+```js
+// First, we add a ignore pattern to ignore a directory
+ig.add('config/')
+
+// `ig` does NOT know if 'config', in the real world,
+//   is a normal file, directory or something.
+
+ig.ignores('config')
+// `ig` treats `config` as a file, so it returns `false`
+
+ig.ignores('config/')
+// returns `true`
+```
+
+Specially for people who develop some library based on `node-ignore`, it is important to understand that.
+
 Usually, you could use [`glob`](http://npmjs.org/package/glob) with `option.mark = true` to fetch the structure of the current directory:
 
 ```js
@@ -229,21 +249,6 @@ glob('**', {
 })
 ```
 
-#### 2. filenames and dirnames
-
-`node-ignore` does NO `fs.stat` during path matching, so for the example below:
-
-```js
-ig.add('config/')
-
-// `ig` does NOT know if 'config' is a normal file, directory or something
-ig.ignores('config')    // And it returns `false`
-
-ig.ignores('config/')   // returns `true`
-```
-
-Specially for people who develop some library based on `node-ignore`, it is important to understand that.
-
 ## .ignores(pathname: Pathname): boolean
 
 > new in 3.2.0
@@ -259,6 +264,8 @@ ig.ignores('.abc/a.js')    // true
 Creates a filter function which could filter an array of paths with `Array.prototype.filter`.
 
 Returns `function(path)` the filter function.
+
+## .test(pathname: Pathname) since 5.0.0
 
 ## `options.ignorecase` since 4.0.0
 
@@ -293,7 +300,7 @@ Since `5.0.0`, if an invalid `Pathname` passed into `ig.ignores()`, an error wil
 ```ts
 .ignores(pathname: Pathname): boolean
 
-.filter(pathnames: Array<Pathname>): Array<string>
+.filter(pathnames: Array<Pathname>): Array<Pathname>
 
 .createFilter(): (pathname: Pathname) => boolean
 

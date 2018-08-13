@@ -108,10 +108,8 @@ function notGitBuiltin (filename) {
 cases((
   description,
   patterns,
-  paths_object,
   skip_test_test,
   paths,
-  expected,
   expect_result
 ) => {
   if (
