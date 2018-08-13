@@ -274,7 +274,13 @@ ig.add('*.png')
 ig.ignores('*.PNG')  // false
 ```
 
-## static `ignore.isValidPath(pathname)` since 5.0.0
+## static `ignore.isPathValid(pathname): boolean` since 5.0.0
+
+Check whether the `pathname` is valid according to the [convention](#1-pathname-should-be-a-pathrelatived-pathname).
+
+```js
+ignore.isPathValid('./foo')  // false
+```
 
 ****
 
@@ -282,19 +288,25 @@ ig.ignores('*.PNG')  // false
 
 ## Upgrade 4.x -> 5.x
 
-Since `5.0.0`, if an invalid `Pathname` passed into `ig.ignores()`, an error will be thrown, while `ignore < 5.0.0` did not make sure the return value, as well as
+Since `5.0.0`, if an invalid `Pathname` passed into `ig.ignores()`, an error will be thrown, while `ignore < 5.0.0` did not make sure what the return value was, as well as
 
-- `.ignores(pathname: Pathname): boolean`
-- `.filter(pathnames: Array<Pathname>): Array<string>`
-- `.createFilter(): (pathname: Pathname) => boolean`
+```ts
+.ignores(pathname: Pathname): boolean
 
-See the convention [here](#1-pathname-should-be-a-pathrelatived-pathname)) for details.
+.filter(pathnames: Array<Pathname>): Array<string>
+
+.createFilter(): (pathname: Pathname) => boolean
+
+.test(pathname: Pathname): {ignored: boolean, unignored: boolean}
+```
+
+See the convention [here](#1-pathname-should-be-a-pathrelatived-pathname) for details.
 
 If there are invalid pathnames, the conversion and filtration should be done by users.
 
 ```js
 const path = require('path')
-const {isPathValid} = require('ignore') // since 5.0.0
+const {isPathValid} = require('ignore') // introduced in 5.0.0
 
 const paths = [
   // invalid
