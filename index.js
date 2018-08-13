@@ -288,9 +288,11 @@ const make_regex = (pattern, negative, ignorecase) => {
     : new RegExp(source)
 }
 
+const isString = subject => typeof subject === 'string'
+
 // > A blank line matches no files, so it can serve as a separator for readability.
 const checkPattern = pattern => pattern
-  && typeof pattern === 'string'
+  && isString(pattern)
   && !REGEX_BLANK_LINE.test(pattern)
 
   // > A line starting with # serves as a comment.
@@ -324,7 +326,7 @@ const createRule = (pattern, ignorecase) => {
   }
 }
 
-class IgnoreBase {
+class Ignore {
   constructor ({
     ignorecase = true
   } = {}) {
@@ -335,14 +337,30 @@ class IgnoreBase {
   }
 
   _initCache () {
-    this._cache = Object.create(null)
+    this._ignoreCache = Object.create(null)
+    this._testCache = Object.create(null)
   }
 
-  // @param {Array.<string>|string|Ignore} pattern
+  _addPattern (pattern) {
+    // #32
+    if (pattern && pattern[KEY_IGNORE]) {
+      this._rules = this._rules.concat(pattern._rules)
+      this._added = true
+      return
+    }
+
+    if (checkPattern(pattern)) {
+      const rule = createRule(pattern, this._ignorecase)
+      this._added = true
+      this._rules.push(rule)
+    }
+  }
+
+  // @param {Array<string> | string | Ignore} pattern
   add (pattern) {
     this._added = false
 
-    if (typeof pattern === 'string') {
+    if (isString(pattern)) {
       pattern = pattern.split(/\r?\n/g)
     }
 
@@ -362,42 +380,40 @@ class IgnoreBase {
     return this.add(pattern)
   }
 
-  _addPattern (pattern) {
-    // #32
-    if (pattern && pattern[KEY_IGNORE]) {
-      this._rules = this._rules.concat(pattern._rules)
-      this._added = true
-      return
-    }
+  // // Returns {ignored: boolean, unignored: boolean}
+  // test (path) {
 
-    if (checkPattern(pattern)) {
-      const rule = createRule(pattern, this._ignorecase)
-      this._added = true
-      this._rules.push(rule)
-    }
-  }
+  // }
 
-  filter (paths) {
-    return make_array(paths).filter(path => this._filter(path))
-  }
+  // @returns {boolean} true if a file is ignored
+  _justIgnores (path) {
+    // Explicitly define variable type by setting matched to `0`
+    let ignored = 0
 
-  createFilter () {
-    return path => this._filter(path)
-  }
+    this._rules.forEach(rule => {
+      // if ignored === 1, then we only test negative rules
+      // if ignored === 0, then we test non-negative rules
+      if (!(ignored ^ rule.negative)) {
+        ignored = rule.negative ^ rule.regex.test(path)
+      }
+    })
 
-  ignores (path) {
-    return !this._filter(path)
+    return !!ignored
   }
 
   // @returns `Boolean` true if the `path` is NOT ignored
-  _filter (path, slices) {
+  _ignores (path, slices) {
     if (!path) {
-      return false
+      return true
     }
 
-    if (path in this._cache) {
-      return this._cache[path]
+    if (path in this._ignoreCache) {
+      return this._ignoreCache[path]
     }
+
+    // if (path in this._testCache) {
+    //   return this._testCache[path].ignored
+    // }
 
     if (!slices) {
       // path/to/a.js
@@ -407,31 +423,27 @@ class IgnoreBase {
 
     slices.pop()
 
-    return this._cache[path] = slices.length
+    return this._ignoreCache[path] = slices.length
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
       // If the path contains a parent directory, check the parent first
-      ? this._filter(slices.join(SLASH) + SLASH, slices)
-        && this._test(path)
+      ? this._ignores(slices.join(SLASH) + SLASH, slices)
+        || this._justIgnores(path)
 
       // Or only test the path
-      : this._test(path)
+      : this._justIgnores(path)
   }
 
-  // @returns {Boolean} true if a file is NOT ignored
-  _test (path) {
-    // Explicitly define variable type by setting matched to `0`
-    let matched = 0
+  ignores (path) {
+    return this._ignores(path)
+  }
 
-    this._rules.forEach(rule => {
-      // if matched = true, then we only test negative rules
-      // if matched = false, then we test non-negative rules
-      if (!(matched ^ rule.negative)) {
-        matched = rule.negative ^ rule.regex.test(path)
-      }
-    })
+  createFilter () {
+    return path => !this._ignores(path)
+  }
 
-    return !matched
+  filter (paths) {
+    return make_array(paths).filter(this.createFilter())
   }
 }
 
@@ -446,7 +458,7 @@ if (
     || process.platform === 'win32'
   )
 ) {
-  const filter = IgnoreBase.prototype._filter
+  const filter = Ignore.prototype._filter
 
   /* eslint no-control-regex: "off" */
   const make_posix = str => /^\\\\\?\\/.test(str)
@@ -454,10 +466,10 @@ if (
     ? str
     : str.replace(/\\/g, '/')
 
-  IgnoreBase.prototype._filter = function filterWin32 (path, slices) {
+  Ignore.prototype._filter = function filterWin32 (path, slices) {
     path = make_posix(path)
     return filter.call(this, path, slices)
   }
 }
 
-module.exports = options => new IgnoreBase(options)
+module.exports = options => new Ignore(options)
