@@ -31,7 +31,7 @@ const ig5 = ignore({
   ignorecase: false
 })
 
-const isValid = ignore.isPathValid('./foo')
+const isValid: boolean = ignore.isPathValid('./foo')
 
 const {
   ignored,
