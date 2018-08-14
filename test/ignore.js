@@ -4,14 +4,15 @@ const {test} = require('tap')
 const cases = require('./fixtures/cases')
 
 const IS_WINDOWS = process.platform === 'win32'
-const SHOULD_TEST_WINDOWS = !process.env.IGNORE_TEST_WIN32
-  && IS_WINDOWS
+const SHOULD_TEST_WINDOWS = process.env.IGNORE_TEST_WIN32
+  || IS_WINDOWS
 
 const make_win32 = path => path.replace(/\//g, '\\')
 const ENV_KEYS = [
   'IGNORE_ONLY_FILTER',
   'IGNORE_ONLY_CREATE_FILTER',
-  'IGNORE_ONLY_IGNORES'
+  'IGNORE_ONLY_IGNORES',
+  'IGNORE_ONLY_WIN32'
 ]
 
 const envs = {}
@@ -75,7 +76,8 @@ cases(({
     return
   }
 
-  test(`win32: .filter(): ${description}`, t => {
+  checkSpec('IGNORE_ONLY_WIN32')
+  && test(`win32: .filter(): ${description}`, t => {
     const win_paths = paths.map(make_win32)
 
     const ig = ignore()

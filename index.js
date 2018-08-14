@@ -435,7 +435,7 @@ class Ignore {
     return this.add(pattern)
   }
 
-  //          |           ignored:unignored
+  //          |           ignored : unignored
   // negative |   0:0   |   0:1   |   1:0   |   1:1
   // -------- | ------- | ------- | ------- | --------
   //     0    |  TEST   |  TEST   |  SKIP   |    X
@@ -444,6 +444,7 @@ class Ignore {
   // - SKIP: always skip
   // - TEST: always test
   // - TESTIF: only test if checkUnignored
+  // - X: that never happen
 
   // @param {boolean} whether should check if the path is unignored,
   //   setting `checkUnignored` to `false` could reduce additional
