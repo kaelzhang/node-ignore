@@ -9,7 +9,7 @@ module.exports = {
       allowAfterThis: true,
       enforceInMethodNames: false,
       // node-ignore only
-      allow: ['_rules', '_filter']
+      allow: ['_rules', '_test']
     }],
 
     'indent': ['error', 2, {

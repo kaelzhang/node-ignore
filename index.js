@@ -543,7 +543,7 @@ if (
     || process.platform === 'win32'
   )
 ) {
-  const filter = Ignore.prototype._filter
+  const test = Ignore.prototype._test
 
   /* eslint no-control-regex: "off" */
   const make_posix = str => /^\\\\\?\\/.test(str)
@@ -551,9 +551,9 @@ if (
     ? str
     : str.replace(/\\/g, '/')
 
-  Ignore.prototype._filter = function filterWin32 (path, slices) {
+  Ignore.prototype._test = function testWin32 (path, ...args) {
     path = make_posix(path)
-    return filter.call(this, path, slices)
+    return test.call(this, path, ...args)
   }
 }
 
