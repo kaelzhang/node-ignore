@@ -2,6 +2,11 @@
 
 # 5.x
 
+## 2018-08-14, Version 5.0.1
+
+- **PATCH**: fixes for windows.
+- **PATCH**: improves tests for typescript and windows.
+
 ## 2018-08-13, Version 5.0.0
 
 - **SEMVER-MAJOR**: [#20](https://github.com/kaelzhang/node-ignore/issues/20): it will throw if an invalid pathname passes into `.ignores(pathname)`, see [Upgrade 4.x -> 5.x](https://github.com/kaelzhang/node-ignore#upgrade-4x---5x).
