@@ -277,6 +277,10 @@ interface TestResult {
 }
 ```
 
+- `{ignored: true, unignored: false}`: the `pathname` is ignored
+- `{ignored: false, unignored: true}`: the `pathname` is unignored
+- `{ignored: false, unignored: false}`: the `pathname` is never matched by any ignore rules.
+
 ## `options.ignorecase` since 4.0.0
 
 Similar as the `core.ignorecase` option of [git-config](https://git-scm.com/docs/git-config), `node-ignore` will be case insensitive if `options.ignorecase` is set to `true` (the default value), otherwise case sensitive.

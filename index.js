@@ -561,4 +561,7 @@ const factory = options => new Ignore(options)
 
 factory.isPathValid = path => checkPath(path, returnFalse)
 
+// Fixes typescript
+factory.default = factory
+
 module.exports = factory

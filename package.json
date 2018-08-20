@@ -1,7 +1,7 @@
 {
   "name": "ignore",
-  "version": "5.0.1",
-  "description": "Ignore is a manager and filter for .gitignore rules.",
+  "version": "5.0.2",
+  "description": "Ignore is a manager and filter for .gitignore rules, the one used by eslint, gitbook and many others.",
   "files": [
     "legacy.js",
     "index.js",
@@ -13,11 +13,12 @@
     "build": "babel -o legacy.js index.js",
     "test:lint": "eslint .",
     "test:tsc": "tsc ./test/ts/simple.ts",
+    "test:ts": "node ./test/ts/simple.js",
     "test:git": "tap test/git-check-ignore.js",
     "test:ignore": "tap test/ignore.js",
     "test:others": "tap test/others.js",
     "test:cases": "tap test/*.js --coverage",
-    "test-no-report": "npm run test:lint && npm run test:tsc && npm run test:cases",
+    "test-no-report": "npm run test:lint && npm run test:tsc && npm run test:ts && npm run test:cases",
     "test": "npm run test-no-report",
     "posttest": "tap --coverage-report=html && codecov"
   },
