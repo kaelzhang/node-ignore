@@ -1,4 +1,4 @@
-import ignore from '../../'
+import * as ignore from '../../'
 
 const paths = ['a', 'a/b', 'foo/bar']
 

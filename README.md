@@ -58,8 +58,14 @@ Since `4.0.0`, ignore will no longer support `node < 6` by default, to use in no
 
 ## Usage
 
+JS:
 ```js
 import ignore from 'ignore'
+const ig = ignore().add(['.abc/*', '!.abc/d/'])
+```
+Typescript:
+```typescript
+import * as ignore from 'ignore'
 const ig = ignore().add(['.abc/*', '!.abc/d/'])
 ```
 

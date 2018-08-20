@@ -60,4 +60,4 @@ declare namespace ignore {
   export function isPathValid (pathname: string): boolean
 }
 
-export default ignore
+export = ignore
