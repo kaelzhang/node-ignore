@@ -1,5 +1,11 @@
 import ignore from '../../'
 
+const equal = (actual, expect, message) => {
+  if (actual !== expect) {
+    throw new Error(`${message}, expect: ${expect}, actual: ${actual}`)
+  }
+}
+
 const paths = ['a', 'a/b', 'foo/bar']
 
 let ig = ignore()
@@ -10,9 +16,11 @@ ig = ig.add(['!*/', '!foo/bar'])
 const filter = ig.createFilter()
 paths.filter(filter)
 const passed: boolean = filter('a')
+equal(passed, false, 'filters a out')
 
 const filtered_paths: Array<string> = ig.filter(paths)
 const ignores: boolean = ig.ignores('a')
+equal(ignores, true, 'ignores a')
 
 let ig2 = ignore()
 
@@ -32,6 +40,7 @@ const ig5 = ignore({
 })
 
 const isValid: boolean = ignore.isPathValid('./foo')
+equal(isValid, false, './foo is not valid')
 
 const {
   ignored,
@@ -40,3 +49,6 @@ const {
   ignored: boolean,
   unignored: boolean
 } = ig4.test('foo')
+
+equal(ignored, false, 'not ignored')
+equal(unignored, false, 'not unignored')
