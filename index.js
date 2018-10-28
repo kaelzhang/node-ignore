@@ -547,7 +547,7 @@ if (
 
   /* eslint no-control-regex: "off" */
   const make_posix = str => /^\\\\\?\\/.test(str)
-  || /[^\x00-\x80]+/.test(str)
+  || /["<>|\u0000-\u001F]+/u.test(str)
     ? str
     : str.replace(/\\/g, '/')
 

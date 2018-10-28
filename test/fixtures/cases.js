@@ -806,6 +806,18 @@ const cases = [
       'node_modules/gulp/node_modules/abc.md': 1,
       'node_modules/gulp/node_modules/abc.json': 1
     }
+  ],
+  [
+    'unicode characters in windows paths',
+    [
+      'test'
+    ],
+    {
+      'some/path/to/test/ignored.js': 1,
+      'some/special/path/to/目录/test/ignored.js': 1
+    },
+    false,
+    true // git-check-ignore fails as git converts special chars to escaped unicode before printing
   ]
 ]
 
