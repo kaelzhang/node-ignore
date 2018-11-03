@@ -3,6 +3,10 @@ const ignore = require('..')
 
 const {isPathValid} = ignore
 
+const IS_WINDOWS = process.platform === 'win32'
+const SHOULD_TEST_WINDOWS = process.env.IGNORE_TEST_WIN32
+  || IS_WINDOWS
+
 test('.add(<Ignore>)', t => {
   const a = ignore().add(['.abc/*', '!.abc/d/'])
   const b = ignore().add(a).add('!.abc/e/')
@@ -97,15 +101,26 @@ test('special case: invalid paths, throw', t => {
 })
 
 test('isPathValid', t => {
+  const paths = [
+    '.',
+    './foo',
+    '../foo',
+    '/foo',
+    false,
+    'foo'
+  ]
+
+  if (SHOULD_TEST_WINDOWS) {
+    paths.push(
+      '..\\foo',
+      '.\\foo',
+      '\\foo',
+      '\\\\foo'
+    )
+  }
+
   t.deepEqual(
-    [
-      '.',
-      './foo',
-      '../foo',
-      '/foo',
-      false,
-      'foo'
-    ].filter(isPathValid),
+    paths.filter(isPathValid),
     [
       'foo'
     ]

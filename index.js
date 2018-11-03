@@ -532,6 +532,18 @@ class Ignore {
   }
 }
 
+const factory = options => new Ignore(options)
+
+const isPathValid = path => checkPath(path, returnFalse)
+
+
+factory.isPathValid = isPathValid
+
+// Fixes typescript
+factory.default = factory
+
+module.exports = factory
+
 // Windows
 // --------------------------------------------------------------
 /* istanbul ignore if  */
@@ -546,22 +558,17 @@ if (
   const test = Ignore.prototype._test
 
   /* eslint no-control-regex: "off" */
-  const make_posix = str => /^\\\\\?\\/.test(str)
+  const makePosix = str => /^\\\\\?\\/.test(str)
   || /["<>|\u0000-\u001F]+/u.test(str)
     ? str
     : str.replace(/\\/g, '/')
 
   Ignore.prototype._test = function testWin32 (path, ...args) {
-    path = make_posix(path)
+    path = makePosix(path)
     return test.call(this, path, ...args)
   }
+
+  factory.isPathValid = path => path
+    ? isPathValid(makePosix(path))
+    : isPathValid(path)
 }
-
-const factory = options => new Ignore(options)
-
-factory.isPathValid = path => checkPath(path, returnFalse)
-
-// Fixes typescript
-factory.default = factory
-
-module.exports = factory
