@@ -7,12 +7,59 @@ const fs = require('fs')
 const path = require('path')
 const {removeEnding} = require('pre-suf')
 const {
+  debug,
   cases,
   checkEnv,
   IS_WINDOWS
 } = require('./fixtures/cases')
 
-function getNativeGitIgnoreResults (rules, paths) {
+const touch = (root, file, content) => {
+  const dirs = file.split('/')
+  const basename = dirs.pop()
+
+  const dir = dirs.join('/')
+
+  if (dir) {
+    mkdirp(path.join(root, dir))
+  }
+
+  // abc/ -> should not create file, but only dir
+  if (basename) {
+    fs.writeFileSync(path.join(root, file), content || '')
+  }
+}
+
+const containsInOthers = (_path, index, paths) => {
+  _path = removeEnding(_path, '/')
+
+  return paths.some((p, i) => {
+    if (index === i) {
+      return false
+    }
+
+    return p === _path
+    || p.indexOf(_path) === 0 && p[_path.length] === '/'
+  })
+}
+
+let tmpCount = 0
+const tmpRoot = tmp().name
+
+const createUniqueTmp = () => {
+  const dir = path.join(tmpRoot, String(tmpCount ++))
+  // Make sure the dir not exists,
+  // clean up dirty things
+  rm(dir)
+  mkdirp(dir)
+  return dir
+}
+
+const debugSpawn = (...args) => {
+  const out = spawn(...args)
+  debug(out.output.toString())
+}
+
+const getNativeGitIgnoreResults = (rules, paths) => {
   const dir = createUniqueTmp()
 
   const gitignore = typeof rules === 'string'
@@ -45,6 +92,14 @@ function getNativeGitIgnoreResults (rules, paths) {
     cwd: dir
   })
 
+  debugSpawn('ls', ['-alF'], {
+    cwd: dir
+  })
+
+  debugSpawn('cat', ['.gitignore'], {
+    cwd: dir
+  })
+
   return paths
   .filter(p => {
     let out = spawn('git', [
@@ -53,59 +108,27 @@ function getNativeGitIgnoreResults (rules, paths) {
       p
     ], {
       cwd: dir
-    }).stdout.toString()
+    })
+    .stdout
+    .toString()
+    // If a path has back slashes and is ignored by .gitignore,
+    //   the output of `git check-ignore` will contain
+    //   double quote pairs and CRLF
+    // output: "b\\c/a.md"
+    // -> string: 'b\\c.md'
+    .replace(/\\\\/g, '\\')
+    .replace(/^"?(.+?)"?(?:\r|\n)*$/g, (m, p1) => p1)
 
     out = removeEnding(out, '\n')
+
+    debug('git check-ignore %s: %s -> ignored: %s', p, out, out === p)
 
     const ignored = out === p
     return !ignored
   })
 }
 
-function touch (root, file, content) {
-  const dirs = file.split('/')
-  const basename = dirs.pop()
-
-  const dir = dirs.join('/')
-
-  if (dir) {
-    mkdirp(path.join(root, dir))
-  }
-
-  // abc/ -> should not create file, but only dir
-  if (basename) {
-    fs.writeFileSync(path.join(root, file), content || '')
-  }
-}
-
-let tmpCount = 0
-const tmpRoot = tmp().name
-
-function createUniqueTmp () {
-  const dir = path.join(tmpRoot, String(tmpCount ++))
-  // Make sure the dir not exists,
-  // clean up dirty things
-  rm(dir)
-  mkdirp(dir)
-  return dir
-}
-
-function containsInOthers (_path, index, paths) {
-  _path = removeEnding(_path, '/')
-
-  return paths.some((p, i) => {
-    if (index === i) {
-      return false
-    }
-
-    return p === _path
-    || p.indexOf(_path) === 0 && p[_path.length] === '/'
-  })
-}
-
-function notGitBuiltin (filename) {
-  return filename.indexOf('.git/') !== 0
-}
+const notGitBuiltin = filename => filename.indexOf('.git/') !== 0
 
 checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
   description,

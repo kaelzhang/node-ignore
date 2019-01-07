@@ -1,6 +1,7 @@
 /* eslint quote-props: ["off"] */
 const fs = require('fs')
 const path = require('path')
+const debug = require('debug')('node-ignore')
 
 function readPatterns (file) {
   file = path.join(__dirname, file)
@@ -834,10 +835,13 @@ if (!IS_WINDOWS) {
   cases.push([
     'linux: back slashes on paths',
     [
-      'a'
+      'a',
+      'b\\\\c'
     ],
     {
+      'b\\c/a.md': 1,
       'a\\b/a.js': 0,
+      'a\\b/a': 1,
       'a/a.js': 1
     }
   ])
@@ -912,3 +916,5 @@ exports.checkEnv = key => hasOnly
 exports.IS_WINDOWS = IS_WINDOWS
 exports.SHOULD_TEST_WINDOWS = process.env.IGNORE_TEST_WIN32
   || IS_WINDOWS
+
+exports.debug = debug
