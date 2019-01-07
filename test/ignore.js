@@ -1,34 +1,13 @@
 // For old node.js versions, we use es5
 const ignore = require('..')
 const {test} = require('tap')
-const cases = require('./fixtures/cases')
-
-const IS_WINDOWS = process.platform === 'win32'
-const SHOULD_TEST_WINDOWS = process.env.IGNORE_TEST_WIN32
-  || IS_WINDOWS
+const {
+  cases,
+  checkEnv,
+  SHOULD_TEST_WINDOWS
+} = require('./fixtures/cases')
 
 const make_win32 = path => path.replace(/\//g, '\\')
-const ENV_KEYS = [
-  'IGNORE_ONLY_FILTER',
-  'IGNORE_ONLY_CREATE_FILTER',
-  'IGNORE_ONLY_IGNORES',
-  'IGNORE_ONLY_WIN32'
-]
-
-const envs = {}
-let hasOnly = false
-ENV_KEYS.forEach(key => {
-  const value = !!process.env[key]
-  envs[key] = value
-
-  if (value) {
-    hasOnly = true
-  }
-})
-
-const checkSpec = key => hasOnly
-  ? !!envs[key]
-  : true
 
 cases(({
   description,
@@ -37,7 +16,7 @@ cases(({
   paths,
   expect_result
 }) => {
-  checkSpec('IGNORE_ONLY_FILTER')
+  checkEnv('IGNORE_ONLY_FILTER')
   && test(`.filter():        ${description}`, t => {
     const ig = ignore()
     const result = ig
@@ -48,7 +27,7 @@ cases(({
     t.end()
   })
 
-  checkSpec('IGNORE_ONLY_CREATE_FILTER')
+  checkEnv('IGNORE_ONLY_CREATE_FILTER')
   && test(`.createFilter():  ${description}`, t => {
     const result = paths.filter(
       ignore()
@@ -62,7 +41,7 @@ cases(({
     t.end()
   })
 
-  checkSpec('IGNORE_ONLY_IGNORES')
+  checkEnv('IGNORE_ONLY_IGNORES')
   && test(`.ignores(path):   ${description}`, t => {
     const ig = ignore().addPattern(patterns)
 
@@ -76,7 +55,7 @@ cases(({
     return
   }
 
-  checkSpec('IGNORE_ONLY_WIN32')
+  checkEnv('IGNORE_ONLY_WIN32')
   && test(`win32: .filter(): ${description}`, t => {
     const win_paths = paths.map(make_win32)
 

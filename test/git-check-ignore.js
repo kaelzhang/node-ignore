@@ -6,9 +6,11 @@ const rm = require('rimraf').sync
 const fs = require('fs')
 const path = require('path')
 const {removeEnding} = require('pre-suf')
-const cases = require('./fixtures/cases')
-
-const IS_WINDOWS = process.platform === 'win32'
+const {
+  cases,
+  checkEnv,
+  IS_WINDOWS
+} = require('./fixtures/cases')
 
 function getNativeGitIgnoreResults (rules, paths) {
   const dir = createUniqueTmp()
@@ -105,18 +107,18 @@ function notGitBuiltin (filename) {
   return filename.indexOf('.git/') !== 0
 }
 
-cases(({
+checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
   description,
   patterns,
-  skip_test_test,
+  skip_test_fixture,
   paths,
   expected,
   expect_result
 }) => {
   if (
     // In some platform, the behavior of git command about trailing spaces
-    // is not implemented as documented, so skip test
-    skip_test_test
+    // is not implemented as documented, so skip testing
+    skip_test_fixture
     // Tired to handle test cases for test cases for windows
     || IS_WINDOWS
     // `git check-ignore` could only handles non-empty filenames

@@ -799,6 +799,14 @@ const cases = [
     }
   ],
   [
+    'node modules: sub directories',
+    [
+      'node_modules'
+    ], {
+      'a/b/node_modules/abc.md': 1
+    }
+  ],
+  [
     'node modules: twice', [
       'node_modules/',
       'node_modules/'
@@ -821,6 +829,19 @@ const cases = [
   ]
 ]
 
+const IS_WINDOWS = process.platform === 'win32'
+if (!IS_WINDOWS) {
+  cases.push([
+    'linux: back slashes on paths',
+    [
+      'a'
+    ],
+    {
+      'a\\b/a.js': 0,
+      'a/a.js': 1
+    }
+  ])
+}
 
 const cases_to_test_only = cases.filter(c => c[3])
 
@@ -828,12 +849,12 @@ const real_cases = cases_to_test_only.length
   ? cases_to_test_only
   : cases
 
-module.exports = iteratee => {
+exports.cases = iteratee => {
   real_cases.forEach(c => {
     const description = c[0]
     const patterns = c[1]
     const paths_object = c[2]
-    const skip_test_test = c[4]
+    const skip_test_fixture = c[4]
 
     // All paths to test
     const paths = Object.keys(paths_object)
@@ -855,10 +876,39 @@ module.exports = iteratee => {
       description,
       patterns,
       paths_object,
-      skip_test_test,
+      skip_test_fixture,
       paths,
       expected,
       expect_result
     })
   })
 }
+
+// For local testing purpose
+const ENV_KEYS = [
+  'IGNORE_ONLY_FILTER',
+  'IGNORE_ONLY_CREATE_FILTER',
+  'IGNORE_ONLY_IGNORES',
+  'IGNORE_ONLY_WIN32',
+  'IGNORE_ONLY_FIXTURES',
+  'IGNORE_ONLY_OTHERS'
+]
+
+const envs = {}
+let hasOnly = false
+ENV_KEYS.forEach(key => {
+  const value = !!process.env[key]
+  envs[key] = value
+
+  if (value) {
+    hasOnly = true
+  }
+})
+
+exports.checkEnv = key => hasOnly
+  ? !!envs[key]
+  : true
+
+exports.IS_WINDOWS = IS_WINDOWS
+exports.SHOULD_TEST_WINDOWS = process.env.IGNORE_TEST_WIN32
+  || IS_WINDOWS

@@ -1,13 +1,22 @@
+// - issues
+// - options
+// - static methods
+// - .test()
+
 const {test} = require('tap')
 const ignore = require('..')
+const {
+  checkEnv,
+  SHOULD_TEST_WINDOWS
+} = require('./fixtures/cases')
 
 const {isPathValid} = ignore
 
-const IS_WINDOWS = process.platform === 'win32'
-const SHOULD_TEST_WINDOWS = process.env.IGNORE_TEST_WIN32
-  || IS_WINDOWS
+const _test = checkEnv('IGNORE_ONLY_OTHERS')
+  ? test
+  : () => {}
 
-test('.add(<Ignore>)', t => {
+_test('.add(<Ignore>)', t => {
   const a = ignore().add(['.abc/*', '!.abc/d/'])
   const b = ignore().add(a).add('!.abc/e/')
 
@@ -22,7 +31,7 @@ test('.add(<Ignore>)', t => {
   t.end()
 })
 
-test('fixes babel class', t => {
+_test('fixes babel class', t => {
   const {constructor} = ignore()
 
   try {
@@ -36,7 +45,7 @@ test('fixes babel class', t => {
   t.end()
 })
 
-test('#32', t => {
+_test('#32', t => {
   const KEY_IGNORE = typeof Symbol !== 'undefined'
     ? Symbol.for('node-ignore')
     : 'node-ignore'
@@ -63,7 +72,7 @@ test('#32', t => {
   t.end()
 })
 
-test('options.ignorecase', t => {
+_test('options.ignorecase', t => {
   const ig = ignore({
     ignorecase: false
   })
@@ -76,7 +85,7 @@ test('options.ignorecase', t => {
   t.end()
 })
 
-test('special case: invalid paths, throw', t => {
+_test('special case: invalid paths, throw', t => {
   const ig = ignore()
 
   const emptyMessage = 'path must be a string, but got ""'
@@ -100,7 +109,7 @@ test('special case: invalid paths, throw', t => {
   t.end()
 })
 
-test('isPathValid', t => {
+_test('isPathValid', t => {
   const paths = [
     '.',
     './foo',
@@ -169,7 +178,7 @@ const IGNORE_TEST_CASES = [
 ]
 
 IGNORE_TEST_CASES.forEach(([d, patterns, path, [ignored, unignored]]) => {
-  test(d, t => {
+  _test(d, t => {
     const ig = ignore()
     if (patterns) {
       ig.add(patterns)
