@@ -5,7 +5,7 @@ interface TestResult {
   unignored: boolean
 }
 
-interface Ignore {
+export interface Ignore {
   /**
    * Adds a rule rules to the current manager.
    * @param  {string | Ignore} pattern
