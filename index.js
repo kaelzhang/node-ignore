@@ -354,12 +354,10 @@ const throwError = (message, Ctor) => {
   throw new Ctor(message)
 }
 
-const returnFalse = () => false
-
-const checkPath = (path, doThrow) => {
+const checkPath = (path, originalPath, doThrow) => {
   if (!isString(path)) {
     return doThrow(
-      `path must be a string, but got \`${path}\``,
+      `path must be a string, but got \`${originalPath}\``,
       TypeError
     )
   }
@@ -373,7 +371,7 @@ const checkPath = (path, doThrow) => {
   if (checkPath.isNotRelative(path)) {
     const r = '`path.relative()`d'
     return doThrow(
-      `path should be a ${r} string, but got "${path}"`,
+      `path should be a ${r} string, but got "${originalPath}"`,
       RangeError
     )
   }
@@ -382,7 +380,9 @@ const checkPath = (path, doThrow) => {
 }
 
 const isNotRelative = path => REGEX_TEST_INVALID_PATH.test(path)
+
 checkPath.isNotRelative = isNotRelative
+checkPath.convert = p => p
 
 class Ignore {
   constructor ({
@@ -482,9 +482,17 @@ class Ignore {
   }
 
   // @returns {TestResult}
-  _test (path, cache, checkUnignored, slices) {
-    checkPath(path, throwError)
+  _test (originalPath, cache, checkUnignored, slices) {
+    const path = originalPath
+      // Supports nullable path
+      && checkPath.convert(originalPath)
 
+    checkPath(path, originalPath, throwError)
+
+    return this._t(path, cache, checkUnignored, slices)
+  }
+
+  _t (path, cache, checkUnignored, slices) {
     if (path in cache) {
       return cache[path]
     }
@@ -502,7 +510,7 @@ class Ignore {
       return cache[path] = this._testOne(path, checkUnignored)
     }
 
-    const parent = this._test(
+    const parent = this._t(
       slices.join(SLASH) + SLASH,
       cache,
       checkUnignored,
@@ -537,8 +545,10 @@ class Ignore {
 
 const factory = options => new Ignore(options)
 
-const isPathValid = path => checkPath(path, returnFalse)
+const returnFalse = () => false
 
+const isPathValid = path =>
+  checkPath(path && checkPath.convert(path), path, returnFalse)
 
 factory.isPathValid = isPathValid
 
@@ -558,22 +568,13 @@ if (
     || process.platform === 'win32'
   )
 ) {
-  const test = Ignore.prototype._test
-
   /* eslint no-control-regex: "off" */
   const makePosix = str => /^\\\\\?\\/.test(str)
   || /["<>|\u0000-\u001F]+/u.test(str)
     ? str
     : str.replace(/\\/g, '/')
 
-  Ignore.prototype._test = function testWin32 (path, ...args) {
-    path = makePosix(path)
-    return test.call(this, path, ...args)
-  }
-
-  factory.isPathValid = path => path
-    ? isPathValid(makePosix(path))
-    : isPathValid(path)
+  checkPath.convert = makePosix
 
   // 'C:\\foo'     <- 'C:\\foo' has been converted to 'C:/'
   // 'd:\\foo'

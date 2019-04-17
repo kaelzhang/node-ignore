@@ -831,7 +831,7 @@ const cases = [
 ]
 
 const IS_WINDOWS = process.platform === 'win32'
-if (!IS_WINDOWS) {
+if (!IS_WINDOWS && !process.env.IGNORE_TEST_WIN32) {
   cases.push([
     'linux: back slashes on paths',
     [

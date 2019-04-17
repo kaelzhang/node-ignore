@@ -102,6 +102,18 @@ _test('special case: invalid paths, throw', t => {
     'path must be `path.relative()`d, but got "/a"'
   )
 
+  if (SHOULD_TEST_WINDOWS) {
+    t.throws(
+      () => ig.ignores('c:\\a'),
+      'path must be `path.relative()`d, but got "c:\\a"'
+    )
+
+    t.throws(
+      () => ig.ignores('C:\\a'),
+      'path must be `path.relative()`d, but got "C:\\a"'
+    )
+  }
+
   t.throws(() => ig.filter(['']), emptyMessage)
 
   t.throws(() => [''].filter(ig.createFilter()), emptyMessage)
@@ -124,7 +136,9 @@ _test('isPathValid', t => {
       '..\\foo',
       '.\\foo',
       '\\foo',
-      '\\\\foo'
+      '\\\\foo',
+      'C:\\foo',
+      'd:\\foo'
     )
   }
 
