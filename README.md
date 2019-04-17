@@ -179,6 +179,9 @@ ig.ignores('./abc')
 // ```
 ig.ignores('/abc')
 
+// WRONG, that it is an absolute path on Windows
+ig.ignores('C:\abc')
+
 // Right
 ig.ignores('abc')
 

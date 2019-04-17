@@ -369,8 +369,8 @@ const checkPath = (path, doThrow) => {
     return doThrow(`path must not be empty`, TypeError)
   }
 
-  //
-  if (REGEX_TEST_INVALID_PATH.test(path)) {
+  // Check if it is a relative path
+  if (checkPath.isNotRelative(path)) {
     const r = '`path.relative()`d'
     return doThrow(
       `path should be a ${r} string, but got "${path}"`,
@@ -380,6 +380,9 @@ const checkPath = (path, doThrow) => {
 
   return true
 }
+
+const isNotRelative = path => REGEX_TEST_INVALID_PATH.test(path)
+checkPath.isNotRelative = isNotRelative
 
 class Ignore {
   constructor ({
@@ -571,4 +574,11 @@ if (
   factory.isPathValid = path => path
     ? isPathValid(makePosix(path))
     : isPathValid(path)
+
+  // 'C:\\foo'     <- 'C:\\foo' has been converted to 'C:/'
+  // 'd:\\foo'
+  const REGIX_IS_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i
+  checkPath.isNotRelative = path =>
+    REGIX_IS_WINDOWS_PATH_ABSOLUTE.test(path)
+    || isNotRelative(path)
 }
