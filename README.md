@@ -56,6 +56,12 @@ Since `4.0.0`, ignore will no longer support `node < 6` by default, to use in no
   - [`glob-gitignore`](https://www.npmjs.com/package/glob-gitignore) matches files using patterns and filters them according to gitignore rules.
 - [Upgrade Guide](#upgrade-guide)
 
+## Install
+
+```sh
+npm i ignore
+```
+
 ## Usage
 
 ```js

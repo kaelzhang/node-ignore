@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "Ignore is a manager and filter for .gitignore rules, the one used by eslint, gitbook and many others.",
   "files": [
     "legacy.js",
@@ -12,7 +12,7 @@
     "prepublishOnly": "npm run build",
     "build": "babel -o legacy.js index.js",
     "test:lint": "eslint .",
-    "test:tsc": "tsc ./test/ts/simple.ts",
+    "test:tsc": "tsc ./test/ts/simple.ts --lib ES6",
     "test:ts": "node ./test/ts/simple.js",
     "test:git": "tap test/git-check-ignore.js",
     "test:ignore": "tap test/ignore.js",
@@ -48,21 +48,21 @@
     "url": "https://github.com/kaelzhang/node-ignore/issues"
   },
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.3.4",
-    "@babel/preset-env": "^7.3.4",
-    "codecov": "^3.2.0",
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "codecov": "^3.5.0",
     "debug": "^4.1.1",
-    "eslint": "^5.15.2",
-    "eslint-config-ostai": "^2.0.0",
-    "eslint-plugin-import": "^2.16.0",
+    "eslint": "^5.16.0",
+    "eslint-config-ostai": "^3.0.0",
+    "eslint-plugin-import": "^2.17.3",
     "mkdirp": "^0.5.1",
     "pre-suf": "^1.1.1",
     "rimraf": "^2.6.3",
     "spawn-sync": "^2.0.0",
-    "tap": "^12.6.0",
-    "tmp": "0.0.33",
-    "typescript": "^3.3.3333"
+    "tap": "^14.2.0",
+    "tmp": "0.1.0",
+    "typescript": "^3.4.5"
   },
   "engines": {
     "node": ">= 4"
