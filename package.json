@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "5.1.3",
+  "version": "5.1.4",
   "description": "Ignore is a manager and filter for .gitignore rules, the one used by eslint, gitbook and many others.",
   "files": [
     "legacy.js",
@@ -48,21 +48,21 @@
     "url": "https://github.com/kaelzhang/node-ignore/issues"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
     "codecov": "^3.5.0",
     "debug": "^4.1.1",
-    "eslint": "^5.16.0",
+    "eslint": "^6.1.0",
     "eslint-config-ostai": "^3.0.0",
-    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-import": "^2.18.2",
     "mkdirp": "^0.5.1",
     "pre-suf": "^1.1.1",
-    "rimraf": "^2.6.3",
+    "rimraf": "^2.7.0",
     "spawn-sync": "^2.0.0",
-    "tap": "^14.2.0",
+    "tap": "^14.6.1",
     "tmp": "0.1.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.5.3"
   },
   "engines": {
     "node": ">= 4"

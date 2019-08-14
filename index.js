@@ -174,7 +174,7 @@ const REPLACERS = [
         // Actually, if there is only a trailing slash,
         //   git also treats it as a shell glob pattern
 
-        // After 2.22.1 (but compatible)
+        // After 2.22.1 (compatible but clearer)
         // > If there is a separator at the beginning or middle (or both)
         // > of the pattern, then the pattern is relative to the directory
         // > level of the particular .gitignore file itself.

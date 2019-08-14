@@ -1,6 +1,7 @@
 // For old node.js versions, we use es5
-const ignore = require('..')
 const {test} = require('tap')
+
+const ignore = require('..')
 const {
   cases,
   checkEnv,

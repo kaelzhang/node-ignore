@@ -37,9 +37,13 @@
 
 `ignore` is a manager, filter and parser which implemented in pure JavaScript according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
 
+`ignore` is used by eslint, gitbook and [many others](https://www.npmjs.com/browse/depended/ignore).
+
 Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does not work in the gitignore way. To filter filenames according to .gitignore file, I recommend this module.
 
-##### Tested on
+### Tested on
+
+`ignore` is fully tested, and has more than **five hundreds** of unit tests.
 
 - Linux + Node: `0.8` - `7.x`
 - Windows + Node: `0.10` - `7.x`, node < `0.10` is not tested due to the lack of support of appveyor.
