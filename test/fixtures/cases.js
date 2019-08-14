@@ -9,17 +9,26 @@ function readPatterns (file) {
 }
 
 const cases = [
-  // [
-  //   '#56',
-  //   [
-  //     '/*/',
-  //     '!/foo/'
-  //   ],
-  //   {
-  //     'foo/bar.js': 0
-  //   },
-  //   true
-  // ],
+  [
+    'gitignore 2.22.1 example',
+    [
+      'doc/frotz/'
+    ],
+    {
+      'doc/frotz/': 1,
+      'a/doc/frotz/': 0
+    }
+  ],
+  [
+    '#56',
+    [
+      '/*/',
+      '!/foo/'
+    ],
+    {
+      'foo/bar.js': 0
+    }
+  ],
   [
     'object prototype',
     [

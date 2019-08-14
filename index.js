@@ -111,14 +111,6 @@ const REPLACERS = [
     // > A leading slash matches the beginning of the pathname.
     // > For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
     // A leading slash matches the beginning of the pathname
-
-    // WTF! https://git-scm.com/docs/gitignore changes, the new rules are
-
-    // > If there is a separator at the beginning or middle (or both)
-    // > of the pattern, then the pattern is relative to the directory level of
-    // >.the particular .gitignore file itself. Otherwise the pattern may also
-    // > match at any level below the .gitignore level.
-
     /^\//,
     () => '^'
   ],
@@ -174,11 +166,20 @@ const REPLACERS = [
     // If starts with '**', adding a '^' to the regular expression also works
     /^(?=[^^])/,
     function startingReplacer () {
+      // If has a slash `/` at the beginning or middle
       return !/\/(?!$)/.test(this)
+        // > Prior to 2.22.1
         // > If the pattern does not contain a slash /,
         // >   Git treats it as a shell glob pattern
         // Actually, if there is only a trailing slash,
         //   git also treats it as a shell glob pattern
+
+        // After 2.22.1 (but compatible)
+        // > If there is a separator at the beginning or middle (or both)
+        // > of the pattern, then the pattern is relative to the directory
+        // > level of the particular .gitignore file itself.
+        // > Otherwise the pattern may also match at any level below
+        // > the .gitignore level.
         ? '(?:^|\\/)'
 
         // > Otherwise, Git treats the pattern as a shell glob suitable for
