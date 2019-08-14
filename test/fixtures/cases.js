@@ -9,6 +9,17 @@ function readPatterns (file) {
 }
 
 const cases = [
+  // [
+  //   '#56',
+  //   [
+  //     '/*/',
+  //     '!/foo/'
+  //   ],
+  //   {
+  //     'foo/bar.js': 0
+  //   },
+  //   true
+  // ],
   [
     'object prototype',
     [

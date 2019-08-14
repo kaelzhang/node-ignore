@@ -49,7 +49,7 @@ const sanitizeRange = range => range.replace(
 //      you could use option `mark: true` with `glob`
 
 // '`foo/`' should not continue with the '`..`'
-const DEFAULT_REPLACER_PREFIX = [
+const REPLACERS = [
 
   // > Trailing spaces are ignored unless they are quoted with backslash ("\")
   [
@@ -111,6 +111,14 @@ const DEFAULT_REPLACER_PREFIX = [
     // > A leading slash matches the beginning of the pathname.
     // > For example, "/*.c" matches "cat-file.c" but not "mozilla-sha1/sha1.c".
     // A leading slash matches the beginning of the pathname
+
+    // WTF! https://git-scm.com/docs/gitignore changes, the new rules are
+
+    // > If there is a separator at the beginning or middle (or both)
+    // > of the pattern, then the pattern is relative to the directory level of
+    // >.the particular .gitignore file itself. Otherwise the pattern may also
+    // > match at any level below the .gitignore level.
+
     /^\//,
     () => '^'
   ],
@@ -132,10 +140,33 @@ const DEFAULT_REPLACER_PREFIX = [
 
     // '**/foo' <-> 'foo'
     () => '^(?:.*\\/)?'
-  ]
-]
+  ],
 
-const DEFAULT_REPLACER_SUFFIX = [
+  // ending
+  [
+    // 'js' will not match 'js.'
+    // 'ab' will not match 'abc'
+    /(?:[^*])$/,
+
+    // WTF!
+    // https://git-scm.com/docs/gitignore
+    // changes in [2.22.1](https://git-scm.com/docs/gitignore/2.22.1)
+    // which re-fixes #24, #38
+
+    // > If there is a separator at the end of the pattern then the pattern
+    // > will only match directories, otherwise the pattern can match both
+    // > files and directories.
+
+    // 'js*' will not match 'a.js'
+    // 'js/' will not match 'a.js'
+    // 'js' will match 'a.js' and 'a.js/'
+    match => /\/$/.test(match)
+      // foo/ will not match 'foo'
+      ? `${match}$`
+      // foo matches 'foo' and 'foo/'
+      : `${match}(?=$|\\/$)`
+  ],
+
   // starting
   [
     // there will be no leading '/'
@@ -223,55 +254,6 @@ const DEFAULT_REPLACER_SUFFIX = [
   ]
 ]
 
-const POSITIVE_REPLACERS = [
-  ...DEFAULT_REPLACER_PREFIX,
-
-  // 'f'
-  // matches
-  // - /f(end)
-  // - /f/
-  // - (start)f(end)
-  // - (start)f/
-  // doesn't match
-  // - oof
-  // - foo
-  // pseudo:
-  // -> (^|/)f(/|$)
-
-  // ending
-  [
-    // 'js' will not match 'js.'
-    // 'ab' will not match 'abc'
-    /(?:[^*/])$/,
-
-    // 'js*' will not match 'a.js'
-    // 'js/' will not match 'a.js'
-    // 'js' will match 'a.js' and 'a.js/'
-    match => `${match}(?=$|\\/)`
-  ],
-
-  ...DEFAULT_REPLACER_SUFFIX
-]
-
-const NEGATIVE_REPLACERS = [
-  ...DEFAULT_REPLACER_PREFIX,
-
-  // #24, #38
-  // The MISSING rule of [gitignore docs](https://git-scm.com/docs/gitignore)
-  // A negative pattern without a trailing wildcard should not
-  // re-include the things inside that directory.
-
-  // eg:
-  // ['node_modules/*', '!node_modules']
-  // should ignore `node_modules/a.js`
-  [
-    /(?:[^*])$/,
-    match => `${match}(?=$|\\/$)`
-  ],
-
-  ...DEFAULT_REPLACER_SUFFIX
-]
-
 // A simple cache, because an ignore rule only has only one certain meaning
 const regexCache = Object.create(null)
 
@@ -282,11 +264,11 @@ const makeRegex = (pattern, negative, ignorecase) => {
     return r
   }
 
-  const replacers = negative
-    ? NEGATIVE_REPLACERS
-    : POSITIVE_REPLACERS
+  // const replacers = negative
+  //   ? NEGATIVE_REPLACERS
+  //   : POSITIVE_REPLACERS
 
-  const source = replacers.reduce(
+  const source = REPLACERS.reduce(
     (prev, current) => prev.replace(current[0], current[1].bind(pattern)),
     pattern
   )
