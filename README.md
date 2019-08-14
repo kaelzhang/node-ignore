@@ -35,7 +35,7 @@
 
 # ignore
 
-`ignore` is a manager, filter and parser which implemented in pure JavaScript according to the .gitignore [spec](http://git-scm.com/docs/gitignore).
+`ignore` is a manager, filter and parser which implemented in pure JavaScript according to the [.gitignore spec 2.22.1](http://git-scm.com/docs/gitignore).
 
 `ignore` is used by eslint, gitbook and [many others](https://www.npmjs.com/browse/depended/ignore).
 
