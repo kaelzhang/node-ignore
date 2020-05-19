@@ -12,7 +12,7 @@ module.exports = {
       allow: ['_rules', '_test']
     }],
 
-    'indent': ['error', 2, {
+    indent: ['error', 2, {
       MemberExpression: 0,
 
       // Eslint bug

@@ -1,4 +1,3 @@
-// For old node.js versions, we use es5
 const {test} = require('tap')
 
 const ignore = require('..')

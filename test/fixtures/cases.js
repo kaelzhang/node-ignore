@@ -9,6 +9,24 @@ function readPatterns (file) {
 }
 
 const cases = [
+  // [
+  //   'Example',
+  //   [
+  //     'a'
+  //   ],
+  //   {
+  //     'a': 1
+  //   }
+  // ],
+  [
+    '#59',
+    [
+      'src/\\[app\\]'
+    ],
+    {
+      'src/[app]': 1
+    }
+  ],
   [
     'gitignore 2.22.1 example',
     [
