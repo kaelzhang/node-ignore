@@ -310,7 +310,9 @@ ig.ignores('*.PNG')  // false
 
 ## static `ignore.isPathValid(pathname): boolean` since 5.0.0
 
-Check whether the `pathname` is valid according to the [convention](#1-pathname-should-be-a-pathrelatived-pathname).
+Check whether the `pathname` is an valid `path.relative()`d path according to the [convention](#1-pathname-should-be-a-pathrelatived-pathname).
+
+This method is **NOT** used to check if an ignore pattern is valid.
 
 ```js
 ignore.isPathValid('./foo')  // false
