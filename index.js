@@ -6,6 +6,7 @@ function makeArray (subject) {
 }
 
 const EMPTY = ''
+const SPACE = ' '
 const ESCAPE = '\\'
 const REGEX_TEST_BLANK_LINE = /^\s+$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
@@ -41,10 +42,10 @@ const sanitizeRange = range => range.replace(
 )
 
 // See fixtures #59
-const cleanRangeBackSlash = slashes => slashes.slice(
-  0,
-  parseInt(slashes.length / 2, 10) * 2
-)
+const cleanRangeBackSlash = slashes => {
+  const {length} = slashes
+  return slashes.slice(0, length - length % 2)
+}
 
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
@@ -66,14 +67,14 @@ const REPLACERS = [
     // (a \ ) -> (a  )
     /\\?\s+$/,
     match => match.indexOf('\\') === 0
-      ? ' '
+      ? SPACE
       : EMPTY
   ],
 
   // replace (\ ) with ' '
   [
     /\\\s/g,
-    () => ' '
+    () => SPACE
   ],
 
   // Escape metacharacters
