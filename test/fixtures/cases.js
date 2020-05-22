@@ -43,15 +43,15 @@ const cases = [
       'src/[x\\]'
     ],
     {
-      // 'src/[foo]': 1,
-      // 'src/[foo2\\]': 1,
+      'src/[foo]': 1,
+      'src/[foo2\\]': 1,
 
-      // // Seems the followings are side-effects,
-      // // however, we will implement these
-      // 'src/[foo3\\]': 1,
-      // 'src/[foo4\\\\]': 1,
-      // 'src/[foo5\\\\]': 1,
-      // 'src/[foo6\\\\\\]': 1,
+      // Seems the followings are side-effects,
+      // however, we will implement these
+      'src/[foo3\\]': 1,
+      'src/[foo4\\\\]': 1,
+      'src/[foo5\\\\]': 1,
+      'src/[foo6\\\\\\]': 1,
 
       'src/[bar]': 1,
 
