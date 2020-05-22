@@ -23,12 +23,12 @@ const cases = [
   [
     '#59 and more cases about range notation',
     [
-      'src/\\[foo\\]',
-      'src/\\[foo2\\\\]',
-      'src/\\[foo3\\\\\\]',
-      'src/\\[foo4\\\\\\\\]',
-      'src/\\[foo5\\\\\\\\\\]',
-      'src/\\[foo6\\\\\\\\\\\\]',
+      'src/\\[foo\\]',              // 1 -> 0
+      'src/\\[foo2\\\\]',           // 2 -> 1
+      'src/\\[foo3\\\\\\]',         // 3 -> 1
+      'src/\\[foo4\\\\\\\\]',       // 4 -> 2
+      'src/\\[foo5\\\\\\\\\\]',     // 5 -> 2
+      'src/\\[foo6\\\\\\\\\\\\]',   // 6 -> 3
 
       'src/\\[bar]',
 

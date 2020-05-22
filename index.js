@@ -40,6 +40,12 @@ const sanitizeRange = range => range.replace(
     : EMPTY
 )
 
+// See fixtures #59
+const cleanRangeBackSlash = slashes => slashes.slice(
+  0,
+  parseInt(slashes.length / 2, 10) * 2
+)
+
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
 // > but it would only find a match with a directory.
@@ -217,7 +223,7 @@ const REPLACERS = [
     /(\\)?\[([^\]/]*?)(\\*)($|\])/g,
     (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE
       // '\\[bar]' -> '\\\\[bar\\]'
-      ? `\\[${range}${close}`
+      ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
       : close === ']'
         ? endEscape.length % 2 === 0
           // A normal case, and it is a range notation
