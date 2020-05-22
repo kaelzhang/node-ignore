@@ -12,19 +12,63 @@ const cases = [
   // [
   //   'Example',
   //   [
+  //     // ignore pattern
   //     'a'
   //   ],
   //   {
+  //     // 1 indicates 'a' should be ignored
   //     'a': 1
   //   }
   // ],
   [
-    '#59',
+    '#59 and more cases about range notation',
     [
-      'src/\\[app\\]'
+      'src/\\[foo\\]',
+      'src/\\[foo2\\\\]',
+      'src/\\[foo3\\\\\\]',
+      'src/\\[foo4\\\\\\\\]',
+      'src/\\[foo5\\\\\\\\\\]',
+      'src/\\[foo6\\\\\\\\\\\\]',
+
+      'src/\\[bar]',
+
+      'src/[e\\\\]',
+      's/[f\\\\\\\\]',
+
+      's/[a-z0-9]',
+
+      // The following special cases are not described in gitignore manual
+      'src/[q',
+      'src/\\[u',
+      'src/[x\\]'
     ],
     {
-      'src/[app]': 1
+      // 'src/[foo]': 1,
+      // 'src/[foo2\\]': 1,
+
+      // // Seems the followings are side-effects,
+      // // however, we will implement these
+      // 'src/[foo3\\]': 1,
+      // 'src/[foo4\\\\]': 1,
+      // 'src/[foo5\\\\]': 1,
+      // 'src/[foo6\\\\\\]': 1,
+
+      'src/[bar]': 1,
+
+      'src/e': 1,
+      'src/\\': 1,
+      's/f': 1,
+      's/\\': 1,
+
+      's/a': 1,
+
+      's/0': 1,
+
+      'src/[q': 0,
+      'src/[u': 1,
+      'src/[x': 0,
+      'src/[x]': 0,
+      'src/x': 0
     }
   ],
   [
