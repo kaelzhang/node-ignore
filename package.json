@@ -62,7 +62,7 @@
     "spawn-sync": "^2.0.0",
     "tap": "^14.10.7",
     "tmp": "0.2.1",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.3"
   },
   "engines": {
     "node": ">= 4"
