@@ -24,11 +24,6 @@ const cases = [
     '#59 and more cases about range notation',
     [
       'src/\\[foo\\]',              // 1 -> 0
-      'src/\\[foo2\\\\]',           // 2 -> 1
-      'src/\\[foo3\\\\\\]',         // 3 -> 1
-      'src/\\[foo4\\\\\\\\]',       // 4 -> 2
-      'src/\\[foo5\\\\\\\\\\]',     // 5 -> 2
-      'src/\\[foo6\\\\\\\\\\\\]',   // 6 -> 3
 
       'src/\\[bar]',
 
@@ -44,21 +39,11 @@ const cases = [
     ],
     {
       'src/[foo]': 1,
-      'src/[foo2\\]': 1,
-
-      // Seems the followings are side-effects,
-      // however, we will implement these
-      'src/[foo3\\]': 1,
-      'src/[foo4\\\\]': 1,
-      'src/[foo5\\\\]': 1,
-      'src/[foo6\\\\\\]': 1,
 
       'src/[bar]': 1,
 
       'src/e': 1,
-      'src/\\': 1,
       's/f': 1,
-      's/\\': 1,
 
       's/a': 1,
 
@@ -914,19 +899,61 @@ const cases = [
 
 const IS_WINDOWS = process.platform === 'win32'
 if (!IS_WINDOWS && !process.env.IGNORE_TEST_WIN32) {
-  cases.push([
-    'linux: back slashes on paths',
+  cases.push(
     [
-      'a',
-      'b\\\\c'
+      'linux: back slashes on paths',
+      [
+        'a',
+        'b\\\\c'
+      ],
+      {
+        'b\\c/a.md': 1,
+        'a\\b/a.js': 0,
+        'a\\b/a': 1,
+        'a/a.js': 1
+      }
     ],
-    {
-      'b\\c/a.md': 1,
-      'a\\b/a.js': 0,
-      'a\\b/a': 1,
-      'a/a.js': 1
-    }
-  ])
+    [
+      '#59: test cases for linux only',
+      [
+        'src/\\[foo\\]',              // 1 -> 0
+        'src/\\[foo2\\\\]',           // 2 -> 1
+        'src/\\[foo3\\\\\\]',         // 3 -> 1
+        'src/\\[foo4\\\\\\\\]',       // 4 -> 2
+        'src/\\[foo5\\\\\\\\\\]',     // 5 -> 2
+        'src/\\[foo6\\\\\\\\\\\\]',   // 6 -> 3
+
+        'src/\\[bar]',
+
+        'src/[e\\\\]',
+        's/[f\\\\\\\\]',
+
+        's/[a-z0-9]'
+      ],
+      {
+        'src/[foo]': 1,
+        'src/[foo2\\]': 1,
+
+        // Seems the followings are side-effects,
+        // however, we will implement these
+        'src/[foo3\\]': 1,
+        'src/[foo4\\\\]': 1,
+        'src/[foo5\\\\]': 1,
+        'src/[foo6\\\\\\]': 1,
+
+        'src/[bar]': 1,
+
+        'src/e': 1,
+        'src/\\': 1,
+        's/f': 1,
+        's/\\': 1,
+
+        's/a': 1,
+
+        's/0': 1
+      }
+    ]
+  )
 }
 
 const cases_to_test_only = cases.filter(c => c[3])
