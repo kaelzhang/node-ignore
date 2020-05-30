@@ -39,7 +39,11 @@
 
 `ignore` is used by eslint, gitbook and [many others](https://www.npmjs.com/browse/depended/ignore).
 
-Pay attention that [`minimatch`](https://www.npmjs.org/package/minimatch) does not work in the gitignore way. To filter filenames according to .gitignore file, I recommend this module.
+Pay **ATTENTION** that [`minimatch`](https://www.npmjs.org/package/minimatch) (which used by `fstream-ignore`) does not follow the gitignore spec.
+
+To filter filenames according to a .gitignore file, I recommend this npm package, `ignore`.
+
+To parse an `.npmignore` file, you should use `minimatch`, because an `.npmignore` file does not work in the .gitignore way.
 
 ### Tested on
 
