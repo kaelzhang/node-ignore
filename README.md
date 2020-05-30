@@ -43,7 +43,7 @@ Pay **ATTENTION** that [`minimatch`](https://www.npmjs.org/package/minimatch) (w
 
 To filter filenames according to a .gitignore file, I recommend this npm package, `ignore`.
 
-To parse an `.npmignore` file, you should use `minimatch`, because an `.npmignore` file does not work in the .gitignore way.
+To parse an `.npmignore` file, you should use `minimatch`, because an `.npmignore` file is parsed by npm using `minimatch` and it does not work in the .gitignore way.
 
 ### Tested on
 
