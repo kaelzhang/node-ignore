@@ -39,6 +39,8 @@ const ig5 = ignore({
   ignorecase: false
 })
 
+let ig6 = ignore().add(ig2).remove('*.js')
+
 const isValid: boolean = ignore.isPathValid('./foo')
 equal(isValid, false, './foo is not valid')
 

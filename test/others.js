@@ -31,6 +31,21 @@ _test('.add(<Ignore>)', t => {
   t.end()
 })
 
+_test('.remove(<Ignore>)', t => {
+  const a = ignore().add(['.abc/*', '!.abc/d/', '!.abc/e/'])
+  const b = ignore().add(['.abc/*', '!.abc/d/', '.abc/e/']).remove(a)
+
+  const paths = [
+    '.abc/a.js',    // included by b, filtered out by a
+    '.abc/d/e.js',  // included
+    '.abc/e/e.js'   // included by a, filtered out by b
+  ]
+
+  t.deepEqual(a.filter(paths), ['.abc/d/e.js', '.abc/e/e.js'])
+  t.deepEqual(b.filter(paths), ['.abc/a.js', '.abc/d/e.js'])
+  t.end()
+})
+
 _test('fixes babel class', t => {
   const {constructor} = ignore()
 

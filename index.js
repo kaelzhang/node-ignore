@@ -450,6 +450,45 @@ class Ignore {
     return this.add(pattern)
   }
 
+  _removeRule (toRemove) {
+    const index = this._rules.findIndex(
+      rule => rule.pattern === toRemove.pattern
+        && rule.negative === toRemove.negative
+    )
+    if (index >= 0) {
+      this._rules.splice(index, 1)
+      this._removed = true
+    }
+  }
+
+  _removePattern (pattern) {
+    if (pattern && pattern[KEY_IGNORE]) {
+      pattern._rules.forEach(this._removeRule, this)
+      return
+    }
+
+    if (checkPattern(pattern)) {
+      this._removeRule(createRule(pattern, this._ignorecase))
+    }
+  }
+
+  // @param {Array<string> | string | Ignore} pattern
+  remove (pattern) {
+    this._removed = false
+
+    makeArray(
+      isString(pattern)
+        ? splitPattern(pattern)
+        : pattern
+    ).forEach(this._removePattern, this)
+
+    if (this._removed) {
+      this._initCache()
+    }
+
+    return this
+  }
+
   //          |           ignored : unignored
   // negative |   0:0   |   0:1   |   1:0   |   1:1
   // -------- | ------- | ------- | ------- | --------

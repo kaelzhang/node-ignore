@@ -20,6 +20,19 @@ export interface Ignore {
   add(patterns: (string | Ignore)[]): this
 
   /**
+   * Removes a rule or rules from the current manager.
+   * @param  {string | Ignore} pattern
+   * @returns IgnoreBase
+   */
+  remove(pattern: string | Ignore): this
+  /**
+   * Adds a rule or rules to the current manager.
+   * @param  {string[]} patterns
+   * @returns IgnoreBase
+   */
+  remove(patterns: (string | Ignore)[]): this
+
+  /**
    * Filters the given array of pathnames, and returns the filtered array.
    * NOTICE that each path here should be a relative path to the root of your repository.
    * @param paths the array of paths to be filtered.

@@ -149,6 +149,16 @@ ignore()
 
 `pattern` could also be an `ignore` instance, so that we could easily inherit the rules of another `Ignore` instance.
 
+## .remove(pattern: string | Ignore): this
+## .remove(patterns: Array<string | Ignore>): this
+
+- **pattern** `String | Ignore` An ignore pattern string, or the `Ignore` instance
+- **patterns** `Array<String | Ignore>` Array of ignore patterns.
+
+Removes a rule or several rules from the current manager.
+
+Returns `this`
+
 ## <strike>.addIgnoreFile(path)</strike>
 
 REMOVED in `3.x` for now.
