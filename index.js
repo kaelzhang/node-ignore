@@ -17,7 +17,8 @@ const REGEX_SPLITALL_CRLF = /\r?\n/g
 // ../foo,
 // .
 // ..
-const REGEX_TEST_INVALID_PATH = /^\.*\/|^\.+$/
+
+const REGEX_TEST_INVALID_PATH = /^\.{0,2}\/|^\.{1,2}$/
 
 const SLASH = '/'
 const KEY_IGNORE = typeof Symbol !== 'undefined'

@@ -188,6 +188,12 @@ const IGNORE_TEST_CASES = [
     ['*.js', '!a/a.js'],
     'a/a.js',
     [false, true]
+  ],
+  [
+    `test: file which named '...'`,
+    'foo',
+    '...',
+    [false, false]
   ]
 ]
 
