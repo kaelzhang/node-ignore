@@ -49,6 +49,7 @@ export interface Ignore {
 
 interface Options {
   ignorecase?: boolean
+  ignorerelative?: boolean
 }
 
 /**

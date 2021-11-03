@@ -362,7 +362,7 @@ const throwError = (message, Ctor) => {
   throw new Ctor(message)
 }
 
-const checkPath = (path, originalPath, doThrow) => {
+const checkPath = (path, originalPath, doThrow, ignoreRelative = false) => {
   if (!isString(path)) {
     return doThrow(
       `path must be a string, but got \`${originalPath}\``,
@@ -376,7 +376,7 @@ const checkPath = (path, originalPath, doThrow) => {
   }
 
   // Check if it is a relative path
-  if (checkPath.isNotRelative(path)) {
+  if (checkPath.isNotRelative(path) && !ignoreRelative) {
     const r = '`path.relative()`d'
     return doThrow(
       `path should be a ${r} string, but got "${originalPath}"`,
@@ -394,12 +394,14 @@ checkPath.convert = p => p
 
 class Ignore {
   constructor ({
-    ignorecase = true
+    ignorecase = true,
+    ignorerelative = false,
   } = {}) {
     define(this, KEY_IGNORE, true)
 
     this._rules = []
     this._ignorecase = ignorecase
+    this._ignorerelative = ignorerelative
     this._initCache()
   }
 
@@ -496,7 +498,7 @@ class Ignore {
       // Supports nullable path
       && checkPath.convert(originalPath)
 
-    checkPath(path, originalPath, throwError)
+    checkPath(path, originalPath, throwError, this._ignorerelative)
 
     return this._t(path, cache, checkUnignored, slices)
   }
@@ -559,7 +561,7 @@ const returnFalse = () => false
 const isPathValid = path =>
   checkPath(path && checkPath.convert(path), path, returnFalse)
 
-factory.isPathValid = isPathValid
+factory.isPathValid = path => isPathValid(path)
 
 // Fixes typescript
 factory.default = factory
