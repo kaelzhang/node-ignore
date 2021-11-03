@@ -85,6 +85,28 @@ _test('options.ignorecase', t => {
   t.end()
 })
 
+_test('special case: internal cache respects ignorecase', t => {
+  const rule = '*.[jJ][pP]g'
+
+  const ig = ignore({
+    ignorecase: false
+  })
+
+  ig.add(rule)
+
+  t.is(ig.ignores('a.JPG'), false)
+
+  const ig2 = ignore({
+    ignorecase: true
+  })
+
+  ig2.add(rule)
+
+  t.is(ig2.ignores('a.JPG'), true)
+
+  t.end()
+})
+
 _test('special case: invalid paths, throw', t => {
   const ig = ignore()
 
