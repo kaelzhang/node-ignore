@@ -292,10 +292,11 @@ const makeRegex = (pattern, ignorecase) => {
   let source = regexCache[pattern]
 
   if (!source) {
-    regexCache[pattern] = source = REPLACERS.reduce(
+    source = REPLACERS.reduce(
       (prev, current) => prev.replace(current[0], current[1].bind(pattern)),
       pattern
     )
+    regexCache[pattern] = source
   }
 
   return ignorecase
