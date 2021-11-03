@@ -395,9 +395,10 @@ class Ignore {
   constructor ({
     ignorecase = true
   } = {}) {
+    define(this, KEY_IGNORE, true)
+
     this._rules = []
     this._ignorecase = ignorecase
-    define(this, KEY_IGNORE, true)
     this._initCache()
   }
 
