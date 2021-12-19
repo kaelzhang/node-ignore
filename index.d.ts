@@ -20,7 +20,7 @@ export interface Ignore {
    * @returns The filtered array of paths
    */
   filter(pathnames: readonly Pathname[]): Pathname[]
-  
+
   /**
    * Creates a filter function which could filter
    * an array of paths with Array.prototype.filter.
@@ -44,6 +44,9 @@ export interface Ignore {
 
 interface Options {
   ignorecase?: boolean
+  // For compatibility
+  ignoreCase?: boolean
+  allowRelativePaths?: boolean
 }
 
 /**

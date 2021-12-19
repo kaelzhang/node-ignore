@@ -227,3 +227,17 @@ IGNORE_TEST_CASES.forEach(([d, patterns, path, [ignored, unignored]]) => {
     t.end()
   })
 })
+
+_test('options.allowRelativePaths', t => {
+  const ig = ignore({
+    allowRelativePaths: true
+  })
+
+  ig.add('foo')
+
+  t.is(ig.ignores('../foo/bar.js'), true)
+
+  t.throws(() => ignore().ignores('../foo/bar.js'))
+
+  t.end()
+})
