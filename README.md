@@ -330,9 +330,9 @@ Which is alternative to `options.ignoreCase`
 
 ### `options.allowRelativePaths?: boolean` since 5.2.0
 
-This option brings backward compatibility with projects which based on `ignore@4.x`
+This option brings backward compatibility with projects which based on `ignore@4.x`. If `options.allowRelativePaths` is `true`, `ignore` will not check whether the given path to be tested is [`path.relative()`d](#pathname-conventions).
 
-However, passing a relative path to test if it is ignored or not is not a good practise, which might lead to unexpected behavior
+However, passing a relative path, such as `'./foo'` or `'../foo'`, to test if it is ignored or not is not a good practise, which might lead to unexpected behavior
 
 ```js
 ignore({
