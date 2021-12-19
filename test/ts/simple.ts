@@ -53,6 +53,16 @@ const {
 equal(ignored, false, 'not ignored')
 equal(unignored, false, 'not unignored')
 
-// Readyonly array
+// Filter an Readyonly array
 const readonlyPaths = ['a', 'a/b', 'foo/bar'] as const
 ig.filter(readonlyPaths)
+
+// Add an Readonly array of rules
+const ig6 = ignore()
+ig6.add([ig3, ig4] as const)
+
+// options.ignoreCase and options.allowRelativePaths
+ignore({
+  ignoreCase: false,
+  allowRelativePaths: true
+})
