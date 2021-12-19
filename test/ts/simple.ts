@@ -52,3 +52,7 @@ const {
 
 equal(ignored, false, 'not ignored')
 equal(unignored, false, 'not unignored')
+
+// Readyonly array
+const readonlyPaths = ['a', 'a/b', 'foo/bar'] as const
+ig.filter(readonlyPaths)
