@@ -9,6 +9,7 @@ function readPatterns (file) {
 }
 
 const cases = [
+  /////////////////////////////////////////////////////////////////////
   // [
   //   'Example',
   //   [
@@ -20,6 +21,16 @@ const cases = [
   //     'a': 1
   //   }
   // ],
+  /////////////////////////////////////////////////////////////////////
+  [
+    '#76 (invalid), comments with no heading whitespace',
+    [
+      'node_modules# comments'
+    ],
+    {
+      'node_modules/a.js': 0
+    }
+  ],
   [
     '#59 and more cases about range notation',
     [
