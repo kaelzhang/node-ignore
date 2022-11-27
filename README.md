@@ -136,7 +136,7 @@ Notice that a line starting with `'#'`(hash) is treated as a comment. Put a back
 
 ```js
 ignore().add('#abc').ignores('#abc')    // false
-ignore().add('\#abc').ignores('#abc')   // true
+ignore().add('\\#abc').ignores('#abc')   // true
 ```
 
 `pattern` could either be a line of ignore pattern or a string of multiple ignore patterns, which means we could just `ignore().add()` the content of a ignore file:
