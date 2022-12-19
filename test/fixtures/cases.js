@@ -23,22 +23,6 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
-    '#81: invalid trailing backslash at the end should not throw',
-    [
-      'test\\',
-      'testa\\\\',
-      'foo/*',
-      // test negative pattern
-      '!foo/test\\'
-    ],
-    {
-      'test': 0,
-      'test\\': 0,
-      'testa\\': 1,
-      'foo/test\\': 1
-    }
-  ],
-  [
     '#76 (invalid), comments with no heading whitespace',
     [
       'node_modules# comments'
@@ -928,12 +912,21 @@ const IS_WINDOWS = process.platform === 'win32'
 if (!IS_WINDOWS && !process.env.IGNORE_TEST_WIN32) {
   cases.push(
     [
-      '#81: invalid trailing backslash, test non-windows only',
+      '#81: invalid trailing backslash at the end should not throw, test non-windows env only',
       [
-        '\\'
+        'test\\',
+        'testa\\\\',
+        '\\',
+        'foo/*',
+        // test negative pattern
+        '!foo/test\\'
       ],
       {
-        '\\': 0
+        'test': 0,
+        'test\\': 0,
+        'testa\\': 1,
+        '\\': 0,
+        'foo/test\\': 1
       }
     ],
     [
