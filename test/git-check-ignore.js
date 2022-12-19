@@ -1,4 +1,4 @@
-const {test} = require('tap')
+const tap = require('tap')
 const spawn = require('spawn-sync')
 const tmp = require('tmp').dirSync
 const mkdirp = require('mkdirp').sync
@@ -12,6 +12,12 @@ const {
   checkEnv,
   IS_WINDOWS
 } = require('./fixtures/cases')
+
+const {test} = tap
+
+// This test file is related to dealing with file systems which takes time,
+// so remove timeout setting.
+tap.setTimeout(0)
 
 const touch = (root, file, content) => {
   const dirs = file.split('/')
