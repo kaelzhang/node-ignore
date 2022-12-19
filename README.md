@@ -8,9 +8,9 @@
   </tr>
 </thead><tbody><tr>
   <td colspan="2" align="center">
-    <a href="https://travis-ci.org/kaelzhang/node-ignore">
+    <a href="https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml">
     <img
-      src="https://travis-ci.org/kaelzhang/node-ignore.svg?branch=master"
+      src="https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml/badge.svg"
       alt="Build Status" /></a>
   </td>
   <td align="center">
