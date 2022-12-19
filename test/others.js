@@ -26,8 +26,8 @@ _test('.add(<Ignore>)', t => {
     '.abc/e/e.js'   // included by b, filtered out by a
   ]
 
-  t.deepEqual(a.filter(paths), ['.abc/d/e.js'])
-  t.deepEqual(b.filter(paths), ['.abc/d/e.js', '.abc/e/e.js'])
+  t.same(a.filter(paths), ['.abc/d/e.js'])
+  t.same(b.filter(paths), ['.abc/d/e.js', '.abc/e/e.js'])
   t.end()
 })
 
@@ -41,7 +41,7 @@ _test('fixes babel class', t => {
     return
   }
 
-  t.is('there should be an error', 'no error found')
+  t.equal('there should be an error', 'no error found')
   t.end()
 })
 
@@ -67,8 +67,8 @@ _test('#32', t => {
     '.abc/e/e.js'   // included by b, filtered out by a
   ]
 
-  t.deepEqual(a.filter(paths), ['.abc/d/e.js'])
-  t.deepEqual(b.filter(paths), ['.abc/d/e.js', '.abc/e/e.js'])
+  t.same(a.filter(paths), ['.abc/d/e.js'])
+  t.same(b.filter(paths), ['.abc/d/e.js', '.abc/e/e.js'])
   t.end()
 })
 
@@ -79,9 +79,9 @@ _test('options.ignorecase', t => {
 
   ig.add('*.[jJ][pP]g')
 
-  t.is(ig.ignores('a.jpg'), true)
-  t.is(ig.ignores('a.JPg'), true)
-  t.is(ig.ignores('a.JPG'), false)
+  t.equal(ig.ignores('a.jpg'), true)
+  t.equal(ig.ignores('a.JPg'), true)
+  t.equal(ig.ignores('a.JPG'), false)
   t.end()
 })
 
@@ -94,7 +94,7 @@ _test('special case: internal cache respects ignorecase', t => {
 
   ig.add(rule)
 
-  t.is(ig.ignores('a.JPG'), false)
+  t.equal(ig.ignores('a.JPG'), false)
 
   const ig2 = ignore({
     ignorecase: true
@@ -102,7 +102,7 @@ _test('special case: internal cache respects ignorecase', t => {
 
   ig2.add(rule)
 
-  t.is(ig2.ignores('a.JPG'), true)
+  t.equal(ig2.ignores('a.JPG'), true)
 
   t.end()
 })
@@ -164,7 +164,7 @@ _test('isPathValid', t => {
     )
   }
 
-  t.deepEqual(
+  t.same(
     paths.filter(isPathValid),
     [
       'foo'
@@ -220,7 +220,7 @@ IGNORE_TEST_CASES.forEach(([d, patterns, path, [ignored, unignored]]) => {
       ig.add(patterns)
     }
 
-    t.deepEqual(ig.test(path), {
+    t.same(ig.test(path), {
       ignored, unignored
     })
 
@@ -235,7 +235,7 @@ _test('options.allowRelativePaths', t => {
 
   ig.add('foo')
 
-  t.is(ig.ignores('../foo/bar.js'), true)
+  t.equal(ig.ignores('../foo/bar.js'), true)
 
   t.throws(() => ignore().ignores('../foo/bar.js'))
 

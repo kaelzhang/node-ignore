@@ -15,9 +15,8 @@ const {
 
 const {test} = tap
 
-// This test file is related to dealing with file systems which takes time,
-// so remove timeout setting.
-tap.setTimeout(0)
+// This test file is related to dealing with file systems which takes time
+tap.setTimeout(600000)
 
 const touch = (root, file, content) => {
   const dirs = file.split('/')

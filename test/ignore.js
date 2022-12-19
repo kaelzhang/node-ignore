@@ -54,7 +54,7 @@ cases(({
     const ig = ignore().addPattern(patterns)
 
     Object.keys(paths_object).forEach(path => {
-      t.is(ig.ignores(path), !!paths_object[path], `path: "${path}"`)
+      t.equal(ig.ignores(path), !!paths_object[path], `path: "${path}"`)
     })
     t.end()
   })

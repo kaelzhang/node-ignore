@@ -1043,7 +1043,7 @@ exports.cases = iteratee => {
         expected = expected.map(mapper)
       }
 
-      t.deepEqual(result.sort(), expected.sort())
+      t.same(result.sort(), expected.sort())
     }
 
     iteratee({
