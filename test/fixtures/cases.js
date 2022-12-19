@@ -23,6 +23,38 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
+    'charactor ?',
+    [
+      'foo?bar'
+    ],
+    {
+      'foo/bar': 0,
+      'fooxbar': 1,
+      'fooxxbar': 0
+    }
+  ],
+  [
+    '#57, normal * and normal consecutive *',
+    [
+      '**foo',
+      '*bar',
+      'ba*z'
+    ],
+    {
+      'foo': 1,
+      'a/foo': 1,
+      'afoo': 1,
+      'abfoo': 1,
+      'abcfoo': 1,
+      'bar': 1,
+      'abar': 1,
+      'baz': 1,
+      'ba/z': 0,
+      'baaaaaaz': 1
+    },
+    true
+  ],
+  [
     '#76 (invalid), comments with no heading whitespace',
     [
       'node_modules# comments'
@@ -992,12 +1024,13 @@ const real_cases = cases_to_test_only.length
   : cases
 
 exports.cases = iteratee => {
-  real_cases.forEach(c => {
-    const description = c[0]
-    const patterns = c[1]
-    const paths_object = c[2]
-    const skip_test_fixture = c[4]
-
+  real_cases.forEach(([
+    description,
+    patterns,
+    paths_object,
+    test_only,
+    skip_test_fixture
+  ]) => {
     // All paths to test
     const paths = Object.keys(paths_object)
 
@@ -1018,6 +1051,7 @@ exports.cases = iteratee => {
       description,
       patterns,
       paths_object,
+      test_only,
       skip_test_fixture,
       paths,
       expected,

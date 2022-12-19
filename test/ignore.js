@@ -1,4 +1,7 @@
-const {test} = require('tap')
+const {
+  test,
+  only
+} = require('tap')
 
 const ignore = require('..')
 const {
@@ -13,11 +16,16 @@ cases(({
   description,
   patterns,
   paths_object,
+  test_only,
   paths,
   expect_result
 }) => {
+  const tt = test_only
+    ? only
+    : test
+
   checkEnv('IGNORE_ONLY_FILTER')
-  && test(`.filter():        ${description}`, t => {
+  && tt(`.filter():        ${description}`, t => {
     const ig = ignore()
     const result = ig
     .addPattern(patterns)
@@ -28,7 +36,7 @@ cases(({
   })
 
   checkEnv('IGNORE_ONLY_CREATE_FILTER')
-  && test(`.createFilter():  ${description}`, t => {
+  && tt(`.createFilter():  ${description}`, t => {
     const result = paths.filter(
       ignore()
       .addPattern(patterns)
@@ -42,7 +50,7 @@ cases(({
   })
 
   checkEnv('IGNORE_ONLY_IGNORES')
-  && test(`.ignores(path):   ${description}`, t => {
+  && tt(`.ignores(path):   ${description}`, t => {
     const ig = ignore().addPattern(patterns)
 
     Object.keys(paths_object).forEach(path => {
@@ -56,7 +64,7 @@ cases(({
   }
 
   checkEnv('IGNORE_ONLY_WIN32')
-  && test(`win32: .filter(): ${description}`, t => {
+  && tt(`win32: .filter(): ${description}`, t => {
     const win_paths = paths.map(make_win32)
 
     const ig = ignore()
