@@ -38,7 +38,8 @@ const cases = [
     [
       '**foo',
       '*bar',
-      'ba*z'
+      'ba*z',
+      'folder/other-folder/**/**js'
     ],
     {
       'foo': 1,
@@ -50,7 +51,8 @@ const cases = [
       'abar': 1,
       'baz': 1,
       'ba/z': 0,
-      'baaaaaaz': 1
+      'baaaaaaz': 1,
+      'folder/other-folder/dir/main.js': 1
     }
   ],
   [
