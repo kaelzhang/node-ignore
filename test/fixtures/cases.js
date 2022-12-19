@@ -51,8 +51,7 @@ const cases = [
       'baz': 1,
       'ba/z': 0,
       'baaaaaaz': 1
-    },
-    true
+    }
   ],
   [
     '#76 (invalid), comments with no heading whitespace',
