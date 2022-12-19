@@ -19,6 +19,7 @@
     "test:ignore": "npm run tap test/ignore.js",
     "test:others": "npm run tap test/others.js",
     "test:cases": "npm run tap test/*.js -- --coverage",
+    "test:no-coverage": "npm run tap test/*.js -- --no-check-coverage",
     "test:only": "npm run test:lint && npm run test:tsc && npm run test:ts && npm run test:cases",
     "test": "npm run test:only",
     "test:win32": "IGNORE_TEST_WIN32=1 npm run test",

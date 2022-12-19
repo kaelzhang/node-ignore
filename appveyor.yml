@@ -16,7 +16,7 @@ test_script:
   - node --version
   - npm --version
   # run tests
-  - npm run test:only
+  - npm run test:no-coverage
 
 # Don't actually build.
-build: off
+build: false
