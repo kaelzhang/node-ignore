@@ -27,13 +27,11 @@ const cases = [
     [
       'test\\',
       'testa\\\\',
-      '\\',
       'foo/*',
       // test negative pattern
       '!foo/test\\'
     ],
     {
-      '\\': 0,
       'test': 0,
       'test\\': 0,
       'testa\\': 1,
@@ -929,6 +927,15 @@ const cases = [
 const IS_WINDOWS = process.platform === 'win32'
 if (!IS_WINDOWS && !process.env.IGNORE_TEST_WIN32) {
   cases.push(
+    [
+      '#81: invalid trailing backslash, test non-windows only',
+      [
+        '\\'
+      ],
+      {
+        '\\': 0
+      }
+    ],
     [
       'linux: back slashes on paths',
       [
