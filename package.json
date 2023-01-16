@@ -59,7 +59,7 @@
     "eslint": "^8.30.0",
     "eslint-config-ostai": "^3.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "mkdirp": "^1.0.4",
+    "mkdirp": "^2.0.0",
     "pre-suf": "^1.1.1",
     "rimraf": "^3.0.2",
     "spawn-sync": "^2.0.0",
