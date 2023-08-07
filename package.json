@@ -51,21 +51,21 @@
     "url": "https://github.com/kaelzhang/node-ignore/issues"
   },
   "devDependencies": {
-    "@babel/cli": "^7.20.7",
-    "@babel/core": "^7.20.12",
-    "@babel/preset-env": "^7.20.2",
+    "@babel/cli": "^7.22.9",
+    "@babel/core": "^7.22.9",
+    "@babel/preset-env": "^7.22.9",
     "codecov": "^3.8.2",
     "debug": "^4.3.4",
-    "eslint": "^8.33.0",
+    "eslint": "^8.46.0",
     "eslint-config-ostai": "^3.0.0",
-    "eslint-plugin-import": "^2.27.5",
-    "mkdirp": "^3.0.0",
+    "eslint-plugin-import": "^2.28.0",
+    "mkdirp": "^3.0.1",
     "pre-suf": "^1.1.1",
-    "rimraf": "^5.0.0",
+    "rimraf": "^5.0.1",
     "spawn-sync": "^2.0.0",
-    "tap": "^16.3.4",
+    "tap": "^16.3.8",
     "tmp": "0.2.1",
-    "typescript": "^5.0.2"
+    "typescript": "^5.1.6"
   },
   "engines": {
     "node": ">= 4"

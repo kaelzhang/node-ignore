@@ -1,10 +1,11 @@
+const fs = require('fs')
+const path = require('path')
+
 const tap = require('tap')
 const spawn = require('spawn-sync')
 const tmp = require('tmp').dirSync
 const mkdirp = require('mkdirp').mkdirp.sync
 const rm = require('rimraf').sync
-const fs = require('fs')
-const path = require('path')
 const {removeEnding} = require('pre-suf')
 const {
   debug,
