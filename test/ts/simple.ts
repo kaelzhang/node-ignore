@@ -1,4 +1,5 @@
 import ignore from '../../'
+import {Ignore} from '../../'
 
 const equal = (actual, expect, message) => {
   if (actual !== expect) {
@@ -8,7 +9,7 @@ const equal = (actual, expect, message) => {
 
 const paths = ['a', 'a/b', 'foo/bar']
 
-let ig = ignore()
+let ig: Ignore = ignore()
 
 ig = ig.add('*')
 ig = ig.add(['!*/', '!foo/bar'])
