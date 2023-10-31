@@ -1,5 +1,6 @@
 # test
 test/ts/*.js
+/.tap
 
 # coverage
 coverage
