@@ -23,6 +23,15 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
+    '#108: gitignore rules with BOM',
+    [
+      readPatterns('.gitignore-with-BOM'),
+    ],
+    {
+      'node_modules': 1
+    }
+  ],
+  [
     'charactor ?',
     [
       'foo?bar'
