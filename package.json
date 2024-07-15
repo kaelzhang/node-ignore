@@ -61,7 +61,7 @@
     "eslint-plugin-import": "^2.28.0",
     "mkdirp": "^3.0.1",
     "pre-suf": "^1.1.1",
-    "rimraf": "^5.0.1",
+    "rimraf": "^6.0.1",
     "spawn-sync": "^2.0.0",
     "tap": "^16.3.9",
     "tmp": "0.2.3",
