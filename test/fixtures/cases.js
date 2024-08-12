@@ -23,6 +23,19 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
+    '#130: consequent escaped backslashes with whitespaces',
+    [
+      'a\\\\ ',
+      'a\\\\ b',
+      'a\\\\\\ b'
+    ],
+    {
+      'a\\': 1,
+      'a\\ b': 1,
+      'a\\\\ b': 0,
+      'a\\\\\\ b': 0
+    }
+  ], [
     '#108: gitignore rules with BOM',
     [
       readPatterns('.gitignore-with-BOM'),
@@ -618,7 +631,8 @@ const cases = [
     [
       'abc\\  ', // only one space left -> (abc )
       'bcd  ',   // no space left -> (bcd)
-      'cde \\ '  // two spaces -> (cde  )
+      'cde \\ ', // two spaces -> (cde  )
+      'def '     // no space left -> (def)
     ],
     {
       // nothing to do with backslashes
@@ -631,7 +645,9 @@ const cases = [
       'bcd  ': 0,
       'cde  ': 1,
       'cde ': 0,
-      'cde   ': 0
+      'cde   ': 0,
+      'def': 1,
+      'def ': 0
     },
     false,
     true

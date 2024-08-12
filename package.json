@@ -1,6 +1,6 @@
 {
   "name": "ignore",
-  "version": "5.3.1",
+  "version": "5.3.2",
   "description": "Ignore is a manager and filter for .gitignore rules, the one used by eslint, gitbook and many others.",
   "files": [
     "legacy.js",
@@ -17,6 +17,7 @@
     "tap": "tap --reporter classic",
     "test:git": "npm run tap test/git-check-ignore.js",
     "test:ignore": "npm run tap test/ignore.js",
+    "test:ignore:only": "IGNORE_ONLY_IGNORES=1 npm run tap test/ignore.js",
     "test:others": "npm run tap test/others.js",
     "test:cases": "npm run tap test/*.js -- --coverage",
     "test:no-coverage": "npm run tap test/*.js -- --no-check-coverage",
