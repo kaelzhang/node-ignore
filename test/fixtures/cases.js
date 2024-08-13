@@ -23,19 +23,6 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
-    '#130: consequent escaped backslashes with whitespaces',
-    [
-      'a\\\\ ',
-      'a\\\\ b',
-      'a\\\\\\ b'
-    ],
-    {
-      'a\\': 1,
-      'a\\ b': 1,
-      'a\\\\ b': 0,
-      'a\\\\\\ b': 0
-    }
-  ], [
     '#108: gitignore rules with BOM',
     [
       readPatterns('.gitignore-with-BOM'),
@@ -969,6 +956,20 @@ const cases = [
 const IS_WINDOWS = process.platform === 'win32'
 if (!IS_WINDOWS && !process.env.IGNORE_TEST_WIN32) {
   cases.push(
+    [
+      '#130: consequent escaped backslashes with whitespaces',
+      [
+        'a\\\\ ',
+        'a\\\\ b',
+        'a\\\\\\ b'
+      ],
+      {
+        'a\\': 1,
+        'a\\ b': 1,
+        'a\\\\ b': 0,
+        'a\\\\\\ b': 0
+      }
+    ],
     [
       '#81: invalid trailing backslash at the end should not throw, test non-windows env only',
       [
