@@ -53,9 +53,9 @@ export interface Options {
  * Creates new ignore manager.
  */
 declare function ignore(options?: Options): Ignore
-
-declare namespace ignore {
-  export function isPathValid (pathname: string): boolean
-}
+declare function isPathValid (pathname: string): boolean
 
 export default ignore
+export {
+  isPathValid
+}

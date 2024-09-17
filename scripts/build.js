@@ -7,12 +7,12 @@ const content = fs
 .replace(
   /\/\/\sCOMMONJS_EXPORTS[\s\S]+$/,
   `
+export default factory
+
 export {
   isPathValid
 }
-
-export default factory
-  `
+`
 )
 
 fs.writeFileSync(join(__dirname, '..', 'index.mjs'), content)
