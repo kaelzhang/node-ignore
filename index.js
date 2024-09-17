@@ -603,10 +603,6 @@ const isPathValid = path =>
 
 factory.isPathValid = isPathValid
 
-// Fixes typescript
-factory.default = factory
-
-module.exports = factory
 
 // Windows
 // --------------------------------------------------------------
@@ -634,3 +630,10 @@ if (
     REGIX_IS_WINDOWS_PATH_ABSOLUTE.test(path)
     || isNotRelative(path)
 }
+
+// COMMONJS_EXPORTS ////////////////////////////////////////////////////////////
+
+// Fixes typescript
+factory.default = factory
+
+module.exports = factory

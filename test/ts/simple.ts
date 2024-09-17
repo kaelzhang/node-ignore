@@ -1,5 +1,8 @@
 import ignore from '../../'
-import {Ignore} from '../../'
+import {
+  Ignore,
+  isPathValid
+} from '../../'
 
 const equal = (actual, expect, message) => {
   if (actual !== expect) {
@@ -40,7 +43,7 @@ const ig5 = ignore({
   ignorecase: false
 })
 
-const isValid: boolean = ignore.isPathValid('./foo')
+const isValid: boolean = isPathValid('./foo')
 equal(isValid, false, './foo is not valid')
 
 const {

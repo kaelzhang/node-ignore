@@ -54,8 +54,6 @@ export interface Options {
  */
 declare function ignore(options?: Options): Ignore
 
-declare namespace ignore {
-  export function isPathValid (pathname: string): boolean
-}
+export function isPathValid (pathname: string): boolean
 
 export default ignore

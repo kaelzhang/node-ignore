@@ -3,3 +3,4 @@
 /no-track
 /test/ts/*.js
 /legacy.js
+/index.mjs
