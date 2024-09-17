@@ -298,14 +298,16 @@ interface TestResult {
 - `{ignored: false, unignored: true}`: the `pathname` is unignored
 - `{ignored: false, unignored: false}`: the `pathname` is never matched by any ignore rules.
 
-## static `ignore.isPathValid(pathname): boolean` since 5.0.0
+## static `isPathValid(pathname): boolean` since 5.0.0
 
 Check whether the `pathname` is an valid `path.relative()`d path according to the [convention](#1-pathname-should-be-a-pathrelatived-pathname).
 
 This method is **NOT** used to check if an ignore pattern is valid.
 
 ```js
-ignore.isPathValid('./foo')  // false
+import {isPathValid} from 'ignore'
+
+isPathValid('./foo')  // false
 ```
 
 ## ignore(options)
@@ -344,6 +346,20 @@ ignore({
 
 # Upgrade Guide
 
+## Upgrade 5.x -> 6.x
+
+To bring better compatibility for TypeScript with `moduleResolution:Node16`, `ignore.isPathValid` has been removed in TypeScript definitions since `6.x`
+
+```js
+// < 6, or works with commonjs
+ignore.isPathValid('./foo')  // false
+
+// >= 6.x
+import {isPathValid} from 'ignore'
+
+isPathValid('./foo')         // false
+```
+
 ## Upgrade 4.x -> 5.x
 
 Since `5.0.0`, if an invalid `Pathname` passed into `ig.ignores()`, an error will be thrown, unless `options.allowRelative = true` is passed to the `Ignore` factory.
@@ -379,7 +395,7 @@ const paths = [
   // valid
   'foo'
 ]
-.filter(isValidPath)
+.filter(isPathValid)
 
 ig.filter(paths)
 ```
