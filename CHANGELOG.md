@@ -1,5 +1,7 @@
 # `node-ignore` 5 ChangeLog
 
+For change logs of new versions, please check [releases](https://github.com/kaelzhang/node-ignore/releases).
+
 # 5.x
 
 ## 2018-08-14, Version 5.0.1
