@@ -30,7 +30,7 @@
     "test": "npm run test:only",
     "test:win32": "IGNORE_TEST_WIN32=1 npm run test",
     "report": "tap --coverage-report=html",
-    "posttest": "npm run report && codecov"
+    "// posttest": "npm run report && codecov"
   },
   "repository": {
     "type": "git",
