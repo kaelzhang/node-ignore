@@ -159,7 +159,9 @@ Returns `Boolean` whether `pathname` should be ignored.
 ig.ignores('.abc/a.js')    // true
 ```
 
-Please **PAY ATTENTION** that `.ignores()` does not equivalent to `git check-ignore` although in most cases they return equivalent results. However, for the purposes of imitating the behavior of `git check-ignore`, please use `.check_ignore()` instead.
+Please **PAY ATTENTION** that `.ignores()` is **NOT** equivalent to `git check-ignore` although in most cases they return equivalent results.
+
+However, for the purposes of imitating the behavior of `git check-ignore`, please use `.checkIgnore()` instead.
 
 ### `Pathname` Conventions:
 
@@ -284,6 +286,16 @@ interface TestResult {
 - `{ignored: true, unignored: false}`: the `pathname` is ignored
 - `{ignored: false, unignored: true}`: the `pathname` is unignored
 - `{ignored: false, unignored: false}`: the `pathname` is never matched by any ignore rules.
+
+## .checkIgnore(pattern) since 6.1.0
+
+> new in 6.1.0
+
+Please pay attention that this method does not have a strong built-in cache mechanism.
+
+The purpose of introducing this method is to make it possible to implement the `git check-ignore` command in JavaScript based on `node-ignore`.
+
+So do not use this method in those situations where performance is extremely important.
 
 ## static `isPathValid(pathname): boolean` since 5.0.0
 
