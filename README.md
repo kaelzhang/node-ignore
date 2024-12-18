@@ -149,31 +149,17 @@ ignore()
 
 `pattern` could also be an `ignore` instance, so that we could easily inherit the rules of another `Ignore` instance.
 
-## <strike>.addIgnoreFile(path)</strike>
+## .ignores(pathname: [Pathname](#pathname-conventions)): boolean
 
-REMOVED in `3.x` for now.
+> new in 3.2.0
 
-To upgrade `ignore@2.x` up to `3.x`, use
+Returns `Boolean` whether `pathname` should be ignored.
 
 ```js
-import fs from 'fs'
-
-if (fs.existsSync(filename)) {
-  ignore().add(fs.readFileSync(filename).toString())
-}
+ig.ignores('.abc/a.js')    // true
 ```
 
-instead.
-
-## .filter(paths: Array&lt;Pathname&gt;): Array&lt;Pathname&gt;
-
-```ts
-type Pathname = string
-```
-
-Filters the given array of pathnames, and returns the filtered array.
-
-- **paths** `Array.<Pathname>` The array of `pathname`s to be filtered.
+Please **PAY ATTENTION** that `.ignores()` does not equivalent to `git check-ignore` although in most cases they return equivalent results. However, for the purposes of imitating the behavior of `git check-ignore`, please use `.check_ignore()` instead.
 
 ### `Pathname` Conventions:
 
@@ -266,15 +252,16 @@ glob('**', {
 })
 ```
 
-## .ignores(pathname: Pathname): boolean
 
-> new in 3.2.0
+## .filter(paths: Array&lt;Pathname&gt;): Array&lt;Pathname&gt;
 
-Returns `Boolean` whether `pathname` should be ignored.
-
-```js
-ig.ignores('.abc/a.js')    // true
+```ts
+type Pathname = string
 ```
+
+Filters the given array of pathnames, and returns the filtered array.
+
+- **paths** `Array.<Pathname>` The array of `pathname`s to be filtered.
 
 ## .createFilter()
 
@@ -309,6 +296,22 @@ import {isPathValid} from 'ignore'
 
 isPathValid('./foo')  // false
 ```
+
+## <strike>.addIgnoreFile(path)</strike>
+
+REMOVED in `3.x` for now.
+
+To upgrade `ignore@2.x` up to `3.x`, use
+
+```js
+import fs from 'fs'
+
+if (fs.existsSync(filename)) {
+  ignore().add(fs.readFileSync(filename).toString())
+}
+```
+
+instead.
 
 ## ignore(options)
 

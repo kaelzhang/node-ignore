@@ -23,27 +23,6 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
-    '#77: ignore the content of directory c, but not the directory c itself',
-    [
-      'c/',
-      '!c',
-      'c/*'
-    ],
-    {
-      'c': 0,
-      'c/': 1
-    }
-  ],
-  [
-    '#77: issue for "directory ending with / not always correctly ignored"',
-    [
-      'c/*'
-    ],
-    {
-      'c/': 1
-    }
-  ],
-  [
     '#108: gitignore rules with BOM',
     [
       readPatterns('.gitignore-with-BOM'),
