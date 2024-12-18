@@ -110,6 +110,7 @@ const getNativeGitIgnoreResults = (rules, paths) => {
   .filter(p => {
     let out = spawn('git', [
       'check-ignore',
+      '--no-index',
       // `spawn` will escape the special cases for us
       p
     ], {

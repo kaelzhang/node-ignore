@@ -54,7 +54,14 @@ cases(({
     const ig = ignore().addPattern(patterns)
 
     Object.keys(paths_object).forEach(path => {
-      t.equal(ig.ignores(path), !!paths_object[path], `path: "${path}"`)
+      const should_ignore = !!paths_object[path]
+      const not = should_ignore ? '' : 'not '
+
+      t.equal(
+        ig.ignores(path),
+        should_ignore,
+        `path: "${path}" should ${not}be ignored`
+      )
     })
     t.end()
   })
