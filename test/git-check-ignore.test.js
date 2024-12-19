@@ -65,12 +65,17 @@ const debugSpawn = (...args) => {
   debug(out.output.toString())
 }
 
+const mapObjectRule = rule =>
+  typeof rule === 'string'
+    ? rule
+    : rule.pattern
+
 const getNativeGitIgnoreResults = (rules, paths) => {
   const dir = createUniqueTmp()
 
   const gitignore = typeof rules === 'string'
     ? rules
-    : rules.join('\n')
+    : rules.map(mapObjectRule).join('\n')
 
   touch(dir, '.gitignore', gitignore)
 

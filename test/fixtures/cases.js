@@ -37,7 +37,7 @@ const cases = [
     '#77: directory ending with / not always correctly ignored',
     [
       'c/*',
-      'foo/bar/*'
+      {pattern: 'foo/bar/*'}
     ],
     {
       'c/': 1,

@@ -361,17 +361,21 @@ const checkPattern = pattern => pattern
   // > A line starting with # serves as a comment.
   && pattern.indexOf('#') !== 0
 
-const splitPattern = pattern => pattern.split(REGEX_SPLITALL_CRLF)
+const splitPattern = pattern => pattern
+.split(REGEX_SPLITALL_CRLF)
+.filter(Boolean)
 
 class IgnoreRule {
   constructor (
     pattern,
+    mark,
     body,
     ignoreCase,
     negative,
     prefix
   ) {
     this.pattern = pattern
+    this.mark = mark
     this.negative = negative
 
     define(this, 'body', body)
@@ -415,7 +419,10 @@ class IgnoreRule {
   }
 }
 
-const createRule = (pattern, ignoreCase) => {
+const createRule = ({
+  pattern,
+  mark
+}, ignoreCase) => {
   let negative = false
   let body = pattern
 
@@ -437,6 +444,7 @@ const createRule = (pattern, ignoreCase) => {
 
   return new IgnoreRule(
     pattern,
+    mark,
     body,
     ignoreCase,
     negative,
@@ -453,18 +461,18 @@ class RuleManager {
   _add (pattern) {
     // #32
     if (pattern && pattern[KEY_IGNORE]) {
-      this._rules = this._rules.concat(
-        pattern._rules._rules
-        ||
-          // Compatible with the old version
-          /* istanbul ignore next */
-          pattern._rules
-      )
+      this._rules = this._rules.concat(pattern._rules._rules)
       this._added = true
       return
     }
 
-    if (checkPattern(pattern)) {
+    if (isString(pattern)) {
+      pattern = {
+        pattern
+      }
+    }
+
+    if (checkPattern(pattern.pattern)) {
       const rule = createRule(pattern, this._ignoreCase)
       this._added = true
       this._rules.push(rule)
@@ -638,7 +646,7 @@ class Ignore {
     // If the path doest not end with a slash, `.ignores()` is much equivalent
     //   to `git check-ignore`
     if (!REGEX_TEST_TRAILING_SLASH.test(path)) {
-      return this.ignores(path)
+      return this.test(path)
     }
 
     const slices = path.split(SLASH).filter(Boolean)
@@ -647,17 +655,17 @@ class Ignore {
     if (slices.length) {
       const parent = this._t(
         slices.join(SLASH) + SLASH,
-        this._ignoreCache,
-        false,
+        this._testCache,
+        true,
         slices
       )
 
       if (parent.ignored) {
-        return true
+        return parent
       }
     }
 
-    return this._rules.test(path, false, MODE_CHECK_IGNORE).ignored
+    return this._rules.test(path, false, MODE_CHECK_IGNORE)
   }
 
   _t (

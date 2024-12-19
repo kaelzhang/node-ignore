@@ -62,29 +62,40 @@ cases(({
     t.end()
   })
 
-  const run_ignores = name => {
-    tt(`.${name}(path):   ${description}`, t => {
-      const ig = ignore().addPattern(patterns)
-
-      Object.keys(paths_object).forEach(path => {
-        const should_ignore = !!paths_object[path]
-        const not = should_ignore ? '' : 'not '
-
-        t.equal(
-          ig[name](path),
-          should_ignore,
-          `path: "${path}" should ${not}be ignored`
-        )
-      })
-      t.end()
-    })
-  }
-
   check('IGNORE_ONLY_IGNORES', 'ignores')
-  && run_ignores('ignores')
+  && tt(`.ignores(path):   ${description}`, t => {
+    const ig = ignore().addPattern(patterns)
+
+    Object.keys(paths_object).forEach(path => {
+      const should_ignore = !!paths_object[path]
+      const not = should_ignore ? '' : 'not '
+
+      t.equal(
+        ig.ignores(path),
+        should_ignore,
+        `path: "${path}" should ${not}be ignored`
+      )
+    })
+    t.end()
+  })
 
   check('IGNORE_ONLY_CHECK_IGNORE', 'checkIgnore')
-  && run_ignores('checkIgnore')
+  && tt(`.checkIgnore(path):   ${description}`, t => {
+    const ig = ignore().addPattern(patterns)
+
+    Object.keys(paths_object).forEach(path => {
+      const should_ignore = !!paths_object[path]
+      const not = should_ignore ? '' : 'not '
+      const {ignored} = ig.checkIgnore(path)
+
+      t.equal(
+        ignored,
+        should_ignore,
+        `path: "${path}" should ${not}be ignored`
+      )
+    })
+    t.end()
+  })
 
   if (!SHOULD_TEST_WINDOWS) {
     return

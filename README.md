@@ -124,9 +124,11 @@ ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
 
 ## .add(pattern: string | Ignore): this
 ## .add(patterns: Array<string | Ignore>): this
+## .add({pattern: string, mark?: string}): this
 
-- **pattern** `String | Ignore` An ignore pattern string, or the `Ignore` instance
-- **patterns** `Array<String | Ignore>` Array of ignore patterns.
+- **pattern** `string | Ignore` An ignore pattern string, or the `Ignore` instance
+- **patterns** `Array<string | Ignore>` Array of ignore patterns.
+- **mark?** `string` Pattern mark, which is used to associate the pattern with a certain marker, such as the line no of the `.gitignore` file. Actually it could be an arbitrary string and is optional.
 
 Adds a rule or several rules to the current manager.
 
@@ -284,6 +286,17 @@ interface TestResult {
   ignored: boolean
   // true if the `pathname` is finally unignored by some negative pattern
   unignored: boolean
+  // The `IgnoreRule` which ignores the pathname
+  rule?: IgnoreRule
+}
+
+interface IgnoreRule {
+  // The original pattern
+  pattern: string
+  // Whether the pattern is a negative pattern
+  negative: boolean
+  // Which is used for other packages to build things upon `node-ignore`
+  mark?: string
 }
 ```
 
@@ -291,9 +304,31 @@ interface TestResult {
 - `{ignored: false, unignored: true}`: the `pathname` is unignored
 - `{ignored: false, unignored: false}`: the `pathname` is never matched by any ignore rules.
 
-## .checkIgnore(pattern) since 6.1.0
+## .checkIgnore(pattern) since 7.0.0
 
 > new in 6.1.0
+
+Debug gitignore / exclude files, which is equivalent to `git check-ignore -v`. Usually this method is used for other packages to implement the function of `git check-ignore -v` upon `node-ignore`
+
+Returns `TestResult`
+
+```js
+ig.add({
+  pattern: 'foo/*',
+  mark: '60'
+})
+
+const {
+  ignored,
+  rule
+} = checkIgnore('foo/')
+
+if (ignored) {
+  console.log(`.gitignore:${result}:${rule.mark}:${rule.pattern} foo/`)
+}
+
+// .gitignore:60:foo/* foo/
+```
 
 Please pay attention that this method does not have a strong built-in cache mechanism.
 
