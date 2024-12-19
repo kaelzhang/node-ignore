@@ -5,6 +5,7 @@ function makeArray (subject) {
     : [subject]
 }
 
+const UNDEFINED = undefined
 const EMPTY = ''
 const SPACE = ' '
 const ESCAPE = '\\'
@@ -36,8 +37,10 @@ if (typeof Symbol !== 'undefined') {
 }
 const KEY_IGNORE = TMP_KEY_IGNORE
 
-const define = (object, key, value) =>
+const define = (object, key, value) => {
   Object.defineProperty(object, key, {value})
+  return value
+}
 
 const REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g
 
@@ -302,8 +305,7 @@ const REPLACERS = [
   ]
 ]
 
-const REGEX_REPLACE_TRAILING_WILDCARD = /(\^|\\\/)?\\\*$/
-const ESCAPED_SLASH = '\\/'
+const REGEX_REPLACE_TRAILING_WILDCARD = /(^|\\\/)?\\\*$/
 const MODE_IGNORE = 'regex'
 const MODE_CHECK_IGNORE = 'checkRegex'
 const UNDERSCORE = '_'
@@ -327,17 +329,11 @@ const TRAILING_WILD_CARD_REPLACERS = {
   },
 
   [MODE_CHECK_IGNORE] (_, p1) {
+    // When doing `git check-ignore`
     const prefix = p1
-
-      // When doing `git check-ignore`
-      ? p1 === ESCAPED_SLASH
-        // '\\\/':
-        // 'abc/*' DOES match 'abc/' !
-        ? `${p1}[^/]*`
-        // '\^':
-        // '/*' does not match EMPTY
-        // '/*' does not match everything
-        : `${p1}[^/]+`
+      // '\\\/':
+      // 'abc/*' DOES match 'abc/' !
+      ? `${p1}[^/]*`
 
       // 'a*' matches 'a'
       // 'a*' matches 'aa'
@@ -369,17 +365,18 @@ const splitPattern = pattern => pattern.split(REGEX_SPLITALL_CRLF)
 
 class IgnoreRule {
   constructor (
-    // origin,
-    // pattern,
+    pattern,
+    body,
     ignoreCase,
     negative,
     prefix
   ) {
-    // this.origin = origin
-    // this.pattern = pattern
-    this.ignoreCase = ignoreCase
+    this.pattern = pattern
     this.negative = negative
-    this.regexPrefix = prefix
+
+    define(this, 'body', body)
+    define(this, 'ignoreCase', ignoreCase)
+    define(this, 'regexPrefix', prefix)
   }
 
   get regex () {
@@ -414,21 +411,21 @@ class IgnoreRule {
       ? new RegExp(str, 'i')
       : new RegExp(str)
 
-    return this[key] = regex
+    return define(this, key, regex)
   }
 }
 
 const createRule = (pattern, ignoreCase) => {
-  // const origin = pattern
   let negative = false
+  let body = pattern
 
   // > An optional prefix "!" which negates the pattern;
-  if (pattern.indexOf('!') === 0) {
+  if (body.indexOf('!') === 0) {
     negative = true
-    pattern = pattern.substr(1)
+    body = body.substr(1)
   }
 
-  pattern = pattern
+  body = body
   // > Put a backslash ("\") in front of the first "!" for patterns that
   // >   begin with a literal "!", for example, `"\!important!.txt"`.
   .replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, '!')
@@ -439,6 +436,8 @@ const createRule = (pattern, ignoreCase) => {
   const regexPrefix = makeRegexPrefix(pattern)
 
   return new IgnoreRule(
+    pattern,
+    body,
     ignoreCase,
     negative,
     regexPrefix
@@ -490,6 +489,7 @@ class RuleManager {
   test (path, checkUnignored, mode) {
     let ignored = false
     let unignored = false
+    let matchedRule
 
     this._rules.forEach(rule => {
       const {negative} = rule
@@ -514,16 +514,28 @@ class RuleManager {
 
       const matched = rule[mode].test(path)
 
-      if (matched) {
-        ignored = !negative
-        unignored = negative
+      if (!matched) {
+        return
       }
+
+      ignored = !negative
+      unignored = negative
+
+      matchedRule = negative
+        ? UNDEFINED
+        : rule
     })
 
-    return {
+    const ret = {
       ignored,
       unignored
     }
+
+    if (matchedRule) {
+      ret.rule = matchedRule
+    }
+
+    return ret
   }
 }
 
@@ -623,22 +635,20 @@ class Ignore {
       return this.ignores(path)
     }
 
-    const slices = path.split(SLASH)
+    const slices = path.split(SLASH).filter(Boolean)
     slices.pop()
 
-    if (!slices.length) {
-      return this.ignores(path)
-    }
+    if (slices.length) {
+      const parent = this._t(
+        slices.join(SLASH) + SLASH,
+        this._ignoreCache,
+        false,
+        slices
+      )
 
-    const parent = this._t(
-      slices.join(SLASH) + SLASH,
-      this._ignoreCache,
-      false,
-      slices
-    )
-
-    if (parent.ignored) {
-      return true
+      if (parent.ignored) {
+        return true
+      }
     }
 
     return this._rules.test(path, false, MODE_CHECK_IGNORE).ignored
@@ -664,7 +674,7 @@ class Ignore {
     if (!slices) {
       // path/to/a.js
       // ['path', 'to', 'a.js']
-      slices = path.split(SLASH)
+      slices = path.split(SLASH).filter(Boolean)
     }
 
     slices.pop()

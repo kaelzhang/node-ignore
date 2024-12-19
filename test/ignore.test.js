@@ -14,6 +14,7 @@ const make_win32 = path => path.replace(/\//g, '\\')
 
 cases(({
   description,
+  scopes,
   patterns,
   paths_object,
   test_only,
@@ -24,7 +25,19 @@ cases(({
     ? only
     : test
 
-  checkEnv('IGNORE_ONLY_FILTER')
+  const check = (env, scope) => {
+    if (!checkEnv(env)) {
+      return false
+    }
+
+    if (!scope || scopes === false) {
+      return true
+    }
+
+    return scopes.includes(scope)
+  }
+
+  check('IGNORE_ONLY_FILTER', 'filter')
   && tt(`.filter():        ${description}`, t => {
     const ig = ignore()
     const result = ig
@@ -35,7 +48,7 @@ cases(({
     t.end()
   })
 
-  checkEnv('IGNORE_ONLY_CREATE_FILTER')
+  check('IGNORE_ONLY_CREATE_FILTER', 'createFilter')
   && tt(`.createFilter():  ${description}`, t => {
     const result = paths.filter(
       ignore()
@@ -67,17 +80,17 @@ cases(({
     })
   }
 
-  checkEnv('IGNORE_ONLY_IGNORES')
+  check('IGNORE_ONLY_IGNORES', 'ignores')
   && run_ignores('ignores')
 
-  checkEnv('IGNORE_ONLY_CHECK_IGNORE')
+  check('IGNORE_ONLY_CHECK_IGNORE', 'checkIgnore')
   && run_ignores('checkIgnore')
 
   if (!SHOULD_TEST_WINDOWS) {
     return
   }
 
-  checkEnv('IGNORE_ONLY_WIN32')
+  check('IGNORE_ONLY_WIN32')
   && tt(`win32: .filter(): ${description}`, t => {
     const win_paths = paths.map(make_win32)
 

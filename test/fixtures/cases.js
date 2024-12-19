@@ -23,6 +23,33 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
+    '#77: more cases for coverage',
+    [
+      '/*'
+    ],
+    {
+      'a': 1,
+      'a/': 1,
+      'a/b/': 1
+    }
+  ],
+  [
+    '#77: directory ending with / not always correctly ignored',
+    [
+      'c/*',
+      'foo/bar/*'
+    ],
+    {
+      'c/': 1,
+      'c': 0,
+      'foo/bar/': 1,
+      'foo/bar': 0
+    },
+    false,
+    false,
+    // Only for checkIgnore
+    ['checkIgnore']
+  ], [
     '#108: gitignore rules with BOM',
     [
       readPatterns('.gitignore-with-BOM'),
@@ -1051,13 +1078,16 @@ const real_cases = cases_to_test_only.length
   : cases
 
 exports.cases = iteratee => {
-  real_cases.forEach(([
-    description,
-    patterns,
-    paths_object,
-    test_only,
-    skip_test_fixture
-  ]) => {
+  real_cases.forEach(single => {
+    const [
+      description,
+      patterns,
+      paths_object,
+      test_only,
+      skip_test_fixture,
+      scopes = false
+    ] = single
+
     // All paths to test
     const paths = Object.keys(paths_object)
 
@@ -1081,6 +1111,7 @@ exports.cases = iteratee => {
       test_only,
       skip_test_fixture,
       paths,
+      scopes,
       expected,
       expect_result
     })
