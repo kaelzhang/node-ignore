@@ -12,6 +12,8 @@ module.exports = {
       allow: ['_rules', '_test']
     }],
 
+    'operator-linebreak': 0,
+
     indent: ['error', 2, {
       MemberExpression: 0,
 

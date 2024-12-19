@@ -433,7 +433,7 @@ const createRule = (pattern, ignoreCase) => {
   // >   begin with a hash.
   .replace(REGEX_REPLACE_LEADING_EXCAPED_HASH, '#')
 
-  const regexPrefix = makeRegexPrefix(pattern)
+  const regexPrefix = makeRegexPrefix(body)
 
   return new IgnoreRule(
     pattern,
@@ -453,7 +453,13 @@ class RuleManager {
   _add (pattern) {
     // #32
     if (pattern && pattern[KEY_IGNORE]) {
-      this._rules = this._rules.concat(pattern._rules._rules)
+      this._rules = this._rules.concat(
+        pattern._rules._rules
+        ||
+          // Compatible with the old version
+          /* istanbul ignore next */
+          pattern._rules
+      )
       this._added = true
       return
     }
