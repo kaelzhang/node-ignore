@@ -49,22 +49,29 @@ cases(({
     t.end()
   })
 
-  checkEnv('IGNORE_ONLY_IGNORES')
-  && tt(`.ignores(path):   ${description}`, t => {
-    const ig = ignore().addPattern(patterns)
+  const run_ignores = name => {
+    tt(`.${name}(path):   ${description}`, t => {
+      const ig = ignore().addPattern(patterns)
 
-    Object.keys(paths_object).forEach(path => {
-      const should_ignore = !!paths_object[path]
-      const not = should_ignore ? '' : 'not '
+      Object.keys(paths_object).forEach(path => {
+        const should_ignore = !!paths_object[path]
+        const not = should_ignore ? '' : 'not '
 
-      t.equal(
-        ig.ignores(path),
-        should_ignore,
-        `path: "${path}" should ${not}be ignored`
-      )
+        t.equal(
+          ig[name](path),
+          should_ignore,
+          `path: "${path}" should ${not}be ignored`
+        )
+      })
+      t.end()
     })
-    t.end()
-  })
+  }
+
+  checkEnv('IGNORE_ONLY_IGNORES')
+  && run_ignores('ignores')
+
+  checkEnv('IGNORE_ONLY_CHECK_IGNORE')
+  && run_ignores('ignores')
 
   if (!SHOULD_TEST_WINDOWS) {
     return

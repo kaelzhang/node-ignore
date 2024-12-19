@@ -56,7 +56,9 @@ _test('#32', t => {
   const aa = {}
 
   /* eslint no-underscore-dangle: ["off"] */
-  aa._rules = a._rules.slice()
+  aa._rules = {
+    _rules: a._rules._rules.slice()
+  }
   aa[KEY_IGNORE] = true
 
   const b = ignore().add(aa).add('!.abc/e/')
