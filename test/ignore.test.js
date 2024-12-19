@@ -71,7 +71,7 @@ cases(({
   && run_ignores('ignores')
 
   checkEnv('IGNORE_ONLY_CHECK_IGNORE')
-  && run_ignores('ignores')
+  && run_ignores('checkIgnore')
 
   if (!SHOULD_TEST_WINDOWS) {
     return
