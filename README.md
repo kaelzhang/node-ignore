@@ -218,7 +218,11 @@ Then the `paths` might be like this:
 
 #### 2. filenames and dirnames
 
-`node-ignore` does NO `fs.stat` during path matching, so for the example below:
+`node-ignore` does NO `fs.stat` during path matching, so `node-ignore` treats
+- `foo` as a file
+- **`foo/` as a directory**
+
+For the example below:
 
 ```js
 // First, we add a ignore pattern to ignore a directory
