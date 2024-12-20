@@ -162,6 +162,10 @@ checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
     // which `node-ignore` should not do as well
     || !expected.every(notGitBuiltin)
   ) {
+    test(`test skipped for windows`, t => {
+      t.pass()
+      t.end()
+    })
     return
   }
 
