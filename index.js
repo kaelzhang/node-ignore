@@ -741,7 +741,7 @@ factory.isPathValid = isPathValid
 
 // Windows
 // --------------------------------------------------------------
-/* istanbul ignore next */
+/* istanbul ignore if */
 if (
   // Detect `process` so that it can run in browsers.
   typeof process !== 'undefined'
