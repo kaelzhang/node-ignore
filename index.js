@@ -585,6 +585,9 @@ const checkPath = (path, originalPath, doThrow) => {
 const isNotRelative = path => REGEX_TEST_INVALID_PATH.test(path)
 
 checkPath.isNotRelative = isNotRelative
+
+// On windows, the following function will be replaced
+/* istanbul ignore next */
 checkPath.convert = p => p
 
 
@@ -741,7 +744,7 @@ factory.isPathValid = isPathValid
 
 // Windows
 // --------------------------------------------------------------
-/* istanbul ignore if */
+/* istanbul ignore next */
 if (
   // Detect `process` so that it can run in browsers.
   typeof process !== 'undefined'
