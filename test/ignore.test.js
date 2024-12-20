@@ -101,7 +101,7 @@ cases(({
     return
   }
 
-  check('IGNORE_ONLY_WIN32')
+  check('IGNORE_ONLY_WIN32', 'filter')
   && tt(`win32: .filter(): ${description}`, t => {
     const win_paths = paths.map(make_win32)
 

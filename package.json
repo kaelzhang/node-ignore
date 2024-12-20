@@ -21,7 +21,7 @@
     "test:ts": "node ./test/ts/simple.js",
     "tap": "tap --reporter classic",
     "test:git": "npm run tap test/git-check-ignore.test.js",
-    "test:ignore": "npm run tap test/ignore.js",
+    "test:ignore": "npm run tap test/ignore.test.js",
     "test:ignore:only": "IGNORE_ONLY_IGNORES=1 npm run tap test/ignore.test.js",
     "test:others": "npm run tap test/others.test.js",
     "test:cases": "npm run tap test/*.test.js -- --coverage",

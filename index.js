@@ -760,9 +760,9 @@ if (
 
   // 'C:\\foo'     <- 'C:\\foo' has been converted to 'C:/'
   // 'd:\\foo'
-  const REGIX_IS_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i
+  const REGEX_TEST_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i
   checkPath.isNotRelative = path =>
-    REGIX_IS_WINDOWS_PATH_ABSOLUTE.test(path)
+    REGEX_TEST_WINDOWS_PATH_ABSOLUTE.test(path)
     || isNotRelative(path)
 }
 

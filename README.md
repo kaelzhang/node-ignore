@@ -7,17 +7,11 @@
     <th>Downloads</th>
   </tr>
 </thead><tbody><tr>
-  <td colspan="2" align="center">
+  <td colspan="3" align="center">
     <a href="https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml">
     <img
       src="https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml/badge.svg"
       alt="Build Status" /></a>
-  </td>
-  <td align="center">
-    <a href="https://ci.appveyor.com/project/kaelzhang/node-ignore">
-    <img
-      src="https://ci.appveyor.com/api/projects/status/github/kaelzhang/node-ignore?branch=master&svg=true"
-      alt="Windows Build Status" /></a>
   </td>
   <td align="center">
     <a href="https://codecov.io/gh/kaelzhang/node-ignore">
