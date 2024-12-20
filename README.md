@@ -1,31 +1,15 @@
-<table><thead>
-  <tr>
-    <th>Linux</th>
-    <th>OS X</th>
-    <th>Windows</th>
-    <th>Coverage</th>
-    <th>Downloads</th>
-  </tr>
-</thead><tbody><tr>
-  <td colspan="3" align="center">
-    <a href="https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml">
-    <img
-      src="https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml/badge.svg"
-      alt="Build Status" /></a>
-  </td>
-  <td align="center">
-    <a href="https://codecov.io/gh/kaelzhang/node-ignore">
-    <img
-      src="https://codecov.io/gh/kaelzhang/node-ignore/branch/master/graph/badge.svg"
-      alt="Coverage Status" /></a>
-  </td>
-  <td align="center">
-    <a href="https://www.npmjs.org/package/ignore">
-    <img
-      src="http://img.shields.io/npm/dm/ignore.svg"
-      alt="npm module downloads per month" /></a>
-  </td>
-</tr></tbody></table>
+| Linux / MacOS / Windows | Coverage | Downloads |
+| ----------------------- | -------- | --------- |
+| [![build][bb]][bl]      | [![coverage][cb]][cl] | [![downloads][db]][dl] |
+
+[bb]: https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml/badge.svg
+[bl]: https://github.com/kaelzhang/node-ignore/actions/workflows/nodejs.yml
+
+[cb]: https://codecov.io/gh/kaelzhang/node-ignore/branch/master/graph/badge.svg
+[cl]: https://codecov.io/gh/kaelzhang/node-ignore
+
+[db]: http://img.shields.io/npm/dm/ignore.svg
+[dl]: https://www.npmjs.org/package/ignore
 
 # ignore
 
