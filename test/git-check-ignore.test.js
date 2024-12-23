@@ -65,12 +65,17 @@ const debugSpawn = (...args) => {
   debug(out.output.toString())
 }
 
+const mapObjectRule = rule =>
+  typeof rule === 'string'
+    ? rule
+    : rule.pattern
+
 const getNativeGitIgnoreResults = (rules, paths) => {
   const dir = createUniqueTmp()
 
   const gitignore = typeof rules === 'string'
     ? rules
-    : rules.join('\n')
+    : rules.map(mapObjectRule).join('\n')
 
   touch(dir, '.gitignore', gitignore)
 
@@ -166,4 +171,9 @@ checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
     expect_result(t, result)
     t.end()
   })
+})
+
+test(`dummy test for windows`, t => {
+  t.pass()
+  t.end()
 })
