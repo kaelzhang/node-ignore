@@ -1,8 +1,20 @@
 type Pathname = string
 
+interface IgnoreRule {
+  pattern: string
+  mark?: string
+  negative: boolean
+}
+
 interface TestResult {
   ignored: boolean
   unignored: boolean
+  rule?: IgnoreRule
+}
+
+interface PatternParams {
+  pattern: string
+  mark?: string
 }
 
 export interface Ignore {
@@ -11,7 +23,9 @@ export interface Ignore {
    * @param  {string[]} patterns
    * @returns IgnoreBase
    */
-  add(patterns: string | Ignore | readonly (string | Ignore)[]): this
+  add(
+    patterns: string | Ignore | readonly (string | Ignore)[] | PatternParams
+  ): this
 
   /**
    * Filters the given array of pathnames, and returns the filtered array.
@@ -40,6 +54,13 @@ export interface Ignore {
    * @returns TestResult
    */
   test(pathname: Pathname): TestResult
+
+  /**
+   * Debugs ignore rules and returns the checking result, which is
+   *   equivalent to `git check-ignore -v`.
+   * @returns TestResult
+   */
+  checkIgnore(pathname: Pathname): TestResult
 }
 
 export interface Options {

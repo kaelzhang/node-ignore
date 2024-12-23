@@ -70,3 +70,15 @@ ignore({
   ignoreCase: false,
   allowRelativePaths: true
 })
+
+const ig7 = ignore()
+
+ig7.add({pattern: 'foo/*', mark: '10'})
+const {
+  ignored: ignored7,
+  rule: ignoreRule7
+} = ig7.checkIgnore('foo/')
+
+equal(ignored7, true, 'should ignore')
+equal(ignoreRule7.mark, '10', 'mark is 10')
+equal(ignoreRule7.pattern, 'foo/*', 'ignored by foo/*')
