@@ -102,7 +102,7 @@ ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
 
 ## .add(pattern: string | Ignore): this
 ## .add(patterns: Array<string | Ignore>): this
-## .add({pattern: string, mark?: string}): this  since 6.1.0
+## .add({pattern: string, mark?: string}): this  since 7.0.0
 
 - **pattern** `string | Ignore` An ignore pattern string, or the `Ignore` instance
 - **patterns** `Array<string | Ignore>` Array of ignore patterns.
@@ -271,7 +271,7 @@ interface TestResult {
   rule?: IgnoreRule
 }
 
-// Since 6.1.0
+// Since 7.0.0
 interface IgnoreRule {
   // The original pattern
   pattern: string
@@ -288,7 +288,7 @@ interface IgnoreRule {
 
 ## .checkIgnore(target: string): TestResult
 
-> new in 6.1.0
+> new in 7.0.0
 
 Debugs gitignore / exclude files, which is equivalent to `git check-ignore -v`. Usually this method is used for other packages to implement the function of `git check-ignore -v` upon `node-ignore`
 
