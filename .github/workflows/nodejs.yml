@@ -24,3 +24,8 @@ jobs:
         npm test
       env:
         CI: true
+    - name: upload to codecov
+      if: runner.os == 'Linux'
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
