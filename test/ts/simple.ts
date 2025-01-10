@@ -1,8 +1,5 @@
-import ignore from '../../'
-import {
-  Ignore,
-  isPathValid
-} from '../../'
+import ignore, {isPathValid} from '../..'
+import type {Ignore} from '../..'
 
 const equal = (actual, expect, message) => {
   if (actual !== expect) {

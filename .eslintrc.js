@@ -27,5 +27,16 @@ module.exports = {
   // Uses `require.resolve` to support npm linked eslint-config
   extends: require.resolve('eslint-config-ostai'),
   root: true,
-  rules
+  rules,
+  overrides: [
+    {
+      files: ['*.ts', '*.cts', '*.mts'],
+      extends: ['plugin:@typescript-eslint/recommended'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['@typescript-eslint'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 }
