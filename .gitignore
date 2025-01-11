@@ -1,6 +1,3 @@
-# build target
-/index.mjs
-
 # test
 /.tap
 

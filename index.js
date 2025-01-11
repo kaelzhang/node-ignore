@@ -739,8 +739,6 @@ const factory = options => new Ignore(options)
 const isPathValid = path =>
   checkPath(path && checkPath.convert(path), path, RETURN_FALSE)
 
-factory.isPathValid = isPathValid
-
 
 // Windows
 // --------------------------------------------------------------
@@ -771,7 +769,5 @@ if (
 
 // COMMONJS_EXPORTS ////////////////////////////////////////////////////////////
 
-// Fixes typescript
-factory.default = factory
-
 module.exports = factory
+module.exports.isPathValid = isPathValid

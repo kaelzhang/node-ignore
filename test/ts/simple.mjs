@@ -1,4 +1,4 @@
-import ignore, {isPathValid} from '../../index.mjs' // eslint-disable-line import/extensions
+import ignore, {isPathValid} from '../../index.js' // eslint-disable-line import/extensions
 
 const equal = (actual, expect, message) => {
   if (actual !== expect) {

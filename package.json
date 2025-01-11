@@ -3,18 +3,16 @@
   "version": "7.0.0",
   "description": "Ignore is a manager and filter for .gitignore rules, the one used by eslint, gitbook and many others.",
   "main": "index.js",
-  "module": "index.mjs",
   "types": "index.d.ts",
   "files": [
     "legacy.js",
     "index.js",
-    "index.mjs",
     "index.d.ts",
     "LICENSE-MIT"
   ],
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build": "babel -o legacy.js index.js && node ./scripts/build.js",
+    "build": "babel -o legacy.js index.js",
     "test:lint": "eslint .",
     "test:ts": "ts-node ./test/ts/simple.ts",
     "test:ts:16": "ts-node --compilerOptions '{\"moduleResolution\": \"Node16\", \"module\": \"Node16\"}' ./test/ts/simple.ts",
