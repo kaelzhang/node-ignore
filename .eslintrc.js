@@ -30,7 +30,7 @@ module.exports = {
   rules,
   overrides: [
     {
-      files: ['*.ts', '*.cts', '*.mts'],
+      files: ['*.ts', '*.cts', '*.mts', '*.cjs', '*.mjs'],
       extends: ['plugin:@typescript-eslint/recommended'],
       parser: '@typescript-eslint/parser',
       plugins: ['@typescript-eslint'],

@@ -2,7 +2,6 @@
 /index.mjs
 
 # test
-test/ts/*.js
 /.tap
 
 # coverage
