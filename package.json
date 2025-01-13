@@ -1,8 +1,7 @@
 {
   "name": "ignore",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "Ignore is a manager and filter for .gitignore rules, the one used by eslint, gitbook and many others.",
-  "main": "index.js",
   "types": "index.d.ts",
   "files": [
     "legacy.js",
@@ -28,8 +27,7 @@
     "test:only": "npm run test:lint && npm run build && npm run test:ts && npm run test:ts:16 && npm run test:cjs:16 && npm run test:mjs:16 && npm run test:cases",
     "test": "npm run test:only",
     "test:win32": "IGNORE_TEST_WIN32=1 npm run test",
-    "report": "tap --coverage-report=html",
-    "// posttest": "npm run report && codecov"
+    "report": "tap --coverage-report=html"
   },
   "repository": {
     "type": "git",
