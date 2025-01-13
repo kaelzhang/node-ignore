@@ -384,20 +384,6 @@ ignore({
 
 # Upgrade Guide
 
-## Upgrade 5.x -> 6.x
-
-To bring better compatibility for TypeScript with `moduleResolution:Node16`, `ignore.isPathValid` has been removed in TypeScript definitions since `6.x`
-
-```js
-// < 6, or works with commonjs
-ignore.isPathValid('./foo')  // false
-
-// >= 6.x
-import {isPathValid} from 'ignore'
-
-isPathValid('./foo')         // false
-```
-
 ## Upgrade 4.x -> 5.x
 
 Since `5.0.0`, if an invalid `Pathname` passed into `ig.ignores()`, an error will be thrown, unless `options.allowRelative = true` is passed to the `Ignore` factory.

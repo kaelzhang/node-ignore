@@ -1,6 +1,12 @@
 name: build
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
@@ -14,16 +20,24 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-    - name: npm install, build, and test
+    - name: npm install, build, and linting
       run: |
         npm install
         npm run build --if-present
-        npm test
+        npm run lint
+        npm run test:ts
       env:
         CI: true
+    - name: test nodeResolution 16
+      if: runner.os != 'Windows'
+      run: |
+        npm run test:16
+    - name: cases
+      run: |
+        npm run test:cases
     - name: upload to codecov
       if: runner.os == 'Linux'
       uses: codecov/codecov-action@v5
