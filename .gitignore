@@ -1,5 +1,6 @@
 # test
 /.tap
+/test/import/*.js
 
 # coverage
 coverage

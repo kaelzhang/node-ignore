@@ -770,4 +770,10 @@ if (
 // COMMONJS_EXPORTS ////////////////////////////////////////////////////////////
 
 module.exports = factory
+
+// Although it is an anti-pattern,
+//   it is still widely misused by a lot of libraries in github
+// Ref: https://github.com/search?q=ignore.default%28%29&type=code
+factory.default = factory
+
 module.exports.isPathValid = isPathValid
