@@ -178,9 +178,13 @@ _test('isPathValid', t => {
 
 const IGNORE_TEST_CASES = [
   [
+    // Description
     'test: no rule',
+    // patterns
     null,
+    // path
     'foo',
+    // ignored, unignored
     [false, false]
   ],
   [
@@ -212,14 +216,17 @@ const IGNORE_TEST_CASES = [
     ['*.js', '!a/a.js'],
     'a/a.js',
     [false, true]
-  ],
-  [
-    `test: file which named '...'`,
-    'foo',
-    '...',
-    [false, false]
   ]
 ]
+
+if (!SHOULD_TEST_WINDOWS) {
+  IGNORE_TEST_CASES.push([
+    `test: file which named '...'`,
+    null,
+    '...',
+    [false, false]
+  ])
+}
 
 IGNORE_TEST_CASES.forEach(([d, patterns, path, [ignored, unignored]]) => {
   _test(d, t => {

@@ -8,6 +8,9 @@ function readPatterns (file) {
   return fs.readFileSync(file).toString()
 }
 
+const IS_WINDOWS = process.platform === 'win32'
+const SHOULD_TEST_WINDOWS = IS_WINDOWS || !!process.env.IGNORE_TEST_WIN32
+
 const cases = [
   /////////////////////////////////////////////////////////////////////
   // [
@@ -988,9 +991,30 @@ const cases = [
   ]
 ]
 
-const IS_WINDOWS = process.platform === 'win32'
-if (!IS_WINDOWS && !process.env.IGNORE_TEST_WIN32) {
+if (!SHOULD_TEST_WINDOWS) {
   cases.push(
+    [
+      '#68: ignore test for files named ...',
+      [
+        '/...',
+        '/.....'
+      ],
+      {
+        '...': 1,
+        '....': 0,
+        '.....': 1,
+        '......': 0
+      }
+    ],
+    [
+      '#68: file named ...',
+      [],
+      {
+        '...': 0,
+        '....': 0,
+        '.....': 0
+      }
+    ],
     [
       '#130: consequent escaped backslashes with whitespaces',
       [
@@ -1153,7 +1177,6 @@ exports.checkEnv = key => hasOnly
   : true
 
 exports.IS_WINDOWS = IS_WINDOWS
-exports.SHOULD_TEST_WINDOWS = process.env.IGNORE_TEST_WIN32
-  || IS_WINDOWS
+exports.SHOULD_TEST_WINDOWS = SHOULD_TEST_WINDOWS
 
 exports.debug = debug
