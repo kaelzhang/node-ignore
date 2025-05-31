@@ -739,7 +739,7 @@ const factory = options => new Ignore(options)
 const isPathValid = path =>
   checkPath(path && checkPath.convert(path), path, RETURN_FALSE)
 
-
+/* istanbul ignore next */
 const setupWindows = () => {
   /* eslint no-control-regex: "off" */
   const makePosix = str => /^\\\\\?\\/.test(str)
