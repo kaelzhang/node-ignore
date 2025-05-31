@@ -2,6 +2,7 @@
 const fs = require('fs')
 const path = require('path')
 const debug = require('debug')('node-ignore')
+const ignore = require('../..')
 
 function readPatterns (file) {
   file = path.join(__dirname, file)
@@ -10,6 +11,11 @@ function readPatterns (file) {
 
 const IS_WINDOWS = process.platform === 'win32'
 const SHOULD_TEST_WINDOWS = IS_WINDOWS || !!process.env.IGNORE_TEST_WIN32
+
+// Not Windows, but want to mimic tests on Windows
+if (!IS_WINDOWS && !!process.env.IGNORE_TEST_WIN32) {
+  ignore[Symbol.for('setupWindows')]()
+}
 
 const cases = [
   /////////////////////////////////////////////////////////////////////
