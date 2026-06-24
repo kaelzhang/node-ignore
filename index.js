@@ -57,6 +57,15 @@ const sanitizeRange = range => range.replace(
     : EMPTY
 )
 
+// > An optional `!` or `^` at the start of a class negates it, so that it
+// >   matches any character not in the set. (gitignore(5), fnmatch(3))
+// The leading `^` has already been escaped to `\^` by the metacharacter
+//   escaper, so we strip the literal `!` or escaped `^` and emit a single
+//   regex `^` which is the JavaScript negation token.
+const negateRange = range => range.startsWith('!') || range.startsWith('\\^')
+  ? `^${range.slice(range[0] === '!' ? 1 : 2)}`
+  : range
+
 // See fixtures #59
 const cleanRangeBackSlash = slashes => {
   const {length} = slashes
@@ -272,7 +281,7 @@ const REPLACERS = [
           // A normal case, and it is a range notation
           // '[bar]'
           // '[bar\\\\]'
-          ? `[${sanitizeRange(range)}${endEscape}]`
+          ? `[${negateRange(sanitizeRange(range))}${endEscape}]`
           // Invalid range notaton
           // '[bar\\]' -> '[bar\\\\]'
           : '[]'
