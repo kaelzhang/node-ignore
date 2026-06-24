@@ -390,6 +390,63 @@ const cases = [
     }
   ],
   [
+    // A class starting with `!` or `^` is negated and matches any
+    //   character not in the set, same as fnmatch(3) / git check-ignore
+    'negated class: [!a].txt',
+    [
+      '[!a].txt'
+    ],
+    {
+      'a.txt': 0,
+      'b.txt': 1
+    }
+  ],
+  [
+    'negated class with caret: [^a]',
+    [
+      '[^a]'
+    ],
+    {
+      'a': 0,
+      'b': 1
+    }
+  ],
+  [
+    'negated range: [!a-c].txt',
+    [
+      '[!a-c].txt'
+    ],
+    {
+      'a.txt': 0,
+      'b.txt': 0,
+      'c.txt': 0,
+      'd.txt': 1
+    }
+  ],
+  [
+    'negated numeric range: [!0-9]',
+    [
+      '[!0-9]'
+    ],
+    {
+      '0': 0,
+      '5': 0,
+      '9': 0,
+      'a': 1
+    }
+  ],
+  [
+    'negated class in the middle: x[!y]z',
+    [
+      'x[!y]z'
+    ],
+    {
+      'xyz': 0,
+      'xaz': 1,
+      'xbz': 1
+    }
+  ],
+  [
     'special case: similar, but not a character set',
     [
       '*.[a-'
