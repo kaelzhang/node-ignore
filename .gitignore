@@ -1,0 +1,62 @@
+# test
+/.tap
+/test/import/*.js
+
+# coverage
+coverage
+.nyc_output
+/legacy.js
+
+# yarn
+*.lock
+
+# php files
+index.php
+
+# Numerous always-ignore extensions
+*.bak
+*.patch
+*.diff
+*.err
+*.orig
+*.log
+*.rej
+*.swo
+*.swp
+*.zip
+*.vi
+*~
+*.sass-cache
+package-lock.json
+
+# npm package
+*.tgz
+
+# OS or Editor folders
+.DS_Store
+._*
+.cache
+.project
+.settings
+.tmproj
+*.esproj
+*.sublime-project
+nbproject
+thumbs.db
+*.*-workspace
+
+# Folders to ignore
+.hg
+.svn
+.CVS
+.idea
+node_modules
+old/
+*-old/
+*-notrack/
+no-track/
+build/
+combo/
+reference/
+jscoverage_lib/
+temp/

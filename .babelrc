@@ -1,0 +1,6 @@
+{
+  "presets": [
+    // Defaults to es2015
+    "@babel/preset-env"
+  ]
+}

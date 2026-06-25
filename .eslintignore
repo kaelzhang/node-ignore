@@ -1,0 +1,6 @@
+/build
+/coverage
+/no-track
+/test/import/*.js
+/legacy.js
+/index.mjs
