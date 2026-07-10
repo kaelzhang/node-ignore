@@ -32,6 +32,16 @@ const cases = [
   // ],
   /////////////////////////////////////////////////////////////////////
   [
+    '#153: reinclude issue',
+    [
+      '/a/**',
+      '!/a/**/b.js ',
+    ],
+    {
+      'a/c.d/b.js': 1, // not ok path: "a/c.d/b.js" should not be ignored
+      'a/cd/b.js': 1,
+    }
+  ], [
     '#148',
     [
       '/.a/'
