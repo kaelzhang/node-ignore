@@ -170,7 +170,7 @@ const REPLACERS = [
     // > "**/foo/bar" matches file or directory "bar" anywhere that is directly
     // >   under directory "foo".
     // Notice that the '*'s have been replaced as '\\*'
-    /^\^*\\\*\\\*\\\//,
+    /^\^*(?:\\\*\\\*\\\/)+/,
 
     // '**/foo' <-> 'foo'
     () => '^(?:.*\\/)?'

@@ -871,6 +871,18 @@ const cases = [
   ],
 
   [
+    'consecutive leading "**/" behave as a single "**/"',
+    [
+      '**/**/foo'
+    ],
+    {
+      'foo': 1,
+      'a/foo': 1,
+      'a/b/foo': 1
+    }
+  ],
+
+  [
     '"**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo"',
     [
       '**/foo/bar'
