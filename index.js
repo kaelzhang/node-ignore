@@ -42,34 +42,223 @@ const define = (object, key, value) => {
   return value
 }
 
-const REGEX_REGEXP_RANGE = /([0-z])-([0-z])/g
-
 const RETURN_FALSE = () => false
-
-// Sanitize the range of a regular expression
-// The cases are complicated, see test cases for details
-const sanitizeRange = range => range.replace(
-  REGEX_REGEXP_RANGE,
-  (match, from, to) => from.charCodeAt(0) <= to.charCodeAt(0)
-    ? match
-    // Invalid range (out of order) which is ok for gitignore rules but
-    //   fatal for JavaScript regular expression, so eliminate it.
-    : EMPTY
-)
-
-// > An optional `!` or `^` at the start of a class negates it, so that it
-// >   matches any character not in the set. (gitignore(5), fnmatch(3))
-// The leading `^` has already been escaped to `\^` by the metacharacter
-//   escaper, so we strip the literal `!` or escaped `^` and emit a single
-//   regex `^` which is the JavaScript negation token.
-const negateRange = range => range.startsWith('!') || range.startsWith('\\^')
-  ? `^${range.slice(range[0] === '!' ? 1 : 2)}`
-  : range
 
 // See fixtures #59
 const cleanRangeBackSlash = slashes => {
   const {length} = slashes
   return slashes.slice(0, length - length % 2)
+}
+
+// > The range notation, e.g. [a-zA-Z],
+// > can be used to match one of the characters in a range.
+//
+// gitignore(5) defers to fnmatch(3) for this, and git implements it in
+//   `wildmatch.c`.  A bracket expression has a sub-grammar of its own, which
+//   is neither the surrounding pattern grammar nor the JavaScript one:
+//
+//   - a `]` right after `[` or `[!` is a literal member, not the terminator
+//   - `[:alpha:]` names one of twelve POSIX classes
+//   - `\` escapes the next member, `]` included
+//   - `*`, `?` and `.` are plain literal members
+//   - an unterminated expression makes the whole pattern match nothing
+//
+// which means the expression can not be located -- let alone translated -- by
+//   a regular expression.  It is scanned out of the pattern before the
+//   replacers below run, and put back once they are done, so that neither the
+//   metacharacter escaper nor the `?` / `*` replacers ever see its body.
+
+// git classifies with its own ASCII-only ctype macros (`wildmatch.c`), never
+//   with the C library ones, so these must not be mapped onto `\d` / `\w` /
+//   `\s`, which are wider.  `/` is left out of every expansion, because a
+//   bracket expression never matches a path separator.
+const POSIX_CLASSES = {
+  alnum: '0-9A-Za-z',
+  alpha: 'A-Za-z',
+  blank: ' \\t',
+  cntrl: '\\x00-\\x1f\\x7f',
+  digit: '0-9',
+  graph: '!-.0-~',
+  lower: 'a-z',
+  print: ' -.0-~',
+  punct: '!-.:-@\\[-`{-~',
+  // git's `sane-ctype.h` classifies \v and \f as control, not space,
+  //   unlike C's `isspace`
+  space: ' \\t\\n\\r',
+  upper: 'A-Z',
+  xdigit: '0-9A-Fa-f'
+}
+
+const CLASS_MEMBERS_TO_ESCAPE = '\\]^-['
+
+const escapeMember = char => CLASS_MEMBERS_TO_ESCAPE.indexOf(char) < 0
+  ? char
+  : ESCAPE + char
+
+// Scan the bracket expression that starts at `pattern[start] === '['`,
+//   mirroring the member loop of git's `wildmatch.c`.
+// @returns {{end: number, source: string} | null} `null` if the expression is
+//   never terminated, which makes the whole pattern match nothing.
+const scanBracket = (pattern, start) => {
+  const {length} = pattern
+  let index = start + 1
+  let negated = EMPTY
+
+  const lead = pattern[index]
+  if (lead === '!' || lead === '^') {
+    negated = '^'
+    index ++
+  }
+
+  let body = EMPTY
+
+  // The member a `-` could start a range from, or EMPTY when the previous
+  //   member can not open one (start of the body, or a range / POSIX class
+  //   that has just closed)
+  let prev = EMPTY
+
+  // git scans the members with a do-while, so the first one is consumed
+  //   unconditionally.  That is the whole reason a leading `]` is a member
+  //   and not the terminator.
+  for (;;) {
+    const char = pattern[index]
+
+    if (char === UNDEFINED) {
+      return null
+    }
+
+    if (char === ESCAPE) {
+      const escaped = pattern[index + 1]
+      if (escaped === UNDEFINED) {
+        return null
+      }
+      body += escapeMember(escaped)
+      prev = escaped
+      index ++
+    } else if (
+      char === '-'
+      && prev
+      && index + 1 < length
+      && pattern[index + 1] !== ']'
+    ) {
+      index ++
+      let to = pattern[index]
+      if (to === ESCAPE) {
+        // A pattern can not end on a lone backslash -- `checkPattern` has
+        //   already thrown it away -- so there is an upper bound to read.
+        to = pattern[index += 1]
+      }
+      // An out-of-order range matches nothing in git but is a syntax error in
+      //   JavaScript, so it is dropped.  Its lower bound stays: git tests it
+      //   as a plain member before it ever looks at the `-`, so `[c-a]` does
+      //   match `c`.
+      if (prev <= to) {
+        body += `-${escapeMember(to)}`
+      }
+      prev = EMPTY
+    } else if (char === '[' && pattern[index + 1] === ':') {
+      const nameStart = index + 2
+      let end = nameStart
+      while (end < length && pattern[end] !== ']') {
+        end ++
+      }
+
+      if (end === length) {
+        return null
+      }
+
+      if (end > nameStart && pattern[end - 1] === ':') {
+        const expanded = POSIX_CLASSES[pattern.slice(nameStart, end - 1)]
+
+        // An unknown class name makes the whole pattern match nothing
+        if (expanded === UNDEFINED) {
+          return null
+        }
+
+        body += expanded
+        prev = EMPTY
+        index = end
+      } else {
+        // No `:]` to close it, so the `[` is a plain member and scanning
+        //   resumes right after it.
+        body += escapeMember('[')
+        prev = '['
+        index = nameStart - 2
+      }
+    } else {
+      body += escapeMember(char)
+      prev = char
+    }
+
+    index ++
+
+    if (pattern[index] === ']') {
+      return {
+        end: index,
+        source: `[${negated}${body}]`
+      }
+    }
+  }
+}
+
+// An empty JavaScript class can never match, which is how a pattern that git
+//   gives up on (`WM_ABORT_ALL`) is expressed here.
+const NEVER_MATCH = '[]'
+
+// A NUL can appear in neither a `.gitignore` line nor a path, which makes it
+//   the one safe placeholder character.  A literal one in the pattern is
+//   held aside all the same, so a collision is impossible by construction.
+const PLACEHOLDER = '\u0000'
+const REGEX_RESTORE_PLACEHOLDER = new RegExp(
+  `${PLACEHOLDER}(\\d+)${PLACEHOLDER}`, 'g'
+)
+
+// Replace every bracket expression with a placeholder the replacers below
+//   leave alone, and translate it separately.
+const extractBrackets = pattern => {
+  const sources = []
+  const hold = source =>
+    `${PLACEHOLDER}${sources.push(source) - 1}${PLACEHOLDER}`
+
+  const {length} = pattern
+  let out = EMPTY
+  let index = 0
+
+  while (index < length) {
+    const char = pattern[index]
+
+    if (char === ESCAPE) {
+      // An escaped `[` is a literal one; leave the pair to the replacers,
+      //   which already deal with `\[foo]`.
+      out += pattern.slice(index, index + 2)
+      index += 2
+    } else if (char === PLACEHOLDER) {
+      // Hold a literal placeholder character aside as well, so that pattern
+      //   text can never be mistaken for a placeholder we emitted.
+      out += hold(`[${PLACEHOLDER}]`)
+      index ++
+    } else if (char === '[') {
+      const scanned = scanBracket(pattern, index)
+
+      if (scanned === null) {
+        // git gives up on the whole pattern (`WM_ABORT_ALL`), so whatever
+        //   follows can not make it match either.
+        out += hold(NEVER_MATCH)
+        index = length
+      } else {
+        out += hold(scanned.source)
+        index = scanned.end + 1
+      }
+    } else {
+      out += char
+      index ++
+    }
+  }
+
+  return {
+    source: out,
+    sources
+  }
 }
 
 // > If the pattern ends with a slash,
@@ -268,24 +457,16 @@ const REPLACERS = [
   ],
 
   [
-    // > The range notation, e.g. [a-zA-Z],
-    // > can be used to match one of the characters in a range.
+    // Every real bracket expression has already been held aside by
+    //   `extractBrackets`, so the only `[` left in the pattern is an escaped,
+    //   literal one.
 
     // `\` is escaped by step 3
-    /(\\)?\[([^\]/]*?)(\\*)($|\])/g,
-    (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE
-      // '\\[bar]' -> '\\\\[bar\\]'
-      ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
-      : close === ']'
-        ? endEscape.length % 2 === 0
-          // A normal case, and it is a range notation
-          // '[bar]'
-          // '[bar\\\\]'
-          ? `[${negateRange(sanitizeRange(range))}${endEscape}]`
-          // Invalid range notaton
-          // '[bar\\]' -> '[bar\\\\]'
-          : '[]'
-        : '[]'
+    /\\\[([^\]/]*?)(\\*)($|\])/g,
+
+    // '\\[bar]' -> '\\\\[bar\\]'
+    (match, range, endEscape, close) =>
+      `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
   ],
 
   // ending
@@ -353,11 +534,16 @@ const TRAILING_WILD_CARD_REPLACERS = {
 }
 
 // @param {pattern}
-const makeRegexPrefix = pattern => REPLACERS.reduce(
-  (prev, [matcher, replacer]) =>
-    prev.replace(matcher, replacer.bind(pattern)),
-  pattern
-)
+const makeRegexPrefix = pattern => {
+  const {source, sources} = extractBrackets(pattern)
+
+  return REPLACERS.reduce(
+    (prev, [matcher, replacer]) =>
+      prev.replace(matcher, replacer.bind(pattern)),
+    source
+  )
+  .replace(REGEX_RESTORE_PLACEHOLDER, (match, index) => sources[index])
+}
 
 const isString = subject => typeof subject === 'string'
 

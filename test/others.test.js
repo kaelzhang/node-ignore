@@ -243,6 +243,20 @@ IGNORE_TEST_CASES.forEach(([d, patterns, path, [ignored, unignored]]) => {
   })
 })
 
+// A bracket expression is held aside behind a NUL placeholder while the
+// pattern is compiled, so a NUL written in the pattern itself must not be
+// mistaken for one of those placeholders
+_test('a literal NUL is not a bracket placeholder', t => {
+  const ig = ignore().add('a\u00000\u0000[bc]')
+
+  t.equal(ig.ignores('a\u00000\u0000b'), true)
+  t.equal(ig.ignores('a\u00000\u0000c'), true)
+  t.equal(ig.ignores('a\u00000\u0000d'), false)
+  t.equal(ig.ignores('[bc]'), false)
+
+  t.end()
+})
+
 _test('options.allowRelativePaths = true', t => {
   const ig = ignore({
     allowRelativePaths: true
