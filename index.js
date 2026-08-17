@@ -72,6 +72,33 @@ const cleanRangeBackSlash = slashes => {
   return slashes.slice(0, length - length % 2)
 }
 
+// POSIX character classes ('[:alpha:]', '[:digit:]', ...) are part of the
+// wildmatch syntax gitignore uses, but JavaScript regular expressions have no
+// equivalent, so expand each one to its range (matching Git in the C locale).
+const POSIX_CLASS = {
+  alnum: '0-9A-Za-z',
+  alpha: 'A-Za-z',
+  blank: ' \\t',
+  cntrl: '\\x00-\\x1f\\x7f',
+  digit: '0-9',
+  graph: '\\x21-\\x7e',
+  lower: 'a-z',
+  print: '\\x20-\\x7e',
+  punct: '\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e',
+  space: ' \\t\\n\\x0b\\f\\r',
+  upper: 'A-Z',
+  xdigit: '0-9A-Fa-f'
+}
+
+const REGEX_POSIX_CLASS = /\[:([a-z]+):\]/g
+
+const expandPosixClasses = range => range.replace(
+  REGEX_POSIX_CLASS,
+  (match, name) => Object.prototype.hasOwnProperty.call(POSIX_CLASS, name)
+    ? POSIX_CLASS[name]
+    : match
+)
+
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
 // > but it would only find a match with a directory.
@@ -272,7 +299,9 @@ const REPLACERS = [
     // > can be used to match one of the characters in a range.
 
     // `\` is escaped by step 3
-    /(\\)?\[([^\]/]*?)(\\*)($|\])/g,
+    // A POSIX class '[:name:]' is consumed as a unit so its inner ']' is not
+    // mistaken for the end of the bracket expression.
+    /(\\)?\[((?:\[:[a-z]+:\]|[^\]/])*?)(\\*)($|\])/g,
     (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE
       // '\\[bar]' -> '\\\\[bar\\]'
       ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
@@ -281,7 +310,7 @@ const REPLACERS = [
           // A normal case, and it is a range notation
           // '[bar]'
           // '[bar\\\\]'
-          ? `[${negateRange(sanitizeRange(range))}${endEscape}]`
+          ? `[${expandPosixClasses(negateRange(sanitizeRange(range)))}${endEscape}]`
           // Invalid range notaton
           // '[bar\\]' -> '[bar\\\\]'
           : '[]'

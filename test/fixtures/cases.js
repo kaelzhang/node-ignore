@@ -363,6 +363,58 @@ const cases = [
     }
   ],
   [
+    'POSIX class: [[:digit:]]',
+    [
+      '[[:digit:]].log'
+    ],
+    {
+      '1.log': 1,
+      'a.log': 0
+    }
+  ],
+  [
+    'POSIX class: [[:alpha:]]',
+    [
+      '[[:alpha:]].log'
+    ],
+    {
+      'a.log': 1,
+      '1.log': 0
+    }
+  ],
+  [
+    'POSIX class: negated [![:digit:]]',
+    [
+      'x[![:digit:]]'
+    ],
+    {
+      'xa': 1,
+      'x1': 0
+    }
+  ],
+  [
+    'POSIX class combined with a set: [[:alnum:]_]',
+    [
+      '[[:alnum:]_].o'
+    ],
+    {
+      'a.o': 1,
+      '_.o': 1,
+      '!.o': 0
+    }
+  ],
+  [
+    // An unknown class name is left as-is, matching Git (no match).
+    'POSIX class: unknown name is inert',
+    [
+      '[[:foo:]]'
+    ],
+    {
+      'foo': 0,
+      'f': 0
+    }
+  ],
+  [
     // Just treat it as normal character set
     'special case: range-like character set',
     [
