@@ -932,6 +932,19 @@ const cases = [
   ],
 
   [
+    'A trailing "/**/" matches directories inside but not the parent folder itself',
+    [
+      'a/**/'
+    ],
+    {
+      'a/f.txt': 0,
+      'a/b/': 1,
+      'a/b/f.txt': 1,
+      'a/deep/nested/x.txt': 1
+    }
+  ],
+
+  [
     'add a file content',
     readPatterns('.aignore'),
     {
