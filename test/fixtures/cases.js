@@ -770,6 +770,22 @@ const cases = [
     }
   ],
   [
+    // Every bracket expression is held aside behind a numbered placeholder
+    //   while the replacers run, so past the ninth one the index is two
+    //   digits, and a digit of the pattern itself can sit right against one
+    'more than nine bracket expressions in one pattern',
+    [
+      '[a][b][c][d][e][f][g][h][i][j][k][l]',
+      '[m]0[n]1[o]2[p]3[q]4[r]5[s]6[t]7[u]8[v]9[w]10[x]'
+    ],
+    {
+      'abcdefghijkl': 1,
+      'abcdefghijkX': 0,
+      'm0n1o2p3q4r5s6t7u8v9w10x': 1,
+      'm0n1o2p3q4r5s6t7u8v9w1x': 0
+    }
+  ],
+  [
     'related to #38',
     [
       '*',
@@ -1242,6 +1258,25 @@ const cases = [
       'a/b/': 1,
       'a/b/f.txt': 1,
       'a/deep/nested/x.txt': 1
+    }
+  ],
+
+  [
+    // The same rule in the two shapes that reach the replacer differently:
+    //   rooted, and a run of globstars, which is where the leading-globstar
+    //   rule meets the trailing one
+    'a trailing "/**/" behaves the same when rooted or repeated',
+    [
+      '/a/**/',
+      'b/**/**/'
+    ],
+    {
+      'a/f.txt': 0,
+      'a/b/': 1,
+      'a/b/f.txt': 1,
+      'b/f.txt': 0,
+      'b/c/': 1,
+      'b/c/f.txt': 1
     }
   ],
 

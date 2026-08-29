@@ -257,6 +257,29 @@ _test('a literal NUL is not a bracket placeholder', t => {
   t.end()
 })
 
+// A POSIX class name is looked up in a table rather than branched on, so a
+// wrong expansion is invisible to a coverage report. `[[:cntrl:]]` is the one
+// class that can not go through test/fixtures/cases.js: `git check-ignore`
+// C-quotes a control character in its output ('"x\001y"'), which the fixture
+// oracle does not unquote, so the case would fail there for the wrong reason.
+// Every expectation below is what `git check-ignore` answers.
+_test('[[:cntrl:]] expands to the control characters', t => {
+  const ig = ignore().add('x[[:cntrl:]]y')
+
+  t.equal(ig.ignores('x\u0001y'), true)
+  t.equal(ig.ignores('x\u001fy'), true)
+  t.equal(ig.ignores('x\u007fy'), true)
+  t.equal(ig.ignores('x y'), false)
+  t.equal(ig.ignores('xay'), false)
+
+  const neg = ignore().add('x[![:cntrl:]]y')
+
+  t.equal(neg.ignores('xay'), true)
+  t.equal(neg.ignores('x\u0001y'), false)
+
+  t.end()
+})
+
 _test('options.allowRelativePaths = true', t => {
   const ig = ignore({
     allowRelativePaths: true
