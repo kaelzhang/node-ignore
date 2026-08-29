@@ -405,12 +405,20 @@ const REPLACERS = [
     // Check if it is not the last `'/**'`
     (_, index, str) => index + 6 < str.length
 
-      // case: /**/
-      // > A slash followed by two consecutive asterisks then a slash matches
-      // >   zero or more directories.
-      // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
-      // '/**/'
-      ? '(?:\\/[^\\/]+)*'
+      // case: /**/ at the end of the pattern, i.e. a trailing `'/**/'`
+      // > A trailing `"/**/"` (a trailing `"/**"` restricted to directories)
+      // >   matches everything inside, but it should not match the current
+      // >   folder itself, so it requires at least one directory segment.
+      // 'a/**/' matches 'a/b/', 'a/x/y/' but not 'a/'
+      ? str.slice(index + 6) === '\\/'
+        ? '(?:\\/[^\\/]+)+'
+
+        // case: /**/
+        // > A slash followed by two consecutive asterisks then a slash matches
+        // >   zero or more directories.
+        // > For example, "a/**/b" matches "a/b", "a/x/b", "a/x/y/b" and so on.
+        // '/**/'
+        : '(?:\\/[^\\/]+)*'
 
       // case: /**
       // > A trailing `"/**"` matches everything inside.
@@ -462,11 +470,22 @@ const REPLACERS = [
     //   literal one.
 
     // `\` is escaped by step 3
-    /\\\[([^\]/]*?)(\\*)($|\])/g,
-
-    // '\\[bar]' -> '\\\\[bar\\]'
-    (match, range, endEscape, close) =>
-      `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
+    // A POSIX class '[:name:]' is consumed as a unit so its inner ']' is not
+    // mistaken for the end of the bracket expression.
+    /(\\)?\[((?:\[:[a-z]+:\]|[^\]/])*?)(\\*)($|\])/g,
+    (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE
+      // '\\[bar]' -> '\\\\[bar\\]'
+      ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
+      : close === ']'
+        ? endEscape.length % 2 === 0
+          // A normal case, and it is a range notation
+          // '[bar]'
+          // '[bar\\\\]'
+          ? `[${expandPosixClasses(negateRange(sanitizeRange(range)))}${endEscape}]`
+          // Invalid range notaton
+          // '[bar\\]' -> '[bar\\\\]'
+          : '[]'
+        : '[]'
   ],
 
   // ending
