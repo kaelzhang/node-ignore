@@ -28,6 +28,9 @@
     "test:cases": "npm run tap test/*.test.js -- --coverage",
     "tap": "tap --reporter classic",
 
+    "=================== benchmark =====================": "",
+    "benchmark": "node benchmark",
+
     "===================== debug =======================": "",
     "test:git": "npm run tap test/git-check-ignore.test.js",
     "test:ignore": "npm run tap test/ignore.test.js",

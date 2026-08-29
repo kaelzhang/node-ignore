@@ -1,0 +1,55 @@
+name: benchmark
+
+on:
+  pull_request:
+    branches:
+      - master
+
+# A newer push to the same pull request makes an in-flight run pointless, and
+# two benchmark jobs sharing a runner would measure each other.
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    # Linux only, on purpose. This compares two versions of the library
+    # against each other on one machine; running that on three operating
+    # systems would triple the cost to learn nothing extra.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The base commit has to be in the local history for the benchmark
+          # to read `index.js` out of it.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: benchmark against the base of this pull request
+        id: benchmark
+        run: |
+          node benchmark \
+            --baseline ${{ github.event.pull_request.base.sha }} \
+            --format markdown \
+            --max-regression 25 \
+            | tee benchmark.md
+
+      - name: publish the comparison
+        # Runs even when the step above failed on a regression, so the numbers
+        # that caused the failure are the first thing a reader sees.
+        if: always()
+        run: |
+          {
+            echo '## Performance'
+            echo
+            echo 'Both versions run in one process with their samples'
+            echo 'interleaved, so the runner'"'"'s own drift affects each of them'
+            echo 'equally. A delta smaller than the two subjects'"'"' combined'
+            echo 'sample spread is reported as `noise` rather than as a result.'
+            echo
+            cat benchmark.md
+          } >> "$GITHUB_STEP_SUMMARY"
