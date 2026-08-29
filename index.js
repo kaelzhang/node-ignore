@@ -95,6 +95,27 @@ const escapeMember = char => CLASS_MEMBERS_TO_ESCAPE.indexOf(char) < 0
   ? char
   : ESCAPE + char
 
+// > if (matched == negated || ((flags & WM_PATHNAME) && text_ch == '/'))
+// >   return WM_ABORT_TO_STARSTAR;                     (git, `wildmatch.c`)
+// A bracket expression never matches a path separator, whatever its members
+//   say, so a negated class gets `/` as one more excluded character, while a
+//   plain one -- where a literal member or a range could still let `/` in --
+//   is guarded with a lookahead, `/` being impossible to subtract from a
+//   JavaScript character class.
+const NON_SLASH = '(?!\\/)'
+
+const classSource = (negated, body) => {
+  if (negated) {
+    return `[^\\/${body}]`
+  }
+
+  const source = `[${body}]`
+
+  return new RegExp(source).test('/')
+    ? NON_SLASH + source
+    : source
+}
+
 // Scan the bracket expression that starts at `pattern[start] === '['`,
 //   mirroring the member loop of git's `wildmatch.c`.
 // @returns {{end: number, source: string} | null} `null` if the expression is
@@ -195,7 +216,7 @@ const scanBracket = (pattern, start) => {
     if (pattern[index] === ']') {
       return {
         end: index,
-        source: `[${negated}${body}]`
+        source: classSource(negated, body)
       }
     }
   }

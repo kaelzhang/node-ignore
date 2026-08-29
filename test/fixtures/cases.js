@@ -580,6 +580,26 @@ const cases = [
     }
   ],
   [
+    // A literal member and a range that spans `/` are the two ways a plain
+    //   class could let a separator in, a negated class is the third
+    'no bracket expression matches a slash',
+    [
+      'lit[/]x',
+      'range[.-0]x',
+      'neg[!a]x',
+      'caret[^a]x'
+    ],
+    {
+      'lit/x': 0,
+      'range/x': 0,
+      'range.x': 1,
+      'neg/x': 0,
+      'neg-x': 1,
+      'caret/x': 0,
+      'caret-x': 1
+    }
+  ],
+  [
     'negated POSIX class',
     [
       'neg[![:digit:]]x',
