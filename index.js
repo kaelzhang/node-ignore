@@ -465,27 +465,16 @@ const REPLACERS = [
   ],
 
   [
-    // Every real bracket expression has already been held aside by
-    //   `extractBrackets`, so the only `[` left in the pattern is an escaped,
-    //   literal one.
+    // Every real bracket expression -- POSIX classes included -- has already
+    //   been held aside by `extractBrackets`, so the only `[` left in the
+    //   pattern is an escaped, literal one.
 
     // `\` is escaped by step 3
-    // A POSIX class '[:name:]' is consumed as a unit so its inner ']' is not
-    // mistaken for the end of the bracket expression.
-    /(\\)?\[((?:\[:[a-z]+:\]|[^\]/])*?)(\\*)($|\])/g,
-    (match, leadEscape, range, endEscape, close) => leadEscape === ESCAPE
-      // '\\[bar]' -> '\\\\[bar\\]'
-      ? `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
-      : close === ']'
-        ? endEscape.length % 2 === 0
-          // A normal case, and it is a range notation
-          // '[bar]'
-          // '[bar\\\\]'
-          ? `[${expandPosixClasses(negateRange(sanitizeRange(range)))}${endEscape}]`
-          // Invalid range notaton
-          // '[bar\\]' -> '[bar\\\\]'
-          : '[]'
-        : '[]'
+    /\\\[([^\]/]*?)(\\*)($|\])/g,
+
+    // '\\[bar]' -> '\\\\[bar\\]'
+    (match, range, endEscape, close) =>
+      `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`
   ],
 
   // ending
