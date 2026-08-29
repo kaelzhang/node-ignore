@@ -351,7 +351,8 @@ const cases = [
     }
   ],
   [
-    // If range is out of order, then omitted
+    // An out of order range matches nothing, but git tests the lower bound as
+    //   a plain member before it ever looks at the `-`, so `a` still matches
     'special case: range out of order: [a-9]',
     [
       '*.[a-9]'
@@ -359,7 +360,8 @@ const cases = [
     {
       'a.0': 0,
       'a.-': 0,
-      'a.9': 0
+      'a.9': 0,
+      'a.a': 1
     }
   ],
   [
@@ -518,6 +520,233 @@ const cases = [
       'a.[': 0,
       'a.a': 0,
       'a.-': 0
+    }
+  ],
+  // A bracket expression has a sub-grammar of its own (gitignore(5) ->
+  //   fnmatch(3) -> git/wildmatch.c).  Every expectation below is what
+  //   `git check-ignore` answers, and test/git-check-ignore.test.js re-checks
+  //   each of them against the real git binary.
+  [
+    'POSIX character classes: [[:alpha:]] and friends',
+    [
+      'alnum[[:alnum:]]x',
+      'alpha[[:alpha:]]x',
+      'blank[[:blank:]]x',
+      'digit[[:digit:]]x',
+      'graph[[:graph:]]x',
+      'lower[[:lower:]]x',
+      'print[[:print:]]x',
+      'punct[[:punct:]]x',
+      'space[[:space:]]x',
+      'upper[[:upper:]]x',
+      'xdigit[[:xdigit:]]x'
+    ],
+    {
+      'alnum7x': 1,
+      'alnum-x': 0,
+      'alphazx': 1,
+      'alpha0x': 0,
+      'blank x': 1,
+      'blank-x': 0,
+      'digit0x': 1,
+      'digitzx': 0,
+      'graph-x': 1,
+      'graph x': 0,
+      'lowerzx': 1,
+      'lower-x': 0,
+      'print x': 1,
+      'print-x': 1,
+      'punct-x': 1,
+      'punctzx': 0,
+      'space x': 1,
+      'space-x': 0,
+      // git's sane-ctype classifies \v and \f as control, not space
+      'space\u000bx': 0,
+      'space\fx': 0,
+      'upperQx': 1,
+      'upper-x': 0,
+      'xdigitfx': 1,
+      'xdigitzx': 0
+    }
+  ],
+  [
+    'a POSIX class never matches a slash',
+    [
+      'a/b[[:print:]]c'
+    ],
+    {
+      'a/b/c': 0,
+      'a/b-c': 1
+    }
+  ],
+  [
+    'negated POSIX class',
+    [
+      'neg[![:digit:]]x',
+      'caret[^[:digit:]]x'
+    ],
+    {
+      'neg0x': 0,
+      'negzx': 1,
+      'neg-x': 1,
+      'caret0x': 0,
+      'caretzx': 1
+    }
+  ],
+  [
+    'POSIX class combined with literals and with another class',
+    [
+      'set[[:digit:]abc]x',
+      'two[[:digit:][:upper:]]x'
+    ],
+    {
+      'set0x': 1,
+      'setbx': 1,
+      'setzx': 0,
+      'two0x': 1,
+      'twoQx': 1,
+      'two-x': 0
+    }
+  ],
+  [
+    'unknown POSIX class name matches nothing',
+    [
+      '*.[[:foo:]]'
+    ],
+    {
+      'a.0': 0,
+      'a.a': 0,
+      'a.f]': 0,
+      'a.[]': 0
+    }
+  ],
+  [
+    '[:name] without the closing :] is a plain character set',
+    [
+      '*.[[:alpha]]'
+    ],
+    {
+      'a.a]': 1,
+      'a.[]': 1,
+      'a.z]': 0,
+      'a.a': 0
+    }
+  ],
+  [
+    '] as the first member of a class',
+    [
+      '*.[]]',
+      'x[]a]y'
+    ],
+    {
+      'a.]': 1,
+      'a.a': 0,
+      'x]y': 1,
+      'xay': 1,
+      'xby': 0
+    }
+  ],
+  [
+    '] as the first member of a negated class',
+    [
+      '*.[!]]'
+    ],
+    {
+      'a.]': 0,
+      'a.a': 1,
+      'a.0': 1
+    }
+  ],
+  [
+    'escaped members of a class',
+    [
+      '*.[\\]]',
+      'x[\\^]y',
+      'n[a\\-c]m'
+    ],
+    {
+      'a.]': 1,
+      'a.a': 0,
+      'x^y': 1,
+      'xay': 0,
+      'nam': 1,
+      'n-m': 1,
+      'ncm': 1,
+      'nbm': 0
+    }
+  ],
+  [
+    'a regular expression metacharacter is a literal class member',
+    [
+      '*.[*]',
+      'x[?]y',
+      'n[a*b]m'
+    ],
+    {
+      'a.*': 1,
+      'a.a': 0,
+      'a.]': 0,
+      'a.[]': 0,
+      'x?y': 1,
+      'xay': 0,
+      'nam': 1,
+      'n*m': 1,
+      'nzm': 0
+    }
+  ],
+  [
+    '[ as a literal class member',
+    [
+      '*.[[]'
+    ],
+    {
+      'a.[': 1,
+      'a.a': 0
+    }
+  ],
+  [
+    'escaped range bound',
+    [
+      '*.[a-\\c]'
+    ],
+    {
+      'a.a': 1,
+      'a.b': 1,
+      'a.c': 1,
+      'a.d': 0
+    }
+  ],
+  [
+    'unterminated class after an escaped backslash',
+    [
+      '*.[a\\\\\\'
+    ],
+    {
+      'a.a': 0,
+      'a.b': 0
+    }
+  ],
+  [
+    // #155
+    'empty negated class: [!]',
+    [
+      '[!]'
+    ],
+    {
+      '!': 0,
+      'a': 0,
+      ']': 0
+    }
+  ],
+  [
+    'unterminated POSIX class',
+    [
+      '*.[[:alpha:'
+    ],
+    {
+      'a.a': 0,
+      'a.z': 0,
+      'a.[': 0
     }
   ],
   [
