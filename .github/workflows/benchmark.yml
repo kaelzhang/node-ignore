@@ -31,6 +31,11 @@ jobs:
 
       - name: benchmark against the base of this pull request
         id: benchmark
+        # Explicit `shell: bash` is what turns pipefail on. The default shell
+        # runs `bash -e` WITHOUT pipefail, and `tee` at the end of the pipe
+        # would then swallow the non-zero exit of the regression check --
+        # a gate that can never fail. Verified locally under both shells.
+        shell: bash
         run: |
           node benchmark \
             --baseline ${{ github.event.pull_request.base.sha }} \
@@ -46,10 +51,10 @@ jobs:
           {
             echo '## Performance'
             echo
-            echo 'Both versions run in one process with their samples'
-            echo 'interleaved, so the runner'"'"'s own drift affects each of them'
-            echo 'equally. A delta smaller than the two subjects'"'"' combined'
-            echo 'sample spread is reported as `noise` rather than as a result.'
+            echo 'Each version runs in a worker process of its own, with'
+            echo 'samples interleaved between them, so the runner'"'"'s own drift'
+            echo 'affects both alike. A delta smaller than the two subjects'"'"''
+            echo 'combined sample spread is reported as `noise`, not a result.'
             echo
             cat benchmark.md
           } >> "$GITHUB_STEP_SUMMARY"
