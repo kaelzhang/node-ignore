@@ -31,7 +31,7 @@
 //   excuse a future difference.
 
 module.exports = {
-  compat: '7.0.6',
+  compat: '7.0.7',
 
   changes: []
 }
