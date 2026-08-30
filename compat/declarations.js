@@ -20,35 +20,11 @@
 //
 // `baseline` names the tag these declarations diverge from. Publishing a
 //   release moves the latest tag, and the gate then requires this file to
-//   be reset -- baseline bumped, claims emptied -- so declarations never
-//   outlive the release that ships them.
-
-// A bracket expression that is real to the pattern grammar: an unescaped
-//   `[` opens one.
-const REGEX_HAS_BRACKET = /(?:^|[^\\])\[/
+//   be reset -- which is what `node compat/reset` does -- so declarations
+//   never outlive the release that ships them.
 
 module.exports = {
-  baseline: '7.0.6',
+  baseline: '7.0.7',
 
-  changes: [
-    {
-      reason: 'a trailing "/**/" no longer matches the bare directory or a '
-        + 'direct file inside it, matching `git check-ignore` (#164)',
-      refs: ['#164'],
-      claims: difference => difference.kind === 'behaviour'
-        && difference.patterns.some(pattern => pattern.endsWith('/**/'))
-    },
-
-    {
-      reason: 'bracket expressions follow the wildmatch sub-grammar of real '
-        + 'git: POSIX classes, "]" as a first member, escaped members, "*" '
-        + 'and "?" as literal members, and no bracket expression matches a '
-        + 'slash (#162, #163, and the follow-up slash fix)',
-      refs: ['#162', '#163', 'd64793f'],
-      claims: difference => difference.kind === 'behaviour'
-        && difference.patterns.some(
-          pattern => REGEX_HAS_BRACKET.test(pattern)
-        )
-    }
-  ]
+  changes: []
 }

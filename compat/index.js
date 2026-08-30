@@ -103,8 +103,8 @@ const main = argv => {
     process.stderr.write(
       `compat/declarations.js declares changes against "${declarations.baseline}", `
       + `but the latest tag is "${against}".\n`
-      + 'The declared changes have shipped. Reset the file: set baseline to '
-      + `"${against}" and empty the claims.\n`
+      + 'The declared changes have shipped. Run `node compat/reset` to set '
+      + `the baseline to "${against}" and empty the claims.\n`
     )
     return 1
   }
