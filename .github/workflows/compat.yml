@@ -1,0 +1,40 @@
+name: compat
+
+# The compatibility gate: the working tree is compared against `index.js` at
+# the latest tag -- the build dependents actually run -- over ~3 million
+# behavioural checks, plus the module surface and the type declarations.
+#
+# An observable difference fails this workflow unless it is claimed by an
+# entry in compat/declarations.js. That file is the explicit act of changing
+# behaviour on purpose: a reviewed record of what the next release changes
+# for its dependents, reset every time a release is tagged.
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  compat:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The gate reads index.js out of the latest tag, so it needs the
+          # tags and the history that reaches them.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      # No `npm install`: the gate depends on nothing but node and git.
+      - name: against the latest tag
+        run: node compat
+
+      - name: against the latest tag, Windows path handling
+        run: node compat --win32

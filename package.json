@@ -31,6 +31,9 @@
     "=================== benchmark =====================": "",
     "benchmark": "node benchmark",
 
+    "==================== compat =======================": "",
+    "compat": "node compat && node compat --win32",
+
     "===================== debug =======================": "",
     "test:git": "npm run tap test/git-check-ignore.test.js",
     "test:ignore": "npm run tap test/ignore.test.js",
