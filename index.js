@@ -23,9 +23,9 @@ const REGEX_SPLITALL_CRLF = /\r?\n/g
 // - ..
 // Valid:
 // - .foo
-const REGEX_TEST_INVALID_PATH = /^\.{0,2}\/|^\.{1,2}$/
+const SLASH_CODE = 47
+const DOT_CODE = 46
 
-const REGEX_TEST_TRAILING_SLASH = /\/$/
 
 const SLASH = '/'
 
@@ -962,7 +962,43 @@ const checkPath = (path, originalPath, doThrow) => {
   return true
 }
 
-const isNotRelative = path => REGEX_TEST_INVALID_PATH.test(path)
+// > pathname should be a `path.relative()`d one
+//
+// The same thing `REGEX_TEST_INVALID_PATH` says, spelled out: a path is not
+//   relative if it begins with a separator, or with `./` or `../`, or is
+//   nothing but `.` or `..`. Every match is decided by the first three
+//   characters, and this runs on every path handed to the library -- where it
+//   was 55% of a cached lookup, more than the cache lookup itself.
+const isNotRelative = path => {
+  const first = path.charCodeAt(0)
+
+  if (first === SLASH_CODE) {
+    return true
+  }
+
+  if (first !== DOT_CODE) {
+    return false
+  }
+
+  // '.'
+  if (path.length === 1) {
+    return true
+  }
+
+  const second = path.charCodeAt(1)
+
+  // './'
+  if (second === SLASH_CODE) {
+    return true
+  }
+
+  if (second !== DOT_CODE) {
+    return false
+  }
+
+  // '..' or '../'
+  return path.length === 2 || path.charCodeAt(2) === SLASH_CODE
+}
 
 checkPath.isNotRelative = isNotRelative
 
@@ -1028,7 +1064,7 @@ class Ignore {
   checkIgnore (path) {
     // If the path doest not end with a slash, `.ignores()` is much equivalent
     //   to `git check-ignore`
-    if (!REGEX_TEST_TRAILING_SLASH.test(path)) {
+    if (path.charCodeAt(path.length - 1) !== SLASH_CODE) {
       return this.test(path)
     }
 
