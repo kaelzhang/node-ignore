@@ -1,13 +1,17 @@
 name: compat
 
-# The compatibility gate: the working tree is compared against `index.js` at
-# the latest tag -- the build dependents actually run -- over ~3 million
-# behavioural checks, plus the module surface and the type declarations.
+# The compatibility gate. compat/declarations.js states, explicitly, which
+# release the working tree stays behaviour-compatible with, and this
+# workflow holds every commit to that promise: the tree is compared against
+# `index.js` at the latest tag -- the build dependents actually run -- over
+# ~3 million behavioural checks, plus the module surface and the type
+# declarations.
 #
-# An observable difference fails this workflow unless it is claimed by an
-# entry in compat/declarations.js. That file is the explicit act of changing
-# behaviour on purpose: a reviewed record of what the next release changes
-# for its dependents, reset every time a release is tagged.
+# In steady state the promise names the latest release and nothing may
+# differ. Changing behaviour on purpose starts by raising `compat` to the
+# version that will ship the change and declaring each difference, in the
+# same reviewed commit; undeclared differences fail regardless. Tagging
+# that version settles the promise by itself -- no follow-up commit.
 
 on:
   push:
@@ -33,8 +37,8 @@ jobs:
           node-version: 20.x
 
       # No `npm install`: the gate depends on nothing but node and git.
-      - name: against the latest tag
+      - name: the compatibility promise holds
         run: node compat
 
-      - name: against the latest tag, Windows path handling
+      - name: the promise holds under Windows path handling
         run: node compat --win32

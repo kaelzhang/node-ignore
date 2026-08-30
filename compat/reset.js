@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
-// Reset compat/declarations.js after a release.
+// Rewrite compat/declarations.js to a clean steady state.
 //
-//   node compat/reset            baseline = the latest tag
-//   node compat/reset 7.0.7      baseline = the given tag
+//   node compat/reset            compat = the latest tag, no declarations
+//   node compat/reset 7.0.8      compat = the given version, no declarations
 //
-// Publishing a release moves the latest tag, which makes the declared
-//   changes part of it: they are no longer pending, they have shipped. The
-//   compatibility gate then refuses to run until this file is reset, and
-//   this script is that reset -- baseline bumped to the new tag, claims
-//   emptied, ready for the next release cycle.
+// Nothing requires running this after a release: tagging the prepared
+//   version is what settles the promise, and shipped declarations go dead by
+//   themselves. This exists for the two moments the gate points at it --
+//   catching the promise up after a release it never covered, and sweeping
+//   out declarations that have shipped.
 
 const fs = require('fs')
 const path = require('path')
@@ -18,40 +18,47 @@ const {execFileSync} = require('child_process')
 const ROOT = path.join(__dirname, '..')
 const DECLARATIONS = path.join(__dirname, 'declarations.js')
 
-const TEMPLATE = baseline => `// Intentional behaviour changes since the latest release.
+const TEMPLATE = compat => `// The compatibility promise, and the changes on their way to breaking it
+//   on purpose.
 //
-// The compatibility gate (\`node compat\`) compares the working tree against
-//   the latest tag, and every observable difference must be claimed by a
-//   declaration below, or the gate fails. This file is the explicit act that
-//   failure asks for: changing behaviour for the library's dependents means
-//   writing down, in a reviewed commit, what changes and why.
+// \`compat\` names the release this working tree stays behaviour-compatible
+//   with. The gate (\`node compat\`) holds every commit to that promise by
+//   comparing the tree against the latest release, and where \`compat\`
+//   stands relative to that release is what the gate reads as intent:
 //
-// A declaration is:
+//   - \`compat\` IS the latest release: nothing may change, at all.
+//   - \`compat\` is AHEAD of it: that version is being prepared, and each
+//     difference must be claimed by a declaration below stamped with it.
+//   - \`compat\` is BEHIND it: a release the promise never covered has
+//     shipped, and the gate fails until this file catches up.
+//
+// So changing what dependents see -- a breaking change, or a bug fix that
+//   alters behaviour -- starts here, in a reviewed commit: raise \`compat\`
+//   to the version that will ship the change, and declare it:
 //
 //   {
-//     reason: one sentence a dependent could read in release notes
-//     refs:   the pull requests, issues or commits that decided it
-//     claims: difference => boolean -- whether this declaration accounts
-//             for the difference; see compat/compare.js for its shape
+//     version: '${compat}'  the release this change ships with
+//     reason:  one sentence a dependent could read in release notes
+//     refs:    the pull requests, issues or commits that decided it
+//     claims:  difference => boolean -- whether this declaration accounts
+//              for the difference; see compat/compare.js for its shape
 //   }
 //
 // A claim should be as narrow as the change: one that claims everything
-//   would turn the gate off while leaving it green.
-//
-// \`baseline\` names the tag these declarations diverge from. Publishing a
-//   release moves the latest tag, and the gate then requires this file to
-//   be reset -- which is what \`node compat/reset\` does -- so declarations
-//   never outlive the release that ships them.
+//   would turn the gate off while leaving it green. Tagging the prepared
+//   version ends the cycle -- every declaration stamped with a version the
+//   latest release now covers is dead, kept or deleted, and can never
+//   excuse a future difference.
 
 module.exports = {
-  baseline: '${baseline}',
+  compat: '${compat}',
 
   changes: []
 }
 `
 
 const main = argv => {
-  const baseline = argv[0] || execFileSync(
+  const compat = argv[0] || execFileSync(
     'git',
     ['describe', '--tags', '--abbrev=0'],
     {cwd: ROOT}
@@ -59,10 +66,11 @@ const main = argv => {
   .toString()
   .trim()
 
-  fs.writeFileSync(DECLARATIONS, TEMPLATE(baseline))
+  fs.writeFileSync(DECLARATIONS, TEMPLATE(compat))
 
   process.stdout.write(
-    `compat/declarations.js reset: baseline "${baseline}", no pending changes\n`
+    `compat/declarations.js reset: compatible with "${compat}", `
+    + 'no pending declarations\n'
   )
 
   return 0
