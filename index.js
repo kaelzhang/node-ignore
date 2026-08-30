@@ -767,12 +767,13 @@ class IgnoreRule {
     define(this, 'regexPrefix', prefix)
   }
 
-  // Worked out on first use and kept, the way `regex` is. Deciding it in the
-  //   constructor instead would add a fourth `defineProperty` to every rule
-  //   ever built, which cost 4% of every compile -- including the compiles of
-  //   rules that are never matched against anything.
-  get basenameOnly () {
-    return define(this, 'basenameOnly', matchesBasename(this.body))
+  // Worked out on first use and kept behind an own property, the way `regex`
+  //   caches itself in `_regex`. Deciding it in the constructor instead would
+  //   add a fourth `defineProperty` to every rule ever built, which cost 4% of
+  //   every compile -- including the compiles of rules that are never matched
+  //   against anything.
+  get _basenameOnly () {
+    return define(this, '_basenameOnly', matchesBasename(this.body))
   }
 
   get regex () {
@@ -885,7 +886,7 @@ class RuleManager {
       this._added = true
       this._rules.push(rule)
 
-      // Deliberately not `rule.basenameOnly`: reading that would materialise
+      // Deliberately not `rule._basenameOnly`: reading that would materialise
       //   the rule's own copy, and the whole point of leaving it lazy is that
       //   a rule which is compiled and never matched never pays for it.
       if (matchesBasename(rule.body)) {
@@ -957,7 +958,7 @@ class RuleManager {
         || negative && !ignored && !unignored && !checkUnignored
 
       if (!skip && rule[mode].test(
-        shortcut && rule.basenameOnly
+        shortcut && rule._basenameOnly
           ? basename
           : path
       )) {

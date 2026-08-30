@@ -5,7 +5,7 @@ const rules = {
     allowAfterThis: true,
     enforceInMethodNames: false,
     // node-ignore only
-    allow: ['_rules', '_basenameCount', '_test']
+    allow: ['_rules', '_basenameCount', '_basenameOnly', '_test']
   }],
 
   'operator-linebreak': 0,
