@@ -280,6 +280,37 @@ _test('[[:cntrl:]] expands to the control characters', t => {
   t.end()
 })
 
+// A path is normally its own prefix, so the walk up to the root cuts each
+// parent out of it. Two accepted shapes break that: an empty segment in the
+// middle ('a//b', whose parent is 'a/', not 'a//'), and a leading separator,
+// which reaches the walk because `checkIgnore` does not put the path it is
+// given through the relative-path check. Both fall back to taking the path
+// apart, and neither has a fixture because `git check-ignore` will not take
+// them as arguments.
+_test('a path with an empty segment walks to the right parent', t => {
+  t.equal(ignore().add('a').ignores('a//b'), true)
+  t.equal(ignore().add('a/').ignores('a//b'), true)
+  t.equal(ignore().add('b').ignores('a//b'), true)
+
+  // 'a/' is ignored, so nothing under it can be brought back
+  t.equal(ignore().add(['a', '!a/b']).ignores('a//b'), true)
+
+  t.end()
+})
+
+_test('checkIgnore() takes a path a walk cannot cut up', t => {
+  // A lone separator has no parent, and asking for one used to hand back
+  //   itself -- `lastIndexOf` searches from 0 rather than reporting no match
+  //   when it is given a negative place to start, and the walk never ended.
+  t.equal(ignore().add('a').checkIgnore('/').ignored, false)
+  t.equal(ignore().add('*').checkIgnore('/').ignored, true)
+
+  t.equal(ignore().add('a').checkIgnore('/a/').ignored, true)
+  t.equal(ignore().add('a').checkIgnore('a//b/').ignored, true)
+
+  t.end()
+})
+
 _test('options.allowRelativePaths = true', t => {
   const ig = ignore({
     allowRelativePaths: true

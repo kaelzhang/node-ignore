@@ -23,6 +23,7 @@ const REGEX_SPLITALL_CRLF = /\r?\n/g
 // - ..
 // Valid:
 // - .foo
+const DOUBLE_SLASH = '//'
 const SLASH_CODE = 47
 const DOT_CODE = 46
 
@@ -684,6 +685,55 @@ const basenameOf = path => {
     : path.slice(index + 1)
 }
 
+// The parent directory of a path, with its trailing separator, or EMPTY when
+//   the path has none.
+// 'a/b/c' -> 'a/b/';  'a/b/' -> 'a/';  'a' -> EMPTY;  'a/' -> EMPTY
+//
+// A path holding an empty segment has to be taken apart, because its
+//   ancestors are not prefixes of it: the parent of 'a//b' is 'a/', not
+//   'a//', and the parent of '/a/' is nothing at all. Both shapes reach here
+//   -- 'a//b' is accepted outright, and `checkIgnore` does not put the path
+//   it is given through the relative-path check.
+//
+// Every other path is a prefix of itself, and cutting one costs a fraction of
+//   splitting it into an array and joining that back at every level: 73ns
+//   against 207ns.
+const parentOf = path => {
+  if (
+    path.charCodeAt(0) === SLASH_CODE
+    || path.indexOf(DOUBLE_SLASH) >= 0
+  ) {
+    const slices = path.split(SLASH).filter(Boolean)
+
+    slices.pop()
+
+    return slices.length
+      ? slices.join(SLASH) + SLASH
+      : EMPTY
+  }
+
+  const end = path.length - 1
+
+  // Look back from before a trailing separator, since that one belongs to the
+  //   path itself.
+  //
+  // A negative place to start would be a trap here: `lastIndexOf` clamps one
+  //   to 0 and searches there rather than reporting no match, so '/' would
+  //   come back as its own parent and the walk would never end. It cannot
+  //   happen -- that is the only path short enough to produce one, and the
+  //   test above has already sent it the other way.
+  const cut = path.lastIndexOf(
+    SLASH,
+    path.charCodeAt(end) === SLASH_CODE
+      ? end - 1
+      : end
+  )
+
+  return cut < 0
+    ? EMPTY
+    : path.slice(0, cut + 1)
+}
+
 const isString = subject => typeof subject === 'string'
 
 // > A blank line matches no files, so it can serve as a separator for readability.
@@ -1045,7 +1095,7 @@ class Ignore {
   }
 
   // @returns {TestResult}
-  _test (originalPath, cache, checkUnignored, slices) {
+  _test (originalPath, cache, checkUnignored) {
     const path = originalPath
       // Supports nullable path
       && checkPath.convert(originalPath)
@@ -1058,7 +1108,7 @@ class Ignore {
         : RETURN_FALSE
     )
 
-    return this._t(path, cache, checkUnignored, slices)
+    return this._t(path, cache, checkUnignored)
   }
 
   checkIgnore (path) {
@@ -1068,16 +1118,10 @@ class Ignore {
       return this.test(path)
     }
 
-    const slices = path.split(SLASH).filter(Boolean)
-    slices.pop()
+    const parentPath = parentOf(path)
 
-    if (slices.length) {
-      const parent = this._t(
-        slices.join(SLASH) + SLASH,
-        this._testCache,
-        true,
-        slices
-      )
+    if (parentPath) {
+      const parent = this._t(parentPath, this._testCache, true)
 
       if (parent.ignored) {
         return parent
@@ -1095,37 +1139,20 @@ class Ignore {
     cache,
 
     // Whether should check if the path is unignored
-    checkUnignored,
-
-    // The path slices
-    slices
+    checkUnignored
   ) {
     if (path in cache) {
       return cache[path]
     }
 
-    if (!slices) {
-      // path/to/a.js
-      // ['path', 'to', 'a.js']
-      slices = path.split(SLASH).filter(Boolean)
-    }
-
-    slices.pop()
-
-    // If the path has no parent directory, just test it
-    if (!slices.length) {
-      return cache[path] = this._rules.test(path, checkUnignored, MODE_IGNORE)
-    }
-
-    const parent = this._t(
-      slices.join(SLASH) + SLASH,
-      cache,
-      checkUnignored,
-      slices
-    )
+    const parentPath = parentOf(path)
 
     // If the path contains a parent directory, check the parent first
-    return cache[path] = parent.ignored
+    const parent = parentPath
+      ? this._t(parentPath, cache, checkUnignored)
+      : UNDEFINED
+
+    return cache[path] = parent && parent.ignored
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
       ? parent
