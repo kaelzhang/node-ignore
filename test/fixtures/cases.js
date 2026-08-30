@@ -1427,6 +1427,82 @@ const cases = [
 
 if (!SHOULD_TEST_WINDOWS) {
   cases.push(
+    // The four cases below are RED on purpose: each documents a confirmed
+    //   incompatibility with real git (see the compatibility audit), every
+    //   expectation is what `git check-ignore` answers -- re-checked by
+    //   test/git-check-ignore.test.js on every run -- and node-ignore
+    //   currently returns the opposite. They go green when the bugs are
+    //   fixed, and they are the definition of fixed.
+    [
+      // wildmatch(3): a backslash makes the next character literal, and a
+      //   literal star matches only a star. The trailing-wildcard rewrite
+      //   cannot tell an escaped star from a wildcard one, so 'a\*' over-
+      //   ignores every 'a*' -- 'ab', even plain 'a'.
+      'RED, audit B1: a trailing escaped star is a literal star',
+      [
+        '\\*',
+        'a\\*'
+      ],
+      {
+        '*': 1,
+        'a*': 1,
+        'x': 0,
+        'ab': 0,
+        'a': 0
+      }
+    ],
+    [
+      // An escaped question mark is a literal question mark, but every '?',
+      //   escaped or not, is translated to the any-character class, and the
+      //   leftover backslash then corrupts the expression -- 'a\?b' matches
+      //   neither 'a?b' nor anything else.
+      'RED, audit B2: an escaped question mark is a literal question mark',
+      [
+        'a\\?b'
+      ],
+      {
+        'a?b': 1,
+        'axb': 0,
+        'ab': 0
+      }
+    ],
+    [
+      // A backslash followed by a character the metacharacter escaper does
+      //   not handle reaches `new RegExp` as-is, and where that sequence
+      //   means something in a regular expression -- \d, \b, \1, \/ --
+      //   the meaning is applied instead of the literal character git sees.
+      'RED, audit B3: a backslash makes the next character literal, always',
+      [
+        '\\d',
+        'e\\bf',
+        '\\1x',
+        'g\\/h'
+      ],
+      {
+        'd': 1,
+        '5': 0,
+        'ebf': 1,
+        '1x': 1,
+        'g/h': 1
+      }
+    ],
+    [
+      // git trims only trailing SPACES (dir.c, trim_trailing_spaces: a
+      //   single `case ' '`), never tabs or other whitespace. The trimming
+      //   here uses \s, which swallows a trailing tab or no-break space and
+      //   turns the pattern into a different one.
+      'RED, audit B4: only trailing spaces are trimmed, not all whitespace',
+      [
+        'a\t',
+        'b\u00a0'
+      ],
+      {
+        'a': 0,
+        'a\t': 1,
+        'b': 0,
+        'b\u00a0': 1
+      }
+    ],
     [
       '#68: ignore test for files named ...',
       [

@@ -113,29 +113,26 @@ const getNativeGitIgnoreResults = (rules, paths) => {
 
   return paths
   .filter(p => {
-    let out = spawn('git', [
+    // `-z` asks for machine-parseable output: the matched path comes back
+    //   raw, NUL-terminated, with none of the C-quoting that would otherwise
+    //   mangle a path holding a backslash, a tab or a non-ASCII character.
+    // It insists on `--stdin`, so the path goes in the same way, NUL-ended.
+    const out = spawn('git', [
       'check-ignore',
       '--no-index',
-      // `spawn` will escape the special cases for us
-      p
+      '-z',
+      '--stdin'
     ], {
-      cwd: dir
+      cwd: dir,
+      input: `${p}\u0000`
     })
     .stdout
     .toString()
-    // If a path has back slashes and is ignored by .gitignore,
-    //   the output of `git check-ignore` will contain
-    //   double quote pairs and CRLF
-    // output: "b\\c/a.md"
-    // -> string: 'b\\c.md'
-    .replace(/\\\\/g, '\\')
-    .replace(/^"?(.+?)"?(?:\r|\n)*$/g, (m, p1) => p1)
 
-    out = removeEnding(out, '\n')
+    const ignored = out === `${p}\u0000`
 
-    debug('git check-ignore %s: %s -> ignored: %s', p, out, out === p)
+    debug('git check-ignore %s: %j -> ignored: %s', p, out, ignored)
 
-    const ignored = out === p
     return !ignored
   })
 }
