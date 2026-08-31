@@ -2,342 +2,166 @@
 
 // The compatibility gate.
 //
-//   node compat                 check the working tree against the promise
-//   node compat --against <ref> ad-hoc: diff against any tag or ref
-//   node compat --win32         compare with Windows path handling switched on
-//   node compat --list          print every difference, claimed or not
+//   node compat            check every promised version, plus the latest tag
+//   node compat --win32    the same, with Windows path handling switched on
 //
-// The library is depended on by millions of projects, so its contract is
-//   whatever its releases observably do -- not what its tests assert. The
-//   promise is stated, explicitly, in `compat/declarations.js`:
+// A promise of compatibility with a released version means one thing: code
+//   written against that version keeps working. The honest way to check it is
+//   to take that version's own test suite -- the contract it shipped -- and
+//   run it against the current `index.js`. If the old tests still pass, the
+//   current code still honours what that version guaranteed. If one fails, a
+//   guarantee has been broken: either a regression to fix, or a deliberate
+//   breaking change, in which case that version is dropped from
+//   `compat/config.js` because the promise to it is ending.
 //
-//     compat: '7.0.7'
+// Which versions are checked: everything in `compat/config.js`, plus the
+//   latest tag, so an accidental break of the release dependents run cannot
+//   slip through even if the config forgets it.
 //
-// names the release the working tree stays behaviour-compatible with, and
-//   the gate holds every commit to it by loading that release's `index.js`
-//   out of git and comparing the two over the corpus in `compat/corpus.js`:
-//   every public method, the errors invalid input must keep throwing, the
-//   module surface, and the type declarations.
+// How: each version is checked out into a throwaway git worktree, its
+//   `index.js` is replaced with the working tree's, and its `ignore` and
+//   `others` test files -- the ones that exercise the library -- are run
+//   there with tap. (Its `git-check-ignore` suite is skipped: that one checks
+//   fixtures against the real git binary, not the library, so it says nothing
+//   about the current code.)
 //
-// Where `compat` stands relative to the latest tag is what the gate reads
-//   as intent:
-//
-// - `compat` IS the latest tag: steady state. The tree must behave exactly
-//     like that release. Changing behaviour -- fixing a bug changes
-//     behaviour too -- starts with raising `compat` to the version that
-//     will ship the change, in the same reviewed commit.
-// - `compat` is AHEAD of the latest tag: that version is being prepared.
-//     The gate still diffs against the latest release, because that is what
-//     dependents run today, but a difference may now be claimed by a
-//     declaration stamped with the version being prepared. Unclaimed
-//     differences still fail: an accident does not become intentional by
-//     happening near a declared change.
-// - `compat` is BEHIND the latest tag: a release happened that the promise
-//     never covered. The gate fails until the file catches up.
-//
-// Publishing is what closes the loop: tagging the prepared version turns
-//   "ahead" into "steady" by itself, and every declaration stamped with a
-//   now-released version goes dead -- kept or deleted, it can never excuse
-//   a future difference.
-//
-// Exit codes: 0 the promise holds, 1 it does not (or the declarations file
-//   contradicts itself), 2 the gate could not run (no tags reachable, say).
+// Exit codes: 0 every promise holds, 1 one does not, 2 the gate could not run
+//   (no tags, tap missing, a worktree that would not create).
 
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const {execFileSync} = require('child_process')
-
-const {compare} = require('./compare')
-const declarations = require('./declarations')
+const {execFileSync, spawnSync} = require('child_process')
 
 const ROOT = path.join(__dirname, '..')
 
+const configured = require('./config')
+
 const git = args => execFileSync('git', args, {
   cwd: ROOT,
-  maxBuffer: 1 << 26
+  maxBuffer: 1 << 26,
+  // Capture stderr rather than let it through -- `worktree add` narrates
+  //   itself there, and a real failure still arrives on the thrown error.
+  stdio: ['ignore', 'pipe', 'pipe']
 }).toString()
 
 const latestTag = () => git(['describe', '--tags', '--abbrev=0']).trim()
 
-const fileAt = (ref, file) => git(['show', `${ref}:${file}`])
+const TAP = path.join(ROOT, 'node_modules', '.bin', 'tap')
 
-const loadBuild = ref => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ignore-compat-'))
-  const file = path.join(dir, 'baseline.js')
+// The test files that actually run patterns and paths through the library.
+//   `git-check-ignore` is a git oracle over the fixtures, not a test of the
+//   library, so it is not part of the contract a new build has to keep.
+const SUITES = ['test/ignore.test.js', 'test/others.test.js']
 
-  fs.writeFileSync(file, fileAt(ref, 'index.js'))
+// Run one version's suite against the working tree's index.js.
+// @returns {{ok: boolean, output: string}}
+const checkVersion = (version, win32) => {
+  const worktree = fs.mkdtempSync(path.join(os.tmpdir(), 'ignore-compat-'))
 
-  return require(file)
-}
+  // A fresh checkout of the tag, detached so nothing touches a branch.
+  git(['worktree', 'add', '--detach', '--force', worktree, version])
 
-const REGEX_VERSION = /^v?(\d+)\.(\d+)\.(\d+)$/
+  try {
+    // The version's tests, its fixtures -- but the current library.
+    fs.copyFileSync(path.join(ROOT, 'index.js'), path.join(worktree, 'index.js'))
 
-const parseVersion = version => {
-  const matched = REGEX_VERSION.exec(version)
-
-  return matched && matched.slice(1).map(Number)
-}
-
-const compareVersions = (a, b) =>
-  a[0] - b[0]
-  || a[1] - b[1]
-  || a[2] - b[2]
-
-const printDifference = (difference, index) => {
-  const lines = [`  ${index + 1}. [${difference.kind}]`]
-
-  if (difference.kind === 'behaviour' || difference.kind === 'error-behaviour') {
-    lines.push(
-      `     ${difference.method}(${JSON.stringify(difference.path)})`
-      + ` with ${JSON.stringify(difference.patterns)}${
-        difference.options && difference.options !== 'default'
-          ? ` [${difference.options}]`
-          : ''}`,
-      `     was: ${difference.was}`,
-      `     is:  ${difference.is}`
+    // tap and the test helpers live in the working tree's node_modules; the
+    //   worktree has none of its own.
+    fs.symlinkSync(
+      path.join(ROOT, 'node_modules'),
+      path.join(worktree, 'node_modules')
     )
-  } else {
-    lines.push(`     was: ${difference.was}`, `     is:  ${difference.is}`)
-  }
 
-  return lines.join('\n')
-}
-
-// Sort the declarations into what the promise makes of them: dead ones that
-//   shipped with a release the latest tag already covers, live ones stamped
-//   with the version being prepared, and contradictions.
-//
-// @returns {{error} | {active, shipped, preparing}}
-const readDeclarations = latest => {
-  const declared = declarations.compat
-  const declaredVersion = parseVersion(declared)
-
-  if (!declaredVersion) {
-    return {
-      error: `compat/declarations.js: \`compat\` is "${declared}", `
-        + 'which is not an <major>.<minor>.<patch> version.\n'
-    }
-  }
-
-  const latestVersion = parseVersion(latest)
-  const standing = compareVersions(declaredVersion, latestVersion)
-
-  if (standing < 0) {
-    return {
-      error: `compat/declarations.js promises compatibility with "${declared}", `
-        + `but "${latest}" has been released.\n`
-        + 'A release the promise never covered has shipped. If it was '
-        + `intended, set \`compat\` to "${latest}" -- \`node compat/reset\` `
-        + 'does exactly that -- and review what it changed.\n'
-    }
-  }
-
-  const active = []
-  const shipped = []
-
-  const {changes} = declarations
-
-  for (let i = 0; i < changes.length; i ++) {
-    const change = changes[i]
-    const version = parseVersion(change.version)
-
-    if (!version) {
-      return {
-        error: 'compat/declarations.js: a declaration ships in '
-          + `"${change.version}", which is not a version: "${change.reason}"\n`
+    const result = spawnSync(
+      TAP,
+      ['--reporter', 'classic', '--no-check-coverage', ...SUITES],
+      {
+        cwd: worktree,
+        encoding: 'utf8',
+        maxBuffer: 1 << 26,
+        env: Object.assign({}, process.env, win32
+          ? {IGNORE_TEST_WIN32: '1'}
+          : {})
       }
-    }
+    )
 
-    if (compareVersions(version, latestVersion) <= 0) {
-      // Shipped with a release the latest tag covers: dead, whatever it
-      //   claims to claim.
-      shipped.push(change)
-    } else if (change.version === declared) {
-      active.push(change)
-    } else {
-      return {
-        error: `compat/declarations.js: a declaration ships in `
-          + `"${change.version}", but \`compat\` prepares "${declared}": `
-          + `"${change.reason}"\n`
-          + 'One of the two is wrong -- a change is declared for the version '
-          + 'that `compat` says is being prepared.\n'
-      }
+    return {
+      ok: result.status === 0,
+      output: `${result.stdout || ''}${result.stderr || ''}`
     }
-  }
-
-  return {
-    active,
-    shipped,
-    preparing: standing > 0
+  } finally {
+    git(['worktree', 'remove', '--force', worktree])
   }
 }
 
 const main = argv => {
-  const list = argv.indexOf('--list') >= 0
-  const againstAt = argv.indexOf('--against')
+  const win32 = argv.indexOf('--win32') >= 0
 
-  const adHoc = againstAt >= 0
-  let against = adHoc
-    ? argv[againstAt + 1]
-    : null
-
-  if (adHoc && !against) {
-    process.stderr.write('--against needs a ref\n')
+  let latest
+  try {
+    latest = latestTag()
+  } catch (error) {
+    process.stderr.write(
+      'cannot resolve the latest tag -- the gate needs the tags and the '
+      + 'history that reaches them\n(in CI, check out with fetch-depth: 0)\n'
+    )
     return 2
   }
 
-  if (!against) {
-    try {
-      against = latestTag()
-    } catch (error) {
-      process.stderr.write(
-        'cannot resolve the latest tag -- the gate needs the full history\n'
-        + '(in CI, check out with fetch-depth: 0)\n'
-      )
-      return 2
-    }
-
-    if (!parseVersion(against)) {
-      process.stderr.write(
-        `the latest tag is "${against}", which is not a version `
-        + 'this gate can reason about\n'
-      )
-      return 2
-    }
-  }
-
-  // In ad-hoc mode the ref is whatever the caller wants to look at, and the
-  //   promise machinery stays out of the way: no claims, plain differences.
-  const read = adHoc
-    ? {active: [], shipped: [], preparing: false}
-    : readDeclarations(against)
-
-  if (read.error) {
-    process.stderr.write(read.error)
-    return 1
-  }
-
-  const {active, shipped, preparing} = read
-
-  const baseline = loadBuild(against)
-  const candidate = require(path.join(ROOT, 'index.js'))
-
-  // Windows path handling rewrites separators and widens the relative-path
-  //   check. It is switched on per module instance, so flipping it on both
-  //   builds compares that half of the behaviour too. The environment
-  //   variable the test suite uses does not reach `index.js` itself.
-  if (argv.indexOf('--win32') >= 0) {
-    baseline[Symbol.for('setupWindows')]()
-    candidate[Symbol.for('setupWindows')]()
-  }
-
-  const types = {
-    was: fileAt(against, 'index.d.ts'),
-    is: fs.readFileSync(path.join(ROOT, 'index.d.ts')).toString()
-  }
-
-  // Every difference is judged as it is found -- all forty thousand of a
-  //   systematic change, not a sample. Only what gets *printed* is capped.
-  const KEEP = 200
-  const claimCounts = active.map(() => 0)
-  const undeclaredSamples = []
-  const claimedSamples = []
-  let claimed = 0
-  let undeclared = 0
-
-  const judge = difference => {
-    const at = active.findIndex(
-      declaration => declaration.claims(difference)
+  if (!fs.existsSync(TAP)) {
+    process.stderr.write(
+      'tap is not installed -- the gate runs each version\'s test suite, so '
+      + 'it needs the dev dependencies (`npm install`)\n'
     )
+    return 2
+  }
 
-    if (at < 0) {
-      undeclared ++
+  // Every configured version, plus the latest tag, without a duplicate and in
+  //   a stable order.
+  const versions = configured.indexOf(latest) < 0
+    ? configured.concat(latest)
+    : configured.slice()
 
-      if (undeclaredSamples.length < KEEP) {
-        undeclaredSamples.push(difference)
-      }
+  process.stdout.write(
+    `compat${win32 ? ' (win32)' : ''}: `
+    + `the working tree against ${versions.join(', ')}\n`
+  )
 
+  const broken = []
+
+  versions.forEach(version => {
+    let result
+    try {
+      result = checkVersion(version, win32)
+    } catch (error) {
+      process.stderr.write(`  ${version}: could not run -- ${error.message}\n`)
+      broken.push(version)
       return
     }
 
-    claimed ++
-    claimCounts[at] ++
+    process.stdout.write(`  ${version}: ${result.ok ? 'ok' : 'FAILED'}\n`)
 
-    if (claimedSamples.length < KEEP) {
-      claimedSamples.push({difference, at})
+    if (!result.ok) {
+      broken.push(version)
+      // The failing assertions, indented, so the break is named in place.
+      result.output
+      .split('\n')
+      .filter(line => /^\s*not ok/.test(line))
+      .slice(0, 20)
+      .forEach(line => process.stdout.write(`      ${line.trim()}\n`))
     }
-  }
-
-  const {checks} = compare(baseline, candidate, {types}, judge)
-
-  process.stdout.write(
-    `compat: working tree vs ${against}${
-      adHoc
-        ? ''
-        : preparing
-          ? `, preparing ${declarations.compat}`
-          : ' -- the declared compatible version'
-    }\n`
-    + `  ${checks} checks, ${claimed + undeclared} differences`
-    + ` (${claimed} claimed by declarations, ${undeclared} undeclared)\n`
-  )
-
-  active.forEach((declaration, at) => {
-    process.stdout.write(
-      `  declared for ${declaration.version}: ${declaration.reason}`
-      + ` -- claims ${claimCounts[at]}\n`
-    )
   })
 
-  if (list) {
-    claimedSamples.forEach(({difference, at}, index) => {
-      process.stdout.write(
-        `${printDifference(difference, index)}\n`
-        + `     claimed: ${active[at].reason}\n`
-      )
-    })
-  }
-
-  if (undeclared) {
+  if (broken.length) {
     process.stdout.write(
-      `\nUndeclared behaviour changes against ${against}:\n\n${
-        undeclaredSamples.slice(0, 20).map(printDifference).join('\n')
-      }${undeclared > 20
-        ? `\n  ... and ${undeclared - 20} more\n`
-        : '\n'
-      }\n${
-        preparing || adHoc
-          ? 'If these are intended, declare them in compat/declarations.js, '
-            + `stamped for "${declarations.compat}" --\n`
-            + 'a reviewed record of what that release changes for its '
-            + 'dependents.\n'
-          : `The working tree no longer behaves like "${against}", which `
-            + 'compat/declarations.js promises.\nIf these changes are '
-            + 'intended, raise `compat` to the version that will ship them '
-            + 'and declare each one.\n'
-      }If they are not, they are regressions.\n`
+      `\nThe working tree breaks the test suite of ${broken.join(', ')}.\n`
+      + 'If that is a regression, fix it. If it is a deliberate breaking '
+      + 'change,\ndrop the version from compat/config.js -- the promise to it '
+      + 'is ending.\n'
     )
     return 1
   }
-
-  // A declaration claiming nothing deserves a look -- it may be stale, or
-  //   the corpus may be missing the case it covers -- but it is not a
-  //   failure.
-  active.forEach((declaration, at) => {
-    if (!claimCounts[at]) {
-      process.stdout.write(
-        `note: declaration claims nothing in the corpus: "${declaration.reason}"\n`
-      )
-    }
-  })
-
-  shipped.forEach(declaration => {
-    process.stdout.write(
-      `note: shipped with ${declaration.version}, safe to delete: `
-      + `"${declaration.reason}"\n`
-    )
-  })
 
   return 0
 }

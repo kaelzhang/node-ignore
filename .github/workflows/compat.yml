@@ -1,17 +1,17 @@
 name: compat
 
-# The compatibility gate. compat/declarations.js states, explicitly, which
-# release the working tree stays behaviour-compatible with, and this
-# workflow holds every commit to that promise: the tree is compared against
-# `index.js` at the latest tag -- the build dependents actually run -- over
-# ~3 million behavioural checks, plus the module surface and the type
-# declarations.
+# The compatibility gate. compat/config.js lists the released versions this
+# working tree promises to stay compatible with, and this workflow holds
+# every commit to that promise the only honest way: it runs each of those
+# versions' own test suites -- the contract each one shipped -- against the
+# current index.js. The tests are the contract, so if the old tests still
+# pass, the current code still honours what those versions guaranteed.
 #
-# In steady state the promise names the latest release and nothing may
-# differ. Changing behaviour on purpose starts by raising `compat` to the
-# version that will ship the change and declaring each difference, in the
-# same reviewed commit; undeclared differences fail regardless. Tagging
-# that version settles the promise by itself -- no follow-up commit.
+# A failure means a guarantee was broken: a regression to fix, or a
+# deliberate breaking change, which is recorded by dropping that version
+# from compat/config.js in the same reviewed commit. The latest tag is
+# always checked, so an accidental break of the release dependents run
+# cannot slip through.
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The gate reads index.js out of the latest tag, so it needs the
+          # The gate checks each version out into a worktree, so it needs the
           # tags and the history that reaches them.
           fetch-depth: 0
 
@@ -36,7 +36,10 @@ jobs:
         with:
           node-version: 20.x
 
-      # No `npm install`: the gate depends on nothing but node and git.
+      # The gate runs each version's test suite, so it needs the dev
+      # dependencies (tap and the test helpers).
+      - run: npm install
+
       - name: the compatibility promise holds
         run: node compat
 
