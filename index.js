@@ -9,7 +9,14 @@ const UNDEFINED = undefined
 const EMPTY = ''
 const SPACE = ' '
 const ESCAPE = '\\'
-const REGEX_TEST_BLANK_LINE = /^\s+$/
+
+// The characters that carry a meaning of their own inside a regular
+//   expression, so a literal one has to be escaped before it is emitted.
+const REGEX_LITERAL_SPECIAL = /[.*+?()[\]{}^$|\\/]/
+// A line of only spaces is blank -- the trailing-space trimming empties it --
+//   but a line holding a tab is a pattern for a tab-named path, since git
+//   never trims a tab.
+const REGEX_TEST_BLANK_LINE = /^ +$/
 const REGEX_INVALID_TRAILING_BACKSLASH = /(?:[^\\]|^)\\$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
@@ -235,6 +242,17 @@ const REGEX_RESTORE_PLACEHOLDER = new RegExp(
   `${PLACEHOLDER}(\\d+)${PLACEHOLDER}`, 'g'
 )
 
+// The one wildcard the chain does not expand for itself is a trailing `*`. How
+//   it expands depends on the mode (`regex` vs `checkRegex`), so `_make` is
+//   left to do it, and until then the pending wildcard travels as this marker.
+//   That is what keeps it apart from a user-escaped literal `\*`: the unescape
+//   steps collapse the escaped one to the exact `\*` a wildcard would leave
+//   behind, so by the time `_make` runs the two are otherwise the same string
+//   and a literal star gets wrongly rewritten into a wildcard. This marker is a
+//   private-use character no compiled pattern carries, and it never survives
+//   into a `RegExp` -- `_make` always turns it back into a real wildcard first.
+const TRAILING_WILDCARD = '\uE000'
+
 // Replace every bracket expression with a placeholder the replacers below
 //   leave alone, and translate it separately.
 const extractBrackets = pattern => {
@@ -250,9 +268,39 @@ const extractBrackets = pattern => {
     const char = pattern[index]
 
     if (char === ESCAPE) {
-      // An escaped `[` is a literal one; leave the pair to the replacers,
-      //   which already deal with `\[foo]`.
-      out += pattern.slice(index, index + 2)
+      // > Put a backslash ("\") in front of ... a character to make it literal.
+      //                                            (gitignore(5) -> fnmatch(3))
+      // A backslash quotes the next character, whatever it is, so `\d` is a
+      //   literal `d`, not the regex digit class, and `\?` is a literal `?`,
+      //   not a wildcard. Held aside as its literal here, the escape never
+      //   reaches the replacers below, which would otherwise let `\d`, `\b`,
+      //   `\1`, `\/` keep their regular-expression meaning, and would turn a
+      //   `\?` into `[^\/]`.
+      //
+      // Four escapes are left for the chain, each with dedicated handling it
+      //   would be wrong to bypass: `\*` (a literal star, told apart from a
+      //   wildcard by `TRAILING_WILDCARD` and the wildcard replacers), `\[`
+      //   (a literal bracket, the one `[` the bracket replacer still expects),
+      //   `\ ` (a quoted trailing space), and `\\` (a literal backslash). A
+      //   lone trailing backslash never reaches here -- `checkPattern` throws
+      //   it out first.
+      const escaped = pattern[index + 1]
+
+      if (
+        escaped === '*'
+        || escaped === '['
+        || escaped === SPACE
+        || escaped === ESCAPE
+      ) {
+        out += pattern.slice(index, index + 2)
+      } else {
+        out += hold(
+          REGEX_LITERAL_SPECIAL.test(escaped)
+            ? ESCAPE + escaped
+            : escaped
+        )
+      }
+
       index += 2
     } else if (char === PLACEHOLDER) {
       // Hold a literal placeholder character aside as well, so that pattern
@@ -335,13 +383,26 @@ const REPLACERS = [
     '\uFEFF'
   ],
 
+  [
+    // A trailing line terminator, left on when a whole file's contents are
+    //   added as one pattern rather than split into lines. git never sees one
+    //   -- it reads a `.gitignore` line by line -- so it is not part of the
+    //   pattern and is dropped here, apart from the trailing-space trimming,
+    //   which follows git in touching spaces and nothing else.
+    /[\r\n]+$/,
+    () => EMPTY
+  ],
+
   // > Trailing spaces are ignored unless they are quoted with backslash ("\")
   [
+    // Only spaces, never tabs or other whitespace: git trims a trailing run
+    //   of `' '` and nothing else (dir.c, `trim_trailing_spaces`, a single
+    //   `case ' '`), so a pattern ending in a tab keeps it as a literal.
     // (a\ ) -> (a )
     // (a  ) -> (a)
     // (a ) -> (a)
     // (a \ ) -> (a  )
-    /((?:\\\\)*?)(\\?\s+)$/,
+    /((?:\\\\)*?)(\\? +)$/,
     (_, m1, m2) => m1 + (
       m2.indexOf('\\') === 0
         ? SPACE
@@ -350,11 +411,14 @@ const REPLACERS = [
   ],
 
   // Replace (\ ) with ' '
+  // Only a space: an escaped tab or other whitespace is already a literal by
+  //   the time it reaches here, and a bare tab must be left as one, not turned
+  //   into a space.
   // (\ ) -> ' '
   // (\\ ) -> '\\ '
   // (\\\ ) -> '\\ '
   [
-    /(\\+?)\s/g,
+    /(\\+?) /g,
     (_, m1) => {
       const {length} = m1
       return m1.slice(0, length - length % 2) + SPACE
@@ -516,6 +580,31 @@ const REPLACERS = [
     '*'
   ],
 
+  // trailing wildcard, held apart from a literal star
+  [
+    // The step above leaves a trailing `*` alone, so a single `\*` is all that
+    //   can be left at the end here. Whether it is a wildcard or a literal
+    //   turns on the backslashes the user put in front of it: the escaper has
+    //   since doubled every one, so what stands here is those `2N` doubled
+    //   backslashes and then the star's own escape. An even number of the
+    //   original `N` leaves the star unescaped -- a wildcard -- and an odd
+    //   number escapes it -- a literal. This runs while the two are still
+    //   distinct, before the unescape steps below collapse the literal onto
+    //   the very `\*` a wildcard leaves behind.
+    /(^|[^\\])((?:\\\\)*)\\\*$/,
+
+    (match, p1, p2) =>
+      // `p2` holds the doubled user backslashes; half of them is `N`.
+      (p2.length / 2) % 2 === 0
+        // A real wildcard: carry it to `_make` as the marker, so the unescape
+        //   steps and the trailing-wildcard rewrite can never mistake it for a
+        //   literal `\*` (nor the reverse).
+        ? p1 + p2 + TRAILING_WILDCARD
+        // A literal star: leave it exactly as it stands for the unescape steps.
+        : match,
+    '*'
+  ],
+
   [
     // unescape, revert step 3 except for back slash
     // For example, if a user escape a '\\*',
@@ -567,8 +656,10 @@ const REPLACERS = [
     source => {
       const last = source[source.length - 1]
 
-      // The pattern is empty, or ends in a wildcard the next step owns
-      if (!last || last === '*') {
+      // The pattern is empty, or ends in the pending trailing wildcard the next
+      //   step owns. A trailing `*` that is not the marker is a literal star,
+      //   which anchors like any other final character.
+      if (!last || last === TRAILING_WILDCARD) {
         return source
       }
 
@@ -581,7 +672,7 @@ const REPLACERS = [
   ]
 ]
 
-const REGEX_REPLACE_TRAILING_WILDCARD = /(^|\\\/)?\\\*$/
+const REGEX_REPLACE_TRAILING_WILDCARD = /(^|\\\/)?\uE000$/
 const MODE_IGNORE = 'regex'
 const MODE_CHECK_IGNORE = 'checkRegex'
 const UNDERSCORE = '_'

@@ -17,7 +17,7 @@
 //   to the version that will ship the change, and declare it:
 //
 //   {
-//     version: '7.0.7'  the release this change ships with
+//     version: '7.0.8'  the release this change ships with
 //     reason:  one sentence a dependent could read in release notes
 //     refs:    the pull requests, issues or commits that decided it
 //     claims:  difference => boolean -- whether this declaration accounts
@@ -30,8 +30,46 @@
 //   latest release now covers is dead, kept or deleted, and can never
 //   excuse a future difference.
 
-module.exports = {
-  compat: '7.0.7',
+// A backslash the escaper of the previous release left with a special
+//   meaning in the compiled regular expression: a word character (`\d`,
+//   `\b`, `\1`), a slash (`\/`), or a question mark (`\?`). A trailing
+//   literal star (`\*`) is the other half of the same change and is matched
+//   on its own.
+const REGEX_MISREAD_ESCAPE = /\\[\w?/]/
+const REGEX_TRAILING_LITERAL_STAR = /(^|[^\\])(\\\\)*\\\*$/
 
-  changes: []
+// Whitespace other than a plain space -- a tab, most often -- which the
+//   previous release trimmed or treated as blank along with spaces.
+const REGEX_NON_SPACE_BLANK = /[^\S ]/
+
+module.exports = {
+  compat: '7.0.8',
+
+  changes: [
+    {
+      version: '7.0.8',
+      reason: 'a backslash makes the next character a literal, exactly as '
+        + 'git does, so `\\?` is a literal question mark rather than a '
+        + 'wildcard, a trailing `\\*` is a literal star, and `\\d`, `\\b`, '
+        + '`\\1`, `\\/` are the plain characters rather than regular-'
+        + 'expression escapes',
+      refs: ['git-compatibility audit'],
+      claims: difference => difference.kind === 'behaviour'
+        && difference.patterns.some(pattern =>
+          REGEX_MISREAD_ESCAPE.test(pattern)
+          || REGEX_TRAILING_LITERAL_STAR.test(pattern)
+        )
+    },
+
+    {
+      version: '7.0.8',
+      reason: 'only a trailing run of spaces is trimmed from a pattern, never '
+        + 'a tab or other whitespace, and a line of only such whitespace is a '
+        + 'pattern rather than a blank line -- matching git, which trims '
+        + 'spaces alone',
+      refs: ['git-compatibility audit'],
+      claims: difference => difference.kind === 'behaviour'
+        && difference.patterns.some(pattern => REGEX_NON_SPACE_BLANK.test(pattern))
+    }
+  ]
 }

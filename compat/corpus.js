@@ -89,6 +89,17 @@ const PATTERN_SETS = [
   ['abc\\  '],
   ['src/\\[foo\\]'],
   ['src/\\[bar]'],
+  ['\\?'],
+  ['a\\?b'],
+  ['\\d'],
+  ['e\\bf'],
+  ['\\1x'],
+  ['g\\/h'],
+  ['a\\/b'],
+  ['a\t'],
+  ['b '],
+  ['\t'],
+  ['a\tb'],
 
   // combinations a real .gitignore accumulates
   [
@@ -149,6 +160,18 @@ const buildPaths = () => {
     'x/y/a  ',
     'src/[foo]',
     'src/[bar]',
+
+    // discriminators for the escape and whitespace escapes above
+    'a?b',
+    'axb',
+    'd',
+    'g/h',
+    'ebf',
+    '1x',
+    'a\t',
+    'a\tb',
+    'a ',
+    '\t',
 
     // On POSIX a backslash is an ordinary filename character; with the
     //   Windows setup these are the paths that get their separators
