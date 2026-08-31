@@ -41,7 +41,7 @@
     "test:others": "npm run tap test/others.test.js",
     "test:no-coverage": "npm run tap test/*.test.js -- --no-check-coverage",
 
-    "test": "npm run lint && npm run ts && npm run build && npm run test:cases",
+    "test": "npm run lint && npm run ts && npm run build && npm run test:cases && npm run compat",
     "test:win32": "IGNORE_TEST_WIN32=1 npm run test",
     "report": "tap --coverage-report=html"
   },
