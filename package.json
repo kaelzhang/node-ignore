@@ -25,7 +25,7 @@
     "test:mjs:16": "ts-node --compilerOptions '{\"moduleResolution\": \"Node16\", \"module\": \"Node16\"}' ./test/import/simple.mjs && babel -o ./test/import/simple-mjs.js ./test/import/simple.mjs && node ./test/import/simple-mjs.js",
 
     "===================== cases =======================": "",
-    "test:cases": "npm run tap test/*.test.js -- --coverage",
+    "test:cases": "npm run tap test/*.test.js -- --coverage --100",
     "tap": "tap --reporter classic",
 
     "=================== benchmark =====================": "",

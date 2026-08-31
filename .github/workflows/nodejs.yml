@@ -35,7 +35,10 @@ jobs:
       if: runner.os != 'Windows'
       run: |
         npm run test:16
-    - name: cases
+    # The gate: every test case passes AND coverage of index.js is 100% on
+    # statements, branches, functions and lines (test:cases runs tap with
+    # --100, so anything less fails this step).
+    - name: cases, with full coverage required
       run: |
         npm run test:cases
     - name: upload to codecov
