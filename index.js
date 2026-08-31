@@ -710,6 +710,136 @@ const TRAILING_WILD_CARD_REPLACERS = {
   }
 }
 
+const WILDCARD = '[^\\/]*'
+
+// Where a run of non-slash wildcards is split by single fixed characters --
+//   `[^/]*x[^/]*y...` -- the engine has many equivalent ways to lay the
+//   input across the wildcards, and on input that does not match it works
+//   through all of them, so the time grows with the number of wildcards
+//   rather than the length of the path. Every wildcard but the last in such a
+//   run can be pinned to stop at the character that follows it, which leaves
+//   one way to lay out the input and no rewinding, without changing which
+//   paths match: the fixed characters still bound the count, and the last
+//   wildcard still absorbs the rest.
+//
+// The source is read one token at a time -- a wildcard, a single-character
+//   piece (a literal, an escape, a class), or a parenthesised group or anchor
+//   that ends the run -- so only a genuine wildcard is touched.
+const pinWildcards = source => {
+  if (source.indexOf(WILDCARD) < 0) {
+    return source
+  }
+
+  const tokens = []
+  const {length} = source
+  let index = 0
+
+  while (index < length) {
+    const char = source[index]
+
+    if (source.startsWith(WILDCARD, index)) {
+      tokens.push({wildcard: true})
+      index += WILDCARD.length
+    } else if (char === '[') {
+      let end = index + 1
+
+      if (source[end] === '^') {
+        end ++
+      }
+
+      if (source[end] === ']') {
+        end ++
+      }
+
+      while (end < length && source[end] !== ']') {
+        end += source[end] === ESCAPE
+          ? 2
+          : 1
+      }
+
+      end ++
+      tokens.push({single: source.slice(index, end)})
+      index = end
+    } else if (char === ESCAPE) {
+      tokens.push({single: source.slice(index, index + 2)})
+      index += 2
+    } else if (char === '(') {
+      let depth = 0
+      let end = index
+
+      do {
+        if (source[end] === ESCAPE) {
+          end ++
+        } else if (source[end] === '(') {
+          depth ++
+        } else if (source[end] === ')') {
+          depth --
+        }
+
+        end ++
+      } while (end < length && depth > 0)
+
+      if ('*+?'.indexOf(source[end]) >= 0) {
+        end ++
+      }
+
+      tokens.push({boundary: source.slice(index, end)})
+      index = end
+    } else if (char === '^' || char === '$') {
+      tokens.push({boundary: char})
+      index ++
+    } else {
+      tokens.push({single: char})
+      index ++
+    }
+  }
+
+  let out = EMPTY
+  let run = []
+
+  const flush = () => {
+    let lastWildcard
+
+    run.forEach((token, at) => {
+      if (token.wildcard) {
+        lastWildcard = at
+      }
+    })
+
+    run.forEach((token, at) => {
+      if (!token.wildcard) {
+        out += token.single
+        return
+      }
+
+      // A wildcard that is not the last in the run is always immediately
+      //   followed by the single character that separates it from the next
+      //   one, because a run never holds two wildcards in a row, so it can be
+      //   pinned to stop there. The last wildcard stays as it is and takes up
+      //   the rest.
+      out += at === lastWildcard
+        ? WILDCARD
+        : `(?:(?!${run[at + 1].single})[^\\/])*`
+    })
+
+    run = []
+  }
+
+  tokens.forEach(token => {
+    if (token.boundary === undefined) {
+      run.push(token)
+      return
+    }
+
+    flush()
+    out += token.boundary
+  })
+
+  flush()
+
+  return out
+}
+
 // @param {pattern}
 const makeRegexPrefix = pattern => {
   const {source, sources} = extractBrackets(pattern)
@@ -888,12 +1018,12 @@ class IgnoreRule {
   }
 
   _make (mode, key) {
-    const str = this.regexPrefix.replace(
+    const str = pinWildcards(this.regexPrefix.replace(
       REGEX_REPLACE_TRAILING_WILDCARD,
 
       // It does not need to bind pattern
       TRAILING_WILD_CARD_REPLACERS[mode]
-    )
+    ))
 
     const regex = this.ignoreCase
       ? new RegExp(str, 'i')

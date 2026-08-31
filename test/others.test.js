@@ -335,3 +335,20 @@ _test('options.allowRelativePaths = false (default value)', t => {
 
   t.end()
 })
+
+// A pattern can hold many wildcards in one segment, and matching a path that
+// never satisfies it should still take time in proportion to the path, not to
+// the number of wildcards. The budget sits far above a linear match and far
+// below the alternative, so only a real change in that proportion trips it.
+_test('a wildcard-heavy pattern matches in linear time', t => {
+  const ig = ignore().add(`${'*a'.repeat(12)}b`)
+
+  const started = process.hrtime.bigint()
+  const ignored = ig.ignores('a'.repeat(64))
+  const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6
+
+  t.equal(ignored, false)
+  t.ok(elapsedMs < 500, `matched in ${elapsedMs.toFixed(1)}ms`)
+
+  t.end()
+})

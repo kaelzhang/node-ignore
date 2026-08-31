@@ -1424,6 +1424,27 @@ const cases = [
     true // git-check-ignore fails as git converts special chars to escaped unicode before printing
   ],
 
+  [
+    // Several wildcards in one path segment, separated by literals: 'a*b*c'
+    //   matches a segment that starts with 'a', ends with 'c', and has a 'b'
+    //   somewhere between, whatever else surrounds them.
+    'several wildcards separated by literals in one segment',
+    [
+      'a*b*c'
+    ],
+    {
+      'abc': 1,
+      'axbyc': 1,
+      'abxc': 1,
+      'aabbcc': 1,
+      'a.b.c': 1,
+      'abcabc': 1,
+      'ac': 0,
+      'xabc': 0,
+      'abcx': 0
+    }
+  ],
+
   // A backslash makes the next character a literal, exactly as git does. Every
   //   expectation here is what `git check-ignore` answers, re-checked against
   //   the real binary by test/git-check-ignore.test.js. (B4, which needs tab-
