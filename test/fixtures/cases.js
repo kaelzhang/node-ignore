@@ -86,6 +86,42 @@ const cases = [
     }
   ],
   [
+    '#166: a BOM-only line matches no files',
+    '\uFEFF',
+    {
+      'a': 0,
+      'tests/example/file.http': 0
+    }
+  ],
+  [
+    '#166: a BOM followed by spaces matches no files',
+    '\uFEFF   ',
+    {
+      'a': 0,
+      'tests/example/file.http': 0
+    }
+  ],
+  [
+    '#166: a BOM on a blank first line with LF',
+    '\uFEFF\nnode_modules/\ndist/\n*.log\n',
+    {
+      'tests/example/file.http': 0,
+      'node_modules/example/index.js': 1,
+      'dist/index.js': 1,
+      'debug.log': 1
+    }
+  ],
+  [
+    '#166: a BOM on a blank first line with CRLF',
+    '\uFEFF\r\nnode_modules/\r\ndist/\r\n*.log\r\n',
+    {
+      'tests/example/file.http': 0,
+      'node_modules/example/index.js': 1,
+      'dist/index.js': 1,
+      'debug.log': 1
+    }
+  ],
+  [
     'charactor ?',
     [
       'foo?bar'
