@@ -86,6 +86,34 @@ const cases = [
     }
   ],
   [
+    'a wildcard reaches past a partial match of what follows it',
+    [
+      'f*o/*/*'
+    ],
+    {
+      // The first `o` of `foo` is not the one `o/` needs: the wildcard has
+      //   to carry on to the second one.
+      'foo/b/c': 1,
+      'fxo/b/c': 1,
+      'foo/b': 0,
+      'fo/b/c': 1,
+      'fxo/b': 0
+    }
+  ],
+  [
+    'a wildcard reaches past a partial match of a multi-character separator',
+    [
+      'a*bc*d'
+    ],
+    {
+      // `bc` first appears to start at index 2, where only `b` follows.
+      'axbbcbcd': 1,
+      'abcd': 1,
+      'axbcxd': 1,
+      'axbbd': 0
+    }
+  ],
+  [
     '#166: a BOM-only line matches no files',
     '\uFEFF',
     {
