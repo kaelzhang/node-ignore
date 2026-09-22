@@ -727,6 +727,20 @@ const WILDCARD = '[^\\/]*'
 // The source is read one token at a time -- a wildcard, a single-character
 //   piece (a literal, an escape, a class), or a parenthesised group or anchor
 //   that ends the run -- so only a genuine wildcard is touched.
+
+// The fixed pieces between the wildcard at `at` and the next wildcard of the
+//   run, joined as they appear in the source. A run never holds two wildcards
+//   in a row, so there is always at least one piece.
+const separatorAfter = (run, at) => {
+  let separator = EMPTY
+
+  for (let index = at + 1; index < run.length && !run[index].wildcard; index ++) {
+    separator += run[index].single
+  }
+
+  return separator
+}
+
 const pinWildcards = source => {
   if (source.indexOf(WILDCARD) < 0) {
     return source
@@ -814,14 +828,19 @@ const pinWildcards = source => {
         return
       }
 
-      // A wildcard that is not the last in the run is always immediately
-      //   followed by the single character that separates it from the next
-      //   one, because a run never holds two wildcards in a row, so it can be
-      //   pinned to stop there. The last wildcard stays as it is and takes up
-      //   the rest.
+      // A wildcard that is not the last in the run is pinned to the whole
+      //   fixed piece that separates it from the next wildcard, not just to
+      //   that piece's first character: stopping at the first character alone
+      //   would let the wildcard hand over at a place where the rest of the
+      //   separator cannot follow, and the pin leaves no way back, so
+      //   `f*o/*/*` would miss `foo/b/c` -- the first `o` of `foo` is not the
+      //   one the `o/` after it needs. Every piece matches exactly one
+      //   character, so pinning to the first place the whole separator fits
+      //   is the leftmost place it can sit, and the wildcards that follow
+      //   take up whatever is left.
       out += at === lastWildcard
         ? WILDCARD
-        : `(?:(?!${run[at + 1].single})[^\\/])*`
+        : `(?:(?!${separatorAfter(run, at)})[^\\/])*`
     })
 
     run = []
