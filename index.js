@@ -255,6 +255,21 @@ const REGEX_RESTORE_PLACEHOLDER = new RegExp(
 //   into a `RegExp` -- `_make` always turns it back into a real wildcard first.
 const TRAILING_WILDCARD = '\uE000'
 
+// A trailing "/**" is deferred the same way, and for the same reason: what it
+//   expands to depends on the mode. `.ignores()`/`.test()` walk a path one
+//   ancestor at a time (see `RuleManager.test`'s caller), and an ancestor is
+//   only ever the parent of something -- so a rule that matched an ancestor
+//   with nothing of its own past the trailing slash would make `foo/**`
+//   behave like a plain `foo/`, which git does not: unlike a plain directory
+//   exclude, a trailing "/**" lets a more specific `!` re-include a path
+//   underneath it (see #21), and that only keeps working while the ancestor
+//   itself tests as not-ignored. `checkIgnore()`, on the other hand, answers
+//   for the exact path it is given, the way `git check-ignore` does, and
+//   `git check-ignore` does report a directory matched by its own trailing
+//   "/**" (see #77) -- so only that mode may match on the bare slash with
+//   nothing after it.
+const TRAILING_DOUBLESTAR = '\uE001'
+
 // Replace every bracket expression with a placeholder the replacers below
 //   leave alone, and translate it separately.
 const extractBrackets = pattern => {
@@ -553,8 +568,11 @@ const REPLACERS = [
       // case: /**
       // > A trailing `"/**"` matches everything inside.
 
-      // #21: everything inside but it should not include the current folder
-      : '\\/.+',
+      // #21 / #77: whether this also matches the bare trailing slash with
+      //   nothing after it -- 'abc/' itself, for pattern 'abc/**' -- depends
+      //   on the mode, so resolving it is left to `_make`, same as a plain
+      //   trailing wildcard.
+      : `\\/${TRAILING_DOUBLESTAR}`,
     '*'
   ],
 
@@ -658,10 +676,11 @@ const REPLACERS = [
     source => {
       const last = source[source.length - 1]
 
-      // The pattern is empty, or ends in the pending trailing wildcard the next
-      //   step owns. A trailing `*` that is not the marker is a literal star,
-      //   which anchors like any other final character.
-      if (!last || last === TRAILING_WILDCARD) {
+      // The pattern is empty, or ends in a pending marker `_make` owns --
+      //   the trailing wildcard, or a trailing "/**". A trailing `*` that is
+      //   not the marker is a literal star, which anchors like any other
+      //   final character.
+      if (!last || last === TRAILING_WILDCARD || last === TRAILING_DOUBLESTAR) {
         return source
       }
 
@@ -710,6 +729,18 @@ const TRAILING_WILD_CARD_REPLACERS = {
 
     return `${prefix}(?=$|\\/$)`
   }
+}
+
+const REGEX_REPLACE_TRAILING_DOUBLESTAR = /$/
+
+const TRAILING_DOUBLESTAR_REPLACERS = {
+  // 'abc/**' matches everything under 'abc', but not 'abc/' itself -- an
+  //   ancestor that tested as ignored here would block a more specific `!`
+  //   from re-including anything below it, which is not what git does (#21).
+  [MODE_IGNORE]: () => '.+(?=$|\\/$)',
+
+  // `git check-ignore` does report 'abc/' itself as matched by 'abc/**' (#77).
+  [MODE_CHECK_IGNORE]: () => '.*(?=$|\\/$)'
 }
 
 const WILDCARD = '[^\\/]*'
@@ -1044,6 +1075,9 @@ class IgnoreRule {
 
       // It does not need to bind pattern
       TRAILING_WILD_CARD_REPLACERS[mode]
+    ).replace(
+      REGEX_REPLACE_TRAILING_DOUBLESTAR,
+      TRAILING_DOUBLESTAR_REPLACERS[mode]
     ))
 
     const regex = this.ignoreCase
