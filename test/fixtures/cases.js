@@ -1319,6 +1319,120 @@ const cases = [
   ],
 
   [
+    '#169: an excluded directory is not re-included by a negated "/**"',
+    [
+      'abc',
+      '!abc/**'
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#169: an excluded parent is not re-included by a negated "/**"',
+    [
+      'abc/**',
+      '!abc/sub/**'
+    ],
+    {
+      'abc/': 1,
+      'abc/sub/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#169: a negated trailing "/**/" matches the directory itself',
+    [
+      'abc/**',
+      '!abc/**/'
+    ],
+    {
+      'abc/': 0
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#169: a negated directory pattern does not match its own literal path',
+    [
+      'abc/**',
+      '!abc/'
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#169: "/*" does not match past the directory itself',
+    [
+      'abc/**',
+      '!abc/*'
+    ],
+    {
+      'abc/': 0,
+      'abc/sub/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#169: a trailing "/*/" or "/**/" matches the directory itself',
+    [
+      'abc/*/',
+      'abc/**/'
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#169: an escaped trailing star does not match the directory itself',
+    [
+      'abc/*',
+      '!abc/\\*'
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#169: a basename wildcard matches the empty basename',
+    [
+      '*',
+      '!abc/'
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
     'A slash followed by two consecutive asterisks then a slash matches zero or more directories',
     [
       'a/**/b'

@@ -426,15 +426,12 @@ behavior. If you need the globstar, write `**`.
 
 ### `checkIgnore()` and a directory passed with a trailing slash
 
-`git check-ignore` treats its arguments as plain strings: handed `a/`, it
-computes an empty basename, with surprising results — `a/**` matches `a/`
-itself, and a negated basename pattern like `!a` fails to match it. During
-an actual traversal git behaves differently: `a/**` does **not** exclude
-the directory `a` (that is what allows it to descend and exclude the
-contents), and `!a` negates it normally. `ignore` models the traversal
-semantics: `'a/'` means *the directory a*, with its basename `a/`. Where
-the two disagree, `ignore` sides with what `git status` actually does
-rather than with the string-level quirks of `check-ignore`.
+`.checkIgnore('a/')` follows `git check-ignore -- a/`, which differs from a
+traversal. If the directory `a` is excluded, by itself or by an ancestor,
+that is the answer. Otherwise git matches the literal string `a/`, where the
+basename is empty: `a/*` and `a/**` match `a/` itself, and a pattern like
+`!a` or `!a/` does not. `.ignores('a/')` and `.test('a/')` keep the
+traversal semantics, where `a/**` does **not** exclude the directory `a`.
 
 ## Upgrade 4.x -> 5.x
 

@@ -255,19 +255,9 @@ const REGEX_RESTORE_PLACEHOLDER = new RegExp(
 //   into a `RegExp` -- `_make` always turns it back into a real wildcard first.
 const TRAILING_WILDCARD = '\uE000'
 
-// A trailing "/**" is deferred the same way, and for the same reason: what it
-//   expands to depends on the mode. `.ignores()`/`.test()` walk a path one
-//   ancestor at a time (see `RuleManager.test`'s caller), and an ancestor is
-//   only ever the parent of something -- so a rule that matched an ancestor
-//   with nothing of its own past the trailing slash would make `foo/**`
-//   behave like a plain `foo/`, which git does not: unlike a plain directory
-//   exclude, a trailing "/**" lets a more specific `!` re-include a path
-//   underneath it (see #21), and that only keeps working while the ancestor
-//   itself tests as not-ignored. `checkIgnore()`, on the other hand, answers
-//   for the exact path it is given, the way `git check-ignore` does, and
-//   `git check-ignore` does report a directory matched by its own trailing
-//   "/**" (see #77) -- so only that mode may match on the bare slash with
-//   nothing after it.
+// A trailing "/**" is deferred the same way, because `checkRegex` has to tell
+//   it apart from a trailing "/*" (see `checkSourceOf`). For `.ignores()` it
+//   still never matches the folder itself (#21).
 const TRAILING_DOUBLESTAR = '\uE001'
 
 // Replace every bracket expression with a placeholder the replacers below
@@ -568,10 +558,8 @@ const REPLACERS = [
       // case: /**
       // > A trailing `"/**"` matches everything inside.
 
-      // #21 / #77: whether this also matches the bare trailing slash with
-      //   nothing after it -- 'abc/' itself, for pattern 'abc/**' -- depends
-      //   on the mode, so resolving it is left to `_make`, same as a plain
-      //   trailing wildcard.
+      // #21: everything inside but it should not include the current folder,
+      //   resolved by `_make`
       : `\\/${TRAILING_DOUBLESTAR}`,
     '*'
   ],
@@ -698,50 +686,27 @@ const MODE_IGNORE = 'regex'
 const MODE_CHECK_IGNORE = 'checkRegex'
 const UNDERSCORE = '_'
 
-const TRAILING_WILD_CARD_REPLACERS = {
-  [MODE_IGNORE] (_, p1) {
-    const prefix = p1
-      // '\^':
-      // '/*' does not match EMPTY
-      // '/*' does not match everything
+const replaceTrailingWildcard = (_, p1) => {
+  const prefix = p1
+    // '\^':
+    // '/*' does not match EMPTY
+    // '/*' does not match everything
 
-      // '\\\/':
-      // 'abc/*' does not match 'abc/'
-      ? `${p1}[^/]+`
+    // '\\\/':
+    // 'abc/*' does not match 'abc/'
+    ? `${p1}[^/]+`
 
-      // 'a*' matches 'a'
-      // 'a*' matches 'aa'
-      : '[^/]*'
+    // 'a*' matches 'a'
+    // 'a*' matches 'aa'
+    : '[^/]*'
 
-    return `${prefix}(?=$|\\/$)`
-  },
-
-  [MODE_CHECK_IGNORE] (_, p1) {
-    // When doing `git check-ignore`
-    const prefix = p1
-      // '\\\/':
-      // 'abc/*' DOES match 'abc/' !
-      ? `${p1}[^/]*`
-
-      // 'a*' matches 'a'
-      // 'a*' matches 'aa'
-      : '[^/]*'
-
-    return `${prefix}(?=$|\\/$)`
-  }
+  return `${prefix}(?=$|\\/$)`
 }
 
-const REGEX_REPLACE_TRAILING_DOUBLESTAR = /$/
+const REGEX_REPLACE_TRAILING_DOUBLESTAR = /\uE001$/
 
-const TRAILING_DOUBLESTAR_REPLACERS = {
-  // 'abc/**' matches everything under 'abc', but not 'abc/' itself -- an
-  //   ancestor that tested as ignored here would block a more specific `!`
-  //   from re-including anything below it, which is not what git does (#21).
-  [MODE_IGNORE]: () => '.+(?=$|\\/$)',
-
-  // `git check-ignore` does report 'abc/' itself as matched by 'abc/**' (#77).
-  [MODE_CHECK_IGNORE]: () => '.*(?=$|\\/$)'
-}
+// 'abc/**' matches everything under 'abc', but not 'abc/' itself (#21)
+const replaceTrailingDoublestar = () => '.+(?=$|\\/$)'
 
 const WILDCARD = '[^\\/]*'
 
@@ -929,6 +894,28 @@ const makeRegexPrefix = pattern => {
     : replaced
 }
 
+// `checkRegex` tests a path with a trailing slash, 'abc/', the way
+//   `git check-ignore` matches that literal string once the directory itself
+//   is known not to be excluded (see `checkIgnore`): a trailing '/' of the
+//   pattern is dropped, a basename pattern sees an empty basename, and only a
+//   pattern whose last segment is a pending wildcard can match what is left
+//   after the final slash -- 'abc/*' and 'abc/**' match 'abc/', and 'abc/**'
+//   also matches 'abc/d/' (#77, #169).
+const checkSourceOf = (body, prefix) => {
+  if (body[body.length - 1] === SLASH) {
+    prefix = makeRegexPrefix(body.slice(0, - 1))
+  }
+
+  const head = prefix.slice(0, - 1)
+  const last = prefix[prefix.length - 1]
+
+  return last === TRAILING_WILDCARD
+    ? `${head}$`
+    : last === TRAILING_DOUBLESTAR
+      ? `${head}.*$`
+      : NEVER_MATCH
+}
+
 // A trailing slash does not stop a pattern being basename-only: it restricts
 //   the match to a directory, it does not let the pattern reach across one.
 //   Everything else a pattern can hold -- a wildcard, a character class, an
@@ -1070,15 +1057,13 @@ class IgnoreRule {
   }
 
   _make (mode, key) {
-    const str = pinWildcards(this.regexPrefix.replace(
-      REGEX_REPLACE_TRAILING_WILDCARD,
-
-      // It does not need to bind pattern
-      TRAILING_WILD_CARD_REPLACERS[mode]
-    ).replace(
-      REGEX_REPLACE_TRAILING_DOUBLESTAR,
-      TRAILING_DOUBLESTAR_REPLACERS[mode]
-    ))
+    const str = pinWildcards(
+      mode === MODE_IGNORE
+        ? this.regexPrefix
+        .replace(REGEX_REPLACE_TRAILING_WILDCARD, replaceTrailingWildcard)
+        .replace(REGEX_REPLACE_TRAILING_DOUBLESTAR, replaceTrailingDoublestar)
+        : checkSourceOf(this.body, this.regexPrefix)
+    )
 
     const regex = this.ignoreCase
       ? new RegExp(str, 'i')
@@ -1181,7 +1166,52 @@ class RuleManager {
         : pattern
     ).forEach(this._add, this)
 
+    if (this._added) {
+      this._literalRules = UNDEFINED
+    }
+
     return this._added
+  }
+
+  // Match the literal 'abc/' for `checkIgnore`, last rule wins. Only a rule
+  //   ending in a wildcard can match it (see `checkSourceOf`), so the rest
+  //   are left out once, rather than tested or compiled for every path.
+  testLiteral (path) {
+    const rules = this._literalRules || (
+      this._literalRules = this._rules.filter(
+        ({body}) => body[body.length - (
+          body[body.length - 1] === SLASH ? 2 : 1
+        )] === '*'
+      )
+    )
+
+    let ignored = false
+    let unignored = false
+    let matchedRule
+
+    for (let index = rules.length - 1; index >= 0; index --) {
+      const rule = rules[index]
+
+      if (rule.checkRegex.test(path)) {
+        ignored = !rule.negative
+        unignored = rule.negative
+        matchedRule = rule.negative
+          ? UNDEFINED
+          : rule
+        break
+      }
+    }
+
+    const ret = {
+      ignored,
+      unignored
+    }
+
+    if (matchedRule) {
+      ret.rule = matchedRule
+    }
+
+    return ret
   }
 
   // Test one single path without recursively checking parent directories
@@ -1395,17 +1425,20 @@ class Ignore {
       return this.test(path)
     }
 
-    const parentPath = parentOf(path)
+    // Like `git check-ignore`: a directory excluded by itself or by an
+    //   ancestor settles it, and only then is the literal 'abc/' matched
+    //   against the rules (see `checkSourceOf`).
+    const dir = this._t(path, this._testCache, true)
 
-    if (parentPath) {
-      const parent = this._t(parentPath, this._testCache, true)
-
-      if (parent.ignored) {
-        return parent
-      }
+    if (dir.ignored) {
+      return dir
     }
 
-    return this._rules.test(path, false, MODE_CHECK_IGNORE)
+    const literal = this._rules.testLiteral(path)
+
+    return literal.ignored || literal.unignored
+      ? literal
+      : dir
   }
 
   _t (
