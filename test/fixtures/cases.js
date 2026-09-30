@@ -1300,6 +1300,25 @@ const cases = [
   ],
 
   [
+    // `git check-ignore -- abc/` reports 'abc/' itself as matched by
+    //   'abc/**', same family of directory-argument quirk as #77 above.
+    //   `.ignores()` keeps treating a bare 'abc/**' as not matching the
+    //   folder itself, the same as plain 'abc' -- see the #21 cases below,
+    //   which rely on that to let a more specific `!` re-include a path
+    //   underneath a folder excluded only by a trailing "/**".
+    '#77: a trailing "/**" and the directory it is rooted at, as a path',
+    [
+      'abc/**'
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
     'A slash followed by two consecutive asterisks then a slash matches zero or more directories',
     [
       'a/**/b'
