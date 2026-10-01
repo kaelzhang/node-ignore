@@ -390,33 +390,6 @@ const REPLACERS = [
     '\uFEFF'
   ],
 
-  [
-    // A trailing line terminator, left on when a whole file's contents are
-    //   added as one pattern rather than split into lines. git never sees one
-    //   -- it reads a `.gitignore` line by line -- so it is not part of the
-    //   pattern and is dropped here, apart from the trailing-space trimming,
-    //   which follows git in touching spaces and nothing else.
-    /[\r\n]+$/,
-    () => EMPTY
-  ],
-
-  // > Trailing spaces are ignored unless they are quoted with backslash ("\")
-  [
-    // Only spaces, never tabs or other whitespace: git trims a trailing run
-    //   of `' '` and nothing else (dir.c, `trim_trailing_spaces`, a single
-    //   `case ' '`), so a pattern ending in a tab keeps it as a literal.
-    // (a\ ) -> (a )
-    // (a  ) -> (a)
-    // (a ) -> (a)
-    // (a \ ) -> (a  )
-    /((?:\\\\)*?)(\\? +)$/,
-    (_, m1, m2) => m1 + (
-      m2.indexOf('\\') === 0
-        ? SPACE
-        : EMPTY
-    )
-  ],
-
   // Replace (\ ) with ' '
   // Only a space: an escaped tab or other whitespace is already a literal by
   //   the time it reaches here, and a bare tab must be left as one, not turned
@@ -1087,6 +1060,16 @@ const createRule = ({
   }
 
   body = body
+  // Normalize the body before checking which slashes anchor the pattern.
+  //   Otherwise `bar/ ` is mistaken for a pattern containing an inner slash.
+  // A line terminator can remain when patterns are passed as an array.
+  .replace(/[\r\n]+$/, EMPTY)
+  // Git trims spaces only; escaped spaces and tabs remain literal.
+  .replace(/((?:\\\\)*?)(\\? +)$/, (_, m1, m2) => m1 + (
+    m2.indexOf('\\') === 0
+      ? SPACE
+      : EMPTY
+  ))
   // > Put a backslash ("\") in front of the first "!" for patterns that
   // >   begin with a literal "!", for example, `"\!important!.txt"`.
   .replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, '!')

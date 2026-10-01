@@ -1106,6 +1106,40 @@ const cases = [
     }
   ],
   [
+    '#155: spaces after a directory pattern do not anchor it to the root',
+    ['bar/  '],
+    {
+      'bar/': 1,
+      'bar/file': 1,
+      'foo/bar/': 1,
+      'foo/bar/file': 1,
+      'foo/baz/bar/file': 1,
+      'other/bar': 0,
+      'foobar/': 0,
+      'barfile': 0
+    }
+  ],
+  [
+    '#155: negated directory patterns ignore trailing spaces',
+    ['bar/', '!bar/ '],
+    {
+      'bar/': 0,
+      'bar/file': 0,
+      'foo/bar/': 0,
+      'foo/bar/file': 0
+    }
+  ],
+  [
+    '#155: a leading slash still anchors a directory pattern with trailing spaces',
+    ['/bar/ '],
+    {
+      'bar/': 1,
+      'bar/file': 1,
+      'foo/bar/': 0,
+      'foo/bar/file': 0
+    }
+  ],
+  [
     'Trailing spaces are ignored unless they are quoted with backslash ("\\")',
     [
       'abc\\  ', // only one space left -> (abc )
@@ -1699,6 +1733,26 @@ const cases = [
 
 if (!SHOULD_TEST_WINDOWS) {
   cases.push(
+    [
+      '#155: quoted spaces and backslashes after a slash remain literal',
+      [
+        'bar/\\ ',
+        'baz/\\\\ ',
+        'qux/\\\\\\ '
+      ],
+      {
+        'bar/ ': 1,
+        'bar/  ': 0,
+        'bar/file': 0,
+        'foo/bar/ ': 0,
+        'baz/\\': 1,
+        'baz/\\ ': 0,
+        'foo/baz/\\': 0,
+        'qux/\\ ': 1,
+        'qux/\\': 0,
+        'foo/qux/\\ ': 0
+      }
+    ],
     [
       // git trims only trailing SPACES (dir.c, trim_trailing_spaces: a
       //   single `case ' '`), never tabs or other whitespace. Every
