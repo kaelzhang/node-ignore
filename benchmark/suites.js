@@ -179,6 +179,8 @@ const WALK_DIRECTORIES = WALK.map(path => `${path}/`)
 //   character: escape runs, wildcard runs, nested globstars, wide brackets.
 const ADVERSARIAL = [
   [`a${'\\\\'.repeat(300)}x`, 'a'],
+  [`a${'\\\\'.repeat(300)}x `, 'a'],
+  [`a${' '.repeat(1000)}x `, 'a'],
   [`a${'\\ '.repeat(1000)}b`, 'a'],
   [`${'a*'.repeat(200)}b`, 'a'.repeat(400)],
   [`${'**/'.repeat(200)}x`, `${'a/'.repeat(100)}y`],

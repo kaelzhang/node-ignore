@@ -1057,6 +1057,42 @@ class IgnoreRule {
   }
 }
 
+const isLineEnd = char => char === '\r' || char === '\n'
+
+// Drop a line terminator, which can remain when patterns are passed as an
+//   array, and then the trailing spaces. Git trims spaces only, and a space
+//   escaped by an odd run of backslashes stays, unescaped, as the last one.
+// Scanned from the end: a regular expression can only try each start in
+//   turn, which is quadratic over a long run of spaces or backslashes.
+// 'a  ' -> 'a';  'a\ ' -> 'a ';  'a\\ ' -> 'a\\';  'a\t' -> 'a\t'
+const trimEnd = body => {
+  let end = body.length
+
+  while (end && isLineEnd(body[end - 1])) {
+    end --
+  }
+
+  const lineEnd = end
+
+  while (end && body[end - 1] === SPACE) {
+    end --
+  }
+
+  if (end === lineEnd) {
+    return body.slice(0, end)
+  }
+
+  let backslashes = 0
+
+  while (backslashes < end && body[end - backslashes - 1] === ESCAPE) {
+    backslashes ++
+  }
+
+  return backslashes % 2
+    ? body.slice(0, end - 1) + SPACE
+    : body.slice(0, end)
+}
+
 const createRule = ({
   pattern,
   mark
@@ -1076,15 +1112,7 @@ const createRule = ({
   const last = body[body.length - 1]
 
   if (last === SPACE || last === '\r' || last === '\n') {
-    body = body
-    // A line terminator can remain when patterns are passed as an array.
-    .replace(/[\r\n]+$/, EMPTY)
-    // Git trims spaces only; escaped spaces and tabs remain literal.
-    .replace(/((?:\\\\)*?)(\\? +)$/, (_, m1, m2) => m1 + (
-      m2.indexOf('\\') === 0
-        ? SPACE
-        : EMPTY
-    ))
+    body = trimEnd(body)
   }
 
   body = body
