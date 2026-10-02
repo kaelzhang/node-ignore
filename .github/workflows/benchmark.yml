@@ -4,11 +4,17 @@ on:
   pull_request:
     branches:
       - master
+  # A merge is measured too: it is the code that ships, and a pull request
+  # whose own run never happened would otherwise go unmeasured.
+  push:
+    branches:
+      - master
 
 # A newer push to the same pull request makes an in-flight run pointless, and
-# two benchmark jobs sharing a runner would measure each other.
+# two benchmark jobs sharing a runner would measure each other. Every push to
+# master is kept, one group per commit.
 concurrency:
-  group: benchmark-${{ github.ref }}
+  group: benchmark-${{ github.event_name == 'push' && github.sha || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -21,27 +27,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The base commit has to be in the local history for the benchmark
-          # to read `index.js` out of it.
+          # The base commit and the release tags have to be in the local
+          # history for the benchmark to read `index.js` out of them.
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
-      - name: benchmark against the base of this pull request
-        id: benchmark
+      - name: benchmark against the previous commit and the last release
         # Explicit `shell: bash` is what turns pipefail on. The default shell
         # runs `bash -e` WITHOUT pipefail, and `tee` at the end of the pipe
         # would then swallow the non-zero exit of the regression check --
         # a gate that can never fail. Verified locally under both shells.
         shell: bash
+        env:
+          PREVIOUS: ${{ github.event_name == 'push' && github.event.before || github.event.pull_request.base.sha }}
         run: |
-          node benchmark \
-            --baseline ${{ github.event.pull_request.base.sha }} \
-            --format markdown \
-            --max-regression 25 \
-            | tee benchmark.md
+          # A push that creates the branch has no previous commit.
+          if [[ "$PREVIOUS" =~ ^0+$ ]]; then
+            PREVIOUS=$(git rev-parse HEAD~1)
+          fi
+
+          # Each change is held to the budget on its own, and the release
+          # comparison stops small regressions from adding up across merges.
+          RELEASE=$(git describe --tags --abbrev=0 \
+            --match '[0-9]*.[0-9]*.[0-9]*' "$PREVIOUS")
+
+          status=0
+
+          echo "### Against the previous commit, ${PREVIOUS:0:7}" > benchmark.md
+          node benchmark --baseline "$PREVIOUS" --format markdown \
+            --max-regression 25 | tee -a benchmark.md || status=1
+
+          if [ "$(git rev-parse "$RELEASE^{commit}")" \
+            != "$(git rev-parse "$PREVIOUS^{commit}")" ]; then
+            printf '\n### Against the last release, %s\n' "$RELEASE" \
+              >> benchmark.md
+            node benchmark --baseline "$RELEASE" --format markdown \
+              --max-regression 25 | tee -a benchmark.md || status=1
+          fi
+
+          exit $status
 
       - name: publish the comparison
         # Runs even when the step above failed on a regression, so the numbers
@@ -57,4 +84,23 @@ jobs:
             echo 'combined sample spread is reported as `noise`, not a result.'
             echo
             cat benchmark.md
-          } >> "$GITHUB_STEP_SUMMARY"
+          } > summary.md
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      # A pull request from a fork gets a read-only token here, so the comment
+      # is posted by `benchmark-comment.yml`, which runs with the base
+      # repository's permissions and never runs the pull request's code.
+      - name: hand the comparison to the commenter
+        if: always() && github.event_name == 'pull_request'
+        env:
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "$NUMBER" > number
+
+      - uses: actions/upload-artifact@v4
+        if: always() && github.event_name == 'pull_request'
+        with:
+          name: benchmark
+          path: |
+            summary.md
+            number
+          retention-days: 7
