@@ -150,6 +150,29 @@ const cases = [
     }
   ],
   [
+    'a lone "!" matches no files',
+    [
+      '*',
+      '!',
+      '! '
+    ],
+    {
+      'a': 1,
+      'a/b': 1
+    }
+  ],
+  [
+    'a "!" followed by a tab negates the tab',
+    [
+      '*',
+      '!\t'
+    ],
+    {
+      'a': 1,
+      '\t': 0
+    }
+  ],
+  [
     'charactor ?',
     [
       'foo?bar'

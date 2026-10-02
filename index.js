@@ -18,7 +18,9 @@ const REGEX_LITERAL_SPECIAL = /[.*+?()[\]{}^$|\\/]/
 //   never trims a tab.
 // A leading BOM is removed during compilation, so reject a line that would
 //   become empty after removing it and trimming spaces.
-const REGEX_TEST_BLANK_LINE = /^\uFEFF? *$/
+// A lone "!" is blank too: it negates an empty pattern, which git never
+//   matches.
+const REGEX_TEST_BLANK_LINE = /^\uFEFF?!? *$/
 const REGEX_INVALID_TRAILING_BACKSLASH = /(?:[^\\]|^)\\$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
