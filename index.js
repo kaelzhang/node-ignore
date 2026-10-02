@@ -13,14 +13,7 @@ const ESCAPE = '\\'
 // The characters that carry a meaning of their own inside a regular
 //   expression, so a literal one has to be escaped before it is emitted.
 const REGEX_LITERAL_SPECIAL = /[.*+?()[\]{}^$|\\/]/
-// A line of only spaces is blank -- the trailing-space trimming empties it --
-//   but a line holding a tab is a pattern for a tab-named path, since git
-//   never trims a tab.
-// A leading BOM is removed during compilation, so reject a line that would
-//   become empty after removing it and trimming spaces.
-// A lone "!" is blank too: it negates an empty pattern, which git never
-//   matches.
-const REGEX_TEST_BLANK_LINE = /^\uFEFF?!? *$/
+const BOM = '\uFEFF'
 const REGEX_INVALID_TRAILING_BACKSLASH = /(?:[^\\]|^)\\$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
@@ -388,15 +381,6 @@ const REGEX_INNER_SLASH = /\/(?!$)/
 //   backtracks its way through the whole string before giving up, 11ns
 //   against 400ns.
 const REPLACERS = [
-
-  [
-    // Remove BOM
-    // TODO:
-    // Other similar zero-width characters?
-    /^\uFEFF/,
-    () => EMPTY,
-    '\uFEFF'
-  ],
 
   // Replace (\ ) with ' '
   // Only a space: an escaped tab or other whitespace is already a literal by
@@ -980,14 +964,11 @@ const parentOf = path => {
 
 const isString = subject => typeof subject === 'string'
 
-// > A blank line matches no files, so it can serve as a separator for readability.
+// Blank lines and comments are told by `createRule`, once the pattern is
+//   normalized.
 const checkPattern = pattern => pattern
   && isString(pattern)
-  && !REGEX_TEST_BLANK_LINE.test(pattern)
   && !REGEX_INVALID_TRAILING_BACKSLASH.test(pattern)
-
-  // > A line starting with # serves as a comment.
-  && pattern.indexOf('#') !== 0
 
 const splitPattern = pattern => pattern
 .split(REGEX_SPLITALL_CRLF)
@@ -1097,13 +1078,22 @@ const createRule = ({
   pattern,
   mark
 }, ignoreCase) => {
+  // Git drops a BOM before it reads the first line, so before anything else.
+  let body = pattern[0] === BOM
+    ? pattern.slice(1)
+    : pattern
+
+  // > A line starting with # serves as a comment.
+  if (body[0] === '#') {
+    return
+  }
+
   let negative = false
-  let body = pattern
 
   // > An optional prefix "!" which negates the pattern;
-  if (body.indexOf('!') === 0) {
+  if (body[0] === '!') {
     negative = true
-    body = body.substr(1)
+    body = body.slice(1)
   }
 
   // Normalize the body before checking which slashes anchor the pattern.
@@ -1113,6 +1103,14 @@ const createRule = ({
 
   if (last === SPACE || last === '\r' || last === '\n') {
     body = trimEnd(body)
+  }
+
+  // > A blank line matches no files, so it can serve as a separator for
+  // >   readability.
+  // Nor does a lone "!", or anything else left empty here: an empty pattern
+  //   would compile to a regex matching every path.
+  if (!body) {
+    return
   }
 
   body = body
@@ -1171,8 +1169,10 @@ class RuleManager {
       }
     }
 
-    if (checkPattern(pattern.pattern)) {
-      const rule = createRule(pattern, this._ignoreCase)
+    const rule = checkPattern(pattern.pattern)
+      && createRule(pattern, this._ignoreCase)
+
+    if (rule) {
       this._added = true
       this._rules.push(rule)
 

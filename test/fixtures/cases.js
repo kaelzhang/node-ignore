@@ -162,6 +162,33 @@ const cases = [
     }
   ],
   [
+    'an array element that is only a line terminator is blank',
+    [
+      'a',
+      '\r',
+      ' \r',
+      '\n'
+    ],
+    {
+      'a': 1,
+      'b': 0,
+      'c/d': 0
+    }
+  ],
+  [
+    'a lone "!" left by a line terminator matches no files',
+    [
+      '*',
+      '!\r',
+      '! \r',
+      '!\n'
+    ],
+    {
+      'a': 1,
+      'b/c': 1
+    }
+  ],
+  [
     'a "!" followed by a tab negates the tab',
     [
       '*',
@@ -1793,6 +1820,31 @@ const cases = [
 
 if (!SHOULD_TEST_WINDOWS) {
   cases.push(
+    [
+      'a BOM is dropped before a comment or a "!" is recognized',
+      [
+        '\uFEFF# x',
+        '\uFEFF!a',
+        'b'
+      ],
+      {
+        '# x': 0,
+        '!a': 0,
+        'a': 0,
+        'b': 1
+      }
+    ],
+    [
+      'a BOM after "!" is part of the pattern',
+      [
+        '*',
+        '!\uFEFF'
+      ],
+      {
+        'a': 1,
+        '\uFEFF': 0
+      }
+    ],
     [
       'a backslash run away from a space stays as it is',
       [
