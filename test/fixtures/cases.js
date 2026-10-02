@@ -1794,6 +1794,17 @@ const cases = [
 if (!SHOULD_TEST_WINDOWS) {
   cases.push(
     [
+      'a backslash run away from a space stays as it is',
+      [
+        'x\\\\y\\ z'
+      ],
+      {
+        'x\\y z': 1,
+        'x\\y\\ z': 0,
+        'xy z': 0
+      }
+    ],
+    [
       '#155: line endings do not turn an unpaired backslash into pattern text',
       [
         'one\\\r\n',

@@ -406,11 +406,14 @@ const REPLACERS = [
   // (\\ ) -> '\\ '
   // (\\\ ) -> '\\ '
   [
-    /(\\+?) /g,
-    (_, m1) => {
-      const {length} = m1
-      return m1.slice(0, length - length % 2) + SPACE
-    }
+    // A run of backslashes is taken whole, from its first one, so no match
+    //   ever starts again inside it -- `(\\+?) ` did, which made a long run
+    //   quadratic.
+    /(\\+)( ?)/g,
+    (_, run, space) => space
+      ? run.slice(0, run.length - run.length % 2) + SPACE
+      : run,
+    ESCAPE + SPACE
   ],
 
   // Escape metacharacters
