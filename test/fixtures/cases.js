@@ -1798,6 +1798,18 @@ const cases = [
     }
   ],
   [
+    'an escaped bracket stays literal alongside an escaped space',
+    [
+      'x\\[y\\ z'
+    ],
+    {
+      'x[y z': 1,
+      'nested/x[y z': 1,
+      'xy z': 0,
+      'x[y  z': 0
+    }
+  ],
+  [
     // A backslash before a character that has a regular-expression meaning --
     //   \d, \b, \1, \/ -- must reach `RegExp` as the plain character, not that
     //   meaning.
