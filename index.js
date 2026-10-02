@@ -1065,17 +1065,24 @@ const createRule = ({
     body = body.substr(1)
   }
 
-  body = body
   // Normalize the body before checking which slashes anchor the pattern.
   //   Otherwise `bar/ ` is mistaken for a pattern containing an inner slash.
-  // A line terminator can remain when patterns are passed as an array.
-  .replace(/[\r\n]+$/, EMPTY)
-  // Git trims spaces only; escaped spaces and tabs remain literal.
-  .replace(/((?:\\\\)*?)(\\? +)$/, (_, m1, m2) => m1 + (
-    m2.indexOf('\\') === 0
-      ? SPACE
-      : EMPTY
-  ))
+  //   Only a body ending in a space or a line terminator has anything to trim.
+  const last = body[body.length - 1]
+
+  if (last === SPACE || last === '\r' || last === '\n') {
+    body = body
+    // A line terminator can remain when patterns are passed as an array.
+    .replace(/[\r\n]+$/, EMPTY)
+    // Git trims spaces only; escaped spaces and tabs remain literal.
+    .replace(/((?:\\\\)*?)(\\? +)$/, (_, m1, m2) => m1 + (
+      m2.indexOf('\\') === 0
+        ? SPACE
+        : EMPTY
+    ))
+  }
+
+  body = body
   // > Put a backslash ("\") in front of the first "!" for patterns that
   // >   begin with a literal "!", for example, `"\!important!.txt"`.
   .replace(REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION, '!')

@@ -1477,6 +1477,33 @@ const cases = [
   ],
 
   [
+    '#170: trailing spaces do not hide a trailing "/**" from checkIgnore',
+    [
+      'abc/** '
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    '#170: trailing spaces do not hide a trailing "/*/" from checkIgnore',
+    [
+      'abc/**',
+      '!abc/*/  '
+    ],
+    {
+      'abc/': 0
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
     'A slash followed by two consecutive asterisks then a slash matches zero or more directories',
     [
       'a/**/b'
