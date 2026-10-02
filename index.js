@@ -289,11 +289,17 @@ const extractBrackets = pattern => {
       //   wildcard by `TRAILING_WILDCARD` and the wildcard replacers), `\[`
       //   (a literal bracket, the one `[` the bracket replacer still expects),
       //   `\ ` (a quoted trailing space), and `\\` (a literal backslash). A
-      //   lone trailing backslash never reaches here -- `checkPattern` throws
-      //   it out first.
+      //   lone trailing backslash can reach here after line-ending cleanup.
       const escaped = pattern[index + 1]
 
       if (
+        escaped === UNDEFINED
+        || escaped === SLASH && index + 2 === length
+      ) {
+        // Git removes a final directory slash before matching. An escape
+        //   without a character after that removal makes the pattern invalid.
+        out += hold(NEVER_MATCH)
+      } else if (
         escaped === '*'
         || escaped === '['
         || escaped === SPACE

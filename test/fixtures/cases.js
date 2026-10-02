@@ -1140,6 +1140,16 @@ const cases = [
     }
   ],
   [
+    '#155: normalization must not make invalid escapes match paths',
+    ['line\\\r\n', 'dir\\/ '],
+    {
+      'lineundefined': 0,
+      'nested/lineundefined': 0,
+      'dir/file': 0,
+      'nested/dir/file': 0
+    }
+  ],
+  [
     'Trailing spaces are ignored unless they are quoted with backslash ("\\")',
     [
       'abc\\  ', // only one space left -> (abc )
@@ -1733,6 +1743,44 @@ const cases = [
 
 if (!SHOULD_TEST_WINDOWS) {
   cases.push(
+    [
+      '#155: line endings do not turn an unpaired backslash into pattern text',
+      [
+        'one\\\r\n',
+        'two\\\\\r\n',
+        'three\\\\\\\r\n',
+        'four\\\\\\\\\r\n'
+      ],
+      {
+        'oneundefined': 0,
+        'nested/oneundefined': 0,
+        'two\\': 1,
+        'nested/two\\': 1,
+        'three\\undefined': 0,
+        'nested/three\\undefined': 0,
+        'four\\\\': 1,
+        'nested/four\\\\': 1
+      }
+    ],
+    [
+      '#155: an escaped final directory slash leaves an invalid pattern',
+      [
+        'one\\/ ',
+        'two\\\\/ ',
+        'three\\\\\\/ \r\n',
+        'four\\\\\\\\/ \r\n'
+      ],
+      {
+        'one/file': 0,
+        'nested/one/file': 0,
+        'two\\/file': 1,
+        'nested/two\\/file': 1,
+        'three\\/file': 0,
+        'nested/three\\/file': 0,
+        'four\\\\/file': 1,
+        'nested/four\\\\/file': 1
+      }
+    ],
     [
       '#155: quoted spaces and backslashes after a slash remain literal',
       [
