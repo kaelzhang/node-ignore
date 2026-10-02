@@ -172,6 +172,19 @@ const WORKING_SET = 2000
 
 const WALK = DISTINCT.slice(0, WORKING_SET)
 
+const WALK_DIRECTORIES = WALK.map(path => `${path}/`)
+
+// [pattern, path] pairs, each a few hundred to a few thousand characters of
+//   what makes a regex chain or a compiled regex do the most work per
+//   character: escape runs, wildcard runs, nested globstars, wide brackets.
+const ADVERSARIAL = [
+  [`a${'\\\\'.repeat(300)}x`, 'a'],
+  [`a${'\\ '.repeat(1000)}b`, 'a'],
+  [`${'a*'.repeat(200)}b`, 'a'.repeat(400)],
+  [`${'**/'.repeat(200)}x`, `${'a/'.repeat(100)}y`],
+  [`[${'a-z'.repeat(1000)}]x`, 'qx']
+]
+
 const DEEP = (() => {
   const paths = []
   const dir = 'a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p'
@@ -344,6 +357,49 @@ const suites = [
         }
       }
     }
+  },
+
+  {
+    // A path with a trailing slash takes a branch of its own in
+    //   `checkIgnore()` (#169), which the suite above never reaches.
+    name: 'check-ignore/directory',
+    description: 'checkIgnore() over 2k distinct directories, "dir/"',
+    unit: 'path',
+    weight: WORKING_SET,
+    setup: ignore => {
+      const fresh = recycle(ignore, TYPICAL)
+
+      fresh().checkIgnore('benchmark/warm-up/')
+
+      return {
+        run: () => {
+          const ig = fresh()
+
+          for (let i = 0; i < WALK_DIRECTORIES.length; i ++) {
+            ig.checkIgnore(WALK_DIRECTORIES[i])
+          }
+        }
+      }
+    }
+  },
+
+  {
+    // Not what a real .gitignore looks like, but what a pattern from user
+    //   input can: a regression that turns one of these superlinear only shows
+    //   up on input this long.
+    name: 'adversarial',
+    description: 'add() and match long hostile patterns',
+    unit: 'pattern',
+    weight: ADVERSARIAL.length,
+    setup: ignore => ({
+      run: () => {
+        for (let i = 0; i < ADVERSARIAL.length; i ++) {
+          const [pattern, path] = ADVERSARIAL[i]
+
+          ignore().add(pattern).ignores(path)
+        }
+      }
+    })
   },
 
   {
