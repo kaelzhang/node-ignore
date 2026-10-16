@@ -755,6 +755,48 @@ const cases = [
     }
   ],
   [
+    'Object.prototype names are not POSIX classes',
+    [
+      'object[[:__proto__:]]',
+      'constructor[[:constructor:]]',
+      'string[[:toString:]]'
+    ],
+    {
+      'objecto]': 0,
+      'objectO]': 0,
+      'constructorf }]': 0,
+      'stringt }]': 0,
+      'nested/objecto]': 0,
+      'objecta': 0
+    }
+  ],
+  [
+    'negated unknown POSIX classes match nothing',
+    [
+      'object[![:__proto__:]]',
+      'string[![:toString:]]'
+    ],
+    {
+      'objectx]': 0,
+      'stringx }]': 0,
+      'objectx': 0,
+      'stringx': 0
+    }
+  ],
+  [
+    'unknown POSIX classes beside literals match nothing',
+    [
+      'object[a[:__proto__:]]',
+      'string[a[:toString:]]'
+    ],
+    {
+      'objecta]': 0,
+      'stringa }]': 0,
+      'objecta': 0,
+      'stringa': 0
+    }
+  ],
+  [
     '[:name] without the closing :] is a plain character set',
     [
       '*.[[:alpha]]'
