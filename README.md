@@ -286,6 +286,27 @@ interface IgnoreRule {
 - `{ignored: false, unignored: true}`: the `pathname` is unignored
 - `{ignored: false, unignored: false}`: the `pathname` is never matched by any ignore rules.
 
+Note that `{ignored: false, unignored: false}` covers two different situations:
+
+- the `pathname` was never matched by any ignore rule, and neither was any of its parent directories, or
+- the `pathname` is unignored **indirectly**: one of its parent directories was unignored by a negative pattern, while the `pathname` itself was never matched by any negative pattern.
+
+```js
+const ig = ignore().add([
+  'foo*',
+  '!foobar'
+])
+
+// Directly unignored by the negative pattern `!foobar`
+ig.test('foobar')      // {ignored: false, unignored: true}
+
+// Unignored indirectly: the parent directory `foobar` is unignored,
+//   but `foobar/x.js` itself is never matched by `!foobar`
+ig.test('foobar/x.js') // {ignored: false, unignored: false}
+```
+
+`unignored` is meant for packages that implement their own caching mechanism upon `node-ignore`. To simply tell whether a `pathname` is ignored, use `.ignores()` or check `TestResult::ignored`.
+
 ## .checkIgnore(target: string): TestResult
 
 > new in 7.0.0
