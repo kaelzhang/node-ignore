@@ -173,6 +173,29 @@ ig.ignores(path.join('./abc'))  // path.join('./abc') -> 'abc'
 
 In other words, each `Pathname` here should be a relative path to the directory of the gitignore rules.
 
+A `.` or `..` component anywhere else in a `Pathname` is outside the
+convention as well, though no error is thrown for it: the check reads how the
+path starts, so that it costs nothing on a hot path. `path.relative()` never
+produces such a component, and one that carries it is not matched the way
+`git` matches it — `git` drops the component from the path first, `ignore`
+matches the path as it was given.
+
+```js
+// path.relative('/', '/a/./b')  -> 'a/b'
+
+// Right
+ignore().add('a/b').ignores('a/b')       // true
+
+// Outside the convention: git matches 'a/b' here and so says true
+ignore().add('a/b').ignores('a/./b')     // false
+
+// Outside the convention: git matches 'a' here and so says false
+ignore().add('a/.').ignores('a/.')       // true
+```
+
+A rule that matches an ancestor still agrees, since the component makes no
+difference to it: `add('a').ignores('a/./b')` is `true` either way.
+
 Suppose the dir structure is:
 
 ```
