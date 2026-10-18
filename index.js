@@ -678,23 +678,10 @@ const replaceTrailingDoublestar = () => '.+(?=$|\\/$)'
 
 const WILDCARD = '[^\\/]*'
 
-// Where a run of non-slash wildcards is split by single fixed characters --
-//   `[^/]*x[^/]*y...` -- the engine has many equivalent ways to lay the
-//   input across the wildcards, and on input that does not match it works
-//   through all of them, so the time grows with the number of wildcards
-//   rather than the length of the path. Every wildcard but the last in such a
-//   run can be pinned to stop at the character that follows it, which leaves
-//   one way to lay out the input and no rewinding, without changing which
-//   paths match: the fixed characters still bound the count, and the last
-//   wildcard still absorbs the rest.
-//
-// The source is read one token at a time -- a wildcard, a single-character
-//   piece (a literal, an escape, a class), or a parenthesised group or anchor
-//   that ends the run -- so only a genuine wildcard is touched.
-
-// The fixed pieces between the wildcard at `at` and the next wildcard of the
-//   run, joined as they appear in the source. A run never holds two wildcards
-//   in a row, so there is always at least one piece.
+// The fixed piece between the wildcard at `at` and the next wildcard of the
+//   run: the tokens that separate them, joined as they appear in the source.
+//   A run never holds two wildcards in a row, so there is always at least one
+//   token.
 const separatorAfter = (run, at) => {
   let separator = EMPTY
 
@@ -705,6 +692,29 @@ const separatorAfter = (run, at) => {
   return separator
 }
 
+// Where a run of non-slash wildcards is split by fixed pieces --
+//   `[^/]*ab[^/]*cd...` -- the engine has many equivalent ways to lay the
+//   input across the wildcards, and on input that does not match it works
+//   through all of them, so the time grows with the number of wildcards
+//   rather than the length of the path. Every wildcard but the last in such a
+//   run can be pinned to stop where the piece after it begins, which leaves
+//   one way to lay out the input and no rewinding, without changing which
+//   paths match: the fixed pieces still bound the count, and the last
+//   wildcard still absorbs the rest.
+//
+// A wildcard is pinned to the whole piece, never to the piece's first
+//   character. The pin leaves no way back, so a wildcard that stopped at that
+//   first character would hand over wherever the character happens to turn
+//   up, including the places the rest of the piece cannot follow -- which is
+//   how `f*o/*/*` came to miss `foo/b/c`, the first `o` of `foo` not being
+//   the one the `o/` after it needs. Every token of a piece matches exactly
+//   one character, so the first place the whole piece fits is the leftmost
+//   place it can sit, and whatever is left over goes to the wildcards that
+//   follow.
+//
+// The source is read one token at a time -- a wildcard, a single-character
+//   piece (a literal, an escape, a class), or a parenthesised group or anchor
+//   that ends the run -- so only a genuine wildcard is touched.
 const pinWildcards = source => {
   if (source.indexOf(WILDCARD) < 0) {
     return source
@@ -792,16 +802,9 @@ const pinWildcards = source => {
         return
       }
 
-      // A wildcard that is not the last in the run is pinned to the whole
-      //   fixed piece that separates it from the next wildcard, not just to
-      //   that piece's first character: stopping at the first character alone
-      //   would let the wildcard hand over at a place where the rest of the
-      //   separator cannot follow, and the pin leaves no way back, so
-      //   `f*o/*/*` would miss `foo/b/c` -- the first `o` of `foo` is not the
-      //   one the `o/` after it needs. Every piece matches exactly one
-      //   character, so pinning to the first place the whole separator fits
-      //   is the leftmost place it can sit, and the wildcards that follow
-      //   take up whatever is left.
+      // Every wildcard but the last is pinned to the whole piece that
+      //   follows it, for the reason set out above this function. The last
+      //   one stays as it is and takes up the rest.
       out += at === lastWildcard
         ? WILDCARD
         : `(?:(?!${separatorAfter(run, at)})[^\\/])*`
