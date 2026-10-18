@@ -2225,6 +2225,136 @@ if (!SHOULD_TEST_WINDOWS) {
 
         's/0': 1
       }
+    ],
+    [
+      // A quoted backslash -- the pattern's own `\\` -- stands for one literal
+      //   backslash, and whatever follows keeps the meaning it would have had
+      //   on its own. These cases live here rather than in the shared list
+      //   because their paths hold backslashes, which the win32 variant
+      //   rewrites into separators.
+      'audit: a quoted backslash before a regex metacharacter',
+      [
+        'a\\\\.',
+        'b\\\\$',
+        'c\\\\+',
+        'd\\\\^',
+        'e\\\\(',
+        'f\\\\)'
+      ],
+      {
+        'a\\.': 1,
+        'a\\z': 0,
+        'a.': 0,
+        'a': 0,
+        'b\\$': 1,
+        'b\\z': 0,
+        'b$': 0,
+        'b': 0,
+        'c\\+': 1,
+        'c\\z': 0,
+        'c+': 0,
+        'c': 0,
+        'd\\^': 1,
+        'd\\z': 0,
+        'd^': 0,
+        'd': 0,
+        'e\\(': 1,
+        'e\\z': 0,
+        'e(': 0,
+        'e': 0,
+        'f\\)': 1,
+        'f\\z': 0,
+        'f)': 0,
+        'f': 0
+      }
+    ],
+    [
+      // Alone, because a pattern of its own: in its own group so the
+      //   cases above fail for their own reason and not for this one.
+      'audit: a quoted backslash before an alternation metacharacter',
+      [
+        'a\\\\|'
+      ],
+      {
+        'a\\|': 1,
+        'a\\z': 0,
+        'a|': 0,
+        'a': 0,
+        'z': 0,
+        'y/z': 0
+      }
+    ],
+    [
+      // A trailing `{` is already only itself to a regular expression, so
+      //   the first pattern here never broke and is a control; a `{` that
+      //   opens a quantifier is the one that did.
+      'audit: a quoted backslash before a brace',
+      [
+        'a\\\\{',
+        'b\\\\{2}',
+        'c\\\\{3,2}'
+      ],
+      {
+        'a\\{': 1,
+        'a\\z': 0,
+        'b\\{2}': 1,
+        'b\\\\': 0,
+        'b\\': 0,
+        'c\\{3,2}': 1,
+        'c\\': 0
+      }
+    ],
+    [
+      // Two quoted backslashes: the length of the run is what the two
+      //   counts disagreed over, so it is worth its own case.
+      'audit: two quoted backslashes before a regex metacharacter',
+      [
+        'a\\\\\\\\.',
+        'b\\\\\\\\('
+      ],
+      {
+        'a\\\\.': 1,
+        'a\\\\z': 0,
+        'b\\\\(': 1,
+        'b\\\\z': 0
+      }
+    ],
+    [
+      // A star after a quoted backslash is still a wildcard. The last
+      //   pattern is a control: a single trailing star never broke.
+      'audit: a quoted backslash before a wildcard run',
+      [
+        'a\\\\**',
+        'b\\\\*c',
+        'd\\\\*'
+      ],
+      {
+        'a\\': 1,
+        'a\\x': 1,
+        'a': 0,
+        'ax': 0,
+        'b\\c': 1,
+        'b\\xc': 1,
+        'bc': 0,
+        'b\\': 0,
+        'd\\': 1,
+        'd\\z': 1,
+        'd*': 0,
+        'd': 0
+      }
+    ],
+    [
+      // And before a run the chain rewrites into a group of its own.
+      'audit: a quoted backslash before a slash-doublestar run',
+      [
+        '\\\\/**/x'
+      ],
+      {
+        '\\/y/x': 1,
+        '\\/x': 1,
+        'a/y/x': 0,
+        '\\': 0
+      }
     ]
   )
 }

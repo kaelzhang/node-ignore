@@ -302,12 +302,17 @@ const extractBrackets = pattern => {
       //   `\1`, `\/` keep their regular-expression meaning, and would turn a
       //   `\?` into `[^\/]`.
       //
-      // Four escapes are left for the chain, each with dedicated handling it
-      //   would be wrong to bypass: `\*` (a literal star, told apart from a
-      //   wildcard by `TRAILING_WILDCARD` and the wildcard replacers), `\[`
-      //   (a literal bracket, the one `[` the bracket replacer still expects),
-      //   `\ ` (a quoted trailing space), and `\\` (a literal backslash). A
-      //   lone trailing backslash can reach here after line-ending cleanup.
+      // Three escapes are still left for the chain: `\*` (a literal star,
+      //   told apart from a wildcard by `TRAILING_WILDCARD` and the wildcard
+      //   replacers), `\[` (a literal bracket, the one `[` the bracket
+      //   replacer still expects), and `\ ` (a quoted trailing space). A lone
+      //   trailing backslash can reach here after line-ending cleanup.
+      //
+      // A quoted backslash is not among them. The chain doubles every
+      //   backslash, then takes the doubling back out again, and a quoted one
+      //   standing next to a character the chain also escapes left the two
+      //   counts sharing a run, so one of the escapes was lost. Held here as
+      //   the literal it means, it never joins that run.
       const escaped = pattern[index + 1]
 
       if (
@@ -321,7 +326,6 @@ const extractBrackets = pattern => {
         escaped === '*'
         || escaped === '['
         || escaped === SPACE
-        || escaped === ESCAPE
       ) {
         out += pattern.slice(index, index + 2)
       } else {
