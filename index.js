@@ -49,12 +49,6 @@ const define = (object, key, value) => {
 
 const RETURN_FALSE = () => false
 
-// See fixtures #59
-const cleanRangeBackSlash = slashes => {
-  const {length} = slashes
-  return slashes.slice(0, length - length % 2)
-}
-
 // > The range notation, e.g. [a-zA-Z],
 // > can be used to match one of the characters in a range.
 //
@@ -305,8 +299,10 @@ const extractBrackets = pattern => {
       // Three escapes are still left for the chain: `\*` (a literal star,
       //   told apart from a wildcard by `TRAILING_WILDCARD` and the wildcard
       //   replacers), `\[` (a literal bracket, the one `[` the bracket
-      //   replacer still expects), and `\ ` (a quoted trailing space). A lone
-      //   trailing backslash can reach here after line-ending cleanup.
+      //   replacer still expects), and `\ ` (a quoted space, which one pass
+      //   below rewrites in bulk -- holding each one aside instead costs more
+      //   on a pattern built out of them). A lone trailing backslash can reach
+      //   here after line-ending cleanup.
       //
       // A quoted backslash is not among them. The chain doubles every
       //   backslash, then takes the doubling back out again, and a quoted one
@@ -586,23 +582,23 @@ const REPLACERS = [
   // trailing wildcard, held apart from a literal star
   [
     // The step above leaves a trailing `*` alone, so a single `\*` is all that
-    //   can be left at the end here. Whether it is a wildcard or a literal
-    //   turns on the backslashes the user put in front of it: the escaper has
-    //   since doubled every one, so what stands here is those `2N` doubled
-    //   backslashes and then the star's own escape. An even number of the
-    //   original `N` leaves the star unescaped -- a wildcard -- and an odd
-    //   number escapes it -- a literal. This runs while the two are still
-    //   distinct, before the unescape steps below collapse the literal onto
-    //   the very `\*` a wildcard leaves behind.
+    //   can be left at the end here, and what stands in front of it says which
+    //   kind it is. A wildcard arrives as the escaper wrote it, `\*` with
+    //   nothing before it; a literal arrives as the user's own escape, which
+    //   the escaper doubled, and then the star's own -- `\\` and then `\*`.
+    //   There is no third case: every backslash still reaching the chain is
+    //   one `\*`, `\[` or `\ ` carries itself, and each is followed by its
+    //   own character, so a longer run can never form. This runs while the
+    //   two are still distinct, before the unescape steps below collapse the
+    //   literal onto the very `\*` a wildcard leaves behind.
     /(^|[^\\])((?:\\\\)*)\\\*$/,
 
     (match, p1, p2) =>
-      // `p2` holds the doubled user backslashes; half of them is `N`.
-      (p2.length / 2) % 2 === 0
+      p2 === EMPTY
         // A real wildcard: carry it to `_make` as the marker, so the unescape
         //   steps and the trailing-wildcard rewrite can never mistake it for a
         //   literal `\*` (nor the reverse).
-        ? p1 + p2 + TRAILING_WILDCARD
+        ? p1 + TRAILING_WILDCARD
         // A literal star: leave it exactly as it stands for the unescape steps.
         : match,
     '*'
@@ -629,12 +625,12 @@ const REPLACERS = [
     //   been held aside by `extractBrackets`, so the only `[` left in the
     //   pattern is an escaped, literal one.
 
-    // `\` is escaped by step 3
-    /\\\[([^\]/]*?)(\\*)($|\])/g,
+    // A backslash could only stand at the end of the range if it quoted the
+    //   `]`, and `\]` is held aside long before this.
+    /\\\[([^\]/]*?)($|\])/g,
 
-    // '\\[bar]' -> '\\\\[bar\\]'
-    (match, range, endEscape, close) =>
-      `\\[${range}${cleanRangeBackSlash(endEscape)}${close}`,
+    // '\\[bar]' -> '\\\\[bar]'
+    (match, range, close) => `\\[${range}${close}`,
     '['
   ],
 
