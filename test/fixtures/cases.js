@@ -1869,7 +1869,141 @@ const cases = [
       '1x': 1,
       'g/h': 1
     }
-  ]
+  ],
+  [
+    // `TRAILING_WILDCARD` and `TRAILING_DOUBLESTAR` carry a pending wildcard
+    //   through the replacer chain as U+E000 and U+E001. A pattern may hold
+    //   those characters too, and then they are ordinary members of it, the
+    //   way an escaped star above is an ordinary star. "The first of them"
+    //   below is the pending-wildcard one, "the second" the pending-"/**"
+    //   one. (If either constant ever moves to another code point, these
+    //   cases must move with it, or they stop testing anything.)
+    'audit: a private-use character is an ordinary member of a pattern',
+    [
+      'a\uE000',
+      'b\uE001'
+    ],
+    {
+      'a\uE000': 1,
+      'a\uE000/': 1,
+      'b\uE001': 1,
+      'b\uE001/': 1,
+      'ab': 0,
+      'ab/': 0,
+      'a': 0,
+      'axx': 0,
+      'b': 0,
+      'b/': 0,
+      'b/c': 0,
+      'bz': 0,
+      'bz/': 0
+    }
+  ],
+  [
+    'audit: a pattern that is only the first of them matches that name',
+    [
+      '\uE000'
+    ],
+    {
+      '\uE000': 1,
+      'x': 0,
+      'a/b': 0
+    }
+  ],
+  [
+    'audit: a pattern that is only the second of them matches that name',
+    [
+      '\uE001'
+    ],
+    {
+      '\uE001': 1,
+      'x': 0,
+      'a/b': 0
+    }
+  ],
+  [
+    'audit: the first of them after a slash is an ordinary member too',
+    [
+      'a/\uE000'
+    ],
+    {
+      'a/\uE000': 1,
+      'a/b': 0
+    }
+  ],
+  [
+    'audit: the second of them after a slash is an ordinary member too',
+    [
+      'a/\uE001'
+    ],
+    {
+      'a/\uE001': 1,
+      'a/b': 0
+    }
+  ],
+  [
+    'audit: trailing spaces go and leave the first of them ordinary',
+    [
+      'a\uE000  '
+    ],
+    {
+      'a\uE000': 1,
+      'ab': 0,
+      'a': 0
+    }
+  ],
+  [
+    'audit: trailing spaces leave the second of them ordinary as well',
+    [
+      'b\uE001  '
+    ],
+    {
+      'b\uE001': 1,
+      'bz': 0,
+      'b': 0
+    }
+  ],
+  [
+    // The escape is taken before the character is looked at, so this one is
+    //   held aside by the escape branch rather than by the reserved-character
+    //   branch. It pins that order.
+    'audit: an escaped private-use character is the same ordinary member',
+    [
+      'a\\\uE000'
+    ],
+    {
+      'a\uE000': 1,
+      'ab': 0,
+      'a': 0
+    }
+  ],
+  [
+    'audit: the first of them re-includes nothing',
+    [
+      '*.js',
+      'a/**',
+      '!\uE000'
+    ],
+    {
+      'b.js': 1,
+      'a/b': 1,
+      '\uE000': 0,
+      'x/y': 0,
+      'c.md': 0
+    }
+  ],
+  [
+    'audit: the second of them re-includes nothing after a name either',
+    [
+      '*.js',
+      '!a\uE001'
+    ],
+    {
+      'a.js': 1,
+      'b.js': 1,
+      'a\uE001': 0
+    }
+  ],
 ]
 
 if (!SHOULD_TEST_WINDOWS) {

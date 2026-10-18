@@ -245,15 +245,38 @@ const REGEX_RESTORE_PLACEHOLDER = new RegExp(
 //   That is what keeps it apart from a user-escaped literal `\*`: the unescape
 //   steps collapse the escaped one to the exact `\*` a wildcard would leave
 //   behind, so by the time `_make` runs the two are otherwise the same string
-//   and a literal star gets wrongly rewritten into a wildcard. This marker is a
-//   private-use character no compiled pattern carries, and it never survives
-//   into a `RegExp` -- `_make` always turns it back into a real wildcard first.
+//   and a literal star gets wrongly rewritten into a wildcard. The marker is a
+//   private-use character, and `extractBrackets` keeps one that came out of the
+//   pattern apart from it, so the only marker `_make` ever turns back into a
+//   real wildcard is the one this chain put there itself.
 const TRAILING_WILDCARD = '\uE000'
 
 // A trailing "/**" is deferred the same way, because `checkRegex` has to tell
 //   it apart from a trailing "/*" (see `checkSourceOf`). For `.ignores()` it
 //   still never matches the folder itself (#21).
 const TRAILING_DOUBLESTAR = '\uE001'
+
+// The three characters above mean something to the chain that builds the
+//   source rather than to the path, so one that came out of the pattern is
+//   held aside like a bracket expression instead of going straight out. Being
+//   held is what makes it safe: the restore runs after the step that anchors
+//   the source, so the character comes back in the middle of the source and
+//   not at its end, which is the one place `_make` and `checkSourceOf` look
+//   for a marker. Without it a pattern's own character lands where a pending
+//   marker sits, and `_make` turns it into a real trailing wildcard.
+//
+// It is held as a one-member class rather than bare, in both of the branches
+//   a reserved character can reach, so that the property can be
+//   read off this function alone -- a reserved character never goes out on
+//   its own -- rather than depending on where in the chain the restore
+//   happens to run. In the expression built here `[x]` matches exactly what
+//   `x` matches, none of the three being special to a regular expression or
+//   inside a class, so no test can tell the two apart: the class is insurance,
+//   and the paragraph above is the reason it is not needed.
+const isReserved = char =>
+  char === PLACEHOLDER
+  || char === TRAILING_WILDCARD
+  || char === TRAILING_DOUBLESTAR
 
 // Replace every bracket expression with a placeholder the replacers below
 //   leave alone, and translate it separately.
@@ -305,15 +328,15 @@ const extractBrackets = pattern => {
         out += hold(
           REGEX_LITERAL_SPECIAL.test(escaped)
             ? ESCAPE + escaped
-            : escaped
+            : isReserved(escaped)
+              ? `[${escaped}]`
+              : escaped
         )
       }
 
       index += 2
-    } else if (char === PLACEHOLDER) {
-      // Hold a literal placeholder character aside as well, so that pattern
-      //   text can never be mistaken for a placeholder we emitted.
-      out += hold(`[${PLACEHOLDER}]`)
+    } else if (isReserved(char)) {
+      out += hold(`[${char}]`)
       index ++
     } else if (char === '[') {
       const scanned = scanBracket(pattern, index)
