@@ -194,14 +194,14 @@ const scanBracket = (pattern, start) => {
       }
 
       if (end > nameStart && pattern[end - 1] === ':') {
-        const expanded = POSIX_CLASSES[pattern.slice(nameStart, end - 1)]
+        const name = pattern.slice(nameStart, end - 1)
 
         // An unknown class name makes the whole pattern match nothing
-        if (expanded === UNDEFINED) {
+        if (!Object.prototype.hasOwnProperty.call(POSIX_CLASSES, name)) {
           return null
         }
 
-        body += expanded
+        body += POSIX_CLASSES[name]
         prev = EMPTY
         index = end
       } else {
