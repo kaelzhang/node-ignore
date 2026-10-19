@@ -282,6 +282,10 @@ Returns `function(path)` the filter function.
 
 > New in 5.0.0
 
+`.test()` is meant for packages that build upon `ignore`. Besides whether a `pathname` is ignored, it tells whether a negative pattern unignored it, which such a package can use to control its own caching, such as what to cache and when a cached result can be reused.
+
+If you only need to know whether a `pathname` should be ignored, use `.ignores()` instead. It returns that answer as a boolean, and always agrees with `.test(pathname).ignored`.
+
 Returns `TestResult`
 
 ```ts
@@ -338,8 +342,6 @@ To tell the two situations apart, test the parent directories of the `pathname`,
 ```js
 ['foobar/'].some(dir => ig2.test(dir).unignored) // true
 ```
-
-`unignored` is meant for packages that implement their own caching mechanism upon `node-ignore`. To simply tell whether a `pathname` is ignored, use `.ignores()` or check `TestResult::ignored`.
 
 ## .checkIgnore(target: string): TestResult
 
