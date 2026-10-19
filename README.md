@@ -288,7 +288,8 @@ Returns `TestResult`
 // Since 5.0.0
 interface TestResult {
   ignored: boolean
-  // true if the `pathname` is finally unignored by some negative pattern
+  // true if a negative pattern matched the `pathname` itself, and no parent
+  //   directory of it is ignored -- see "When both are false" below
   unignored: boolean
   // The `IgnoreRule` which ignores the pathname
   rule?: IgnoreRule
@@ -306,26 +307,36 @@ interface IgnoreRule {
 ```
 
 - `{ignored: true, unignored: false}`: the `pathname` is ignored
-- `{ignored: false, unignored: true}`: the `pathname` is unignored
-- `{ignored: false, unignored: false}`: the `pathname` is never matched by any ignore rules.
+- `{ignored: false, unignored: true}`: a negative pattern matched the `pathname` itself
+- `{ignored: false, unignored: false}`: no rule matched the `pathname` itself, and no parent directory of it is ignored
 
-Note that `{ignored: false, unignored: false}` covers two different situations:
+### When both are `false`
 
-- the `pathname` was never matched by any ignore rule, and neither was any of its parent directories, or
-- the `pathname` is unignored **indirectly**: one of its parent directories was unignored by a negative pattern, while the `pathname` itself was never matched by any negative pattern.
+`{ignored: false, unignored: false}` covers two different situations:
+
+- no rule matched the `pathname`, nor any of its parent directories, or
+- no rule matched the `pathname` itself, but one of its parent directories is unignored by a negative pattern: the `pathname` is unignored **indirectly**.
+
+`unignored` stays `false` in the second case because only `ignored` passes down from a parent directory. A `pathname` whose parent directory is ignored is ignored as well — git never re-includes a file whose parent directory is excluded — but one whose parent directory is unignored is decided on its own, by the rules that match the `pathname` itself.
 
 ```js
-const ig = ignore().add([
+const ig2 = ignore().add([
   'foo*',
   '!foobar'
 ])
 
-// Directly unignored by the negative pattern `!foobar`
-ig.test('foobar')      // {ignored: false, unignored: true}
+// The directory `foobar/` is unignored directly, by `!foobar`
+ig2.test('foobar/')     // {ignored: false, unignored: true}
 
-// Unignored indirectly: the parent directory `foobar` is unignored,
-//   but `foobar/x.js` itself is never matched by `!foobar`
-ig.test('foobar/x.js') // {ignored: false, unignored: false}
+// No rule matches `foobar/x.js` itself. It is not ignored only because its
+//   parent directory `foobar/` is not, so it is unignored indirectly
+ig2.test('foobar/x.js') // {ignored: false, unignored: false}
+```
+
+To tell the two situations apart, test the parent directories of the `pathname`, each with a trailing slash: the `pathname` is unignored indirectly if any of them is `unignored`.
+
+```js
+['foobar/'].some(dir => ig2.test(dir).unignored) // true
 ```
 
 `unignored` is meant for packages that implement their own caching mechanism upon `node-ignore`. To simply tell whether a `pathname` is ignored, use `.ignores()` or check `TestResult::ignored`.
@@ -338,7 +349,7 @@ Debugs gitignore / exclude files, which is equivalent to `git check-ignore -v`. 
 
 - **target** `string` the target to test.
 
-Returns `TestResult`
+Returns `TestResult`, the same shape `.test()` returns, so `{ignored: false, unignored: false}` carries the [same two meanings](#when-both-are-false) here.
 
 ```js
 ig.add({
@@ -349,10 +360,10 @@ ig.add({
 const {
   ignored,
   rule
-} = checkIgnore('foo/')
+} = ig.checkIgnore('foo/')
 
 if (ignored) {
-  console.log(`.gitignore:${result}:${rule.mark}:${rule.pattern} foo/`)
+  console.log(`.gitignore:${rule.mark}:${rule.pattern} foo/`)
 }
 
 // .gitignore:60:foo/* foo/
