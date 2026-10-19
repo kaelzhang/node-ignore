@@ -1,5 +1,11 @@
 import ignore, {isPathValid} from '../..'
-import type {Ignore} from '../..'
+import type {
+  Ignore,
+  IgnoreRule,
+  PatternParams,
+  Pathname,
+  TestResult
+} from '../..'
 
 const equal = (actual: unknown, expect: unknown, message: string) => {
   if (actual !== expect) {
@@ -43,13 +49,12 @@ const ig5 = ignore({
 const isValid: boolean = isPathValid('./foo')
 equal(isValid, false, './foo is not valid')
 
+// The result types are named, not spelled out, so they stay importable
+const result: TestResult = ig4.test('foo')
 const {
   ignored,
   unignored
-}: {
-  ignored: boolean,
-  unignored: boolean
-} = ig4.test('foo')
+} = result
 
 equal(ignored, false, 'not ignored')
 equal(unignored, false, 'not unignored')
@@ -70,7 +75,8 @@ ignore({
 
 const ig7 = ignore()
 
-ig7.add({pattern: 'foo/*', mark: '10'})
+const params: PatternParams = {pattern: 'foo/*', mark: '10'}
+ig7.add(params)
 const {
   ignored: ignored7,
   rule: ignoreRule7
@@ -79,3 +85,8 @@ const {
 equal(ignored7, true, 'should ignore')
 equal(ignoreRule7?.mark, '10', 'mark is 10')
 equal(ignoreRule7?.pattern, 'foo/*', 'ignored by foo/*')
+
+const rule7: IgnoreRule | undefined = ignoreRule7
+const pathname: Pathname = 'foo/'
+equal(rule7?.negative, false, 'not a negative rule')
+equal(ig7.checkIgnore(pathname).ignored, true, 'Pathname is a string')
