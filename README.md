@@ -282,6 +282,8 @@ Returns `function(path)` the filter function.
 
 > New in 5.0.0
 
+**This method is NOT meant for ordinary users or everyday use.** If all you need is to tell whether a `pathname` is ignored, this is not the method you are looking for.
+
 `.test()` is meant for packages that build upon `ignore`. Besides whether a `pathname` is ignored, it tells whether a negative pattern unignored it, which such a package can use to control its own caching, such as what to cache and when a cached result can be reused.
 
 If you only need to know whether a `pathname` should be ignored, use `.ignores()` instead. It returns that answer as a boolean, and always agrees with `.test(pathname).ignored`.
