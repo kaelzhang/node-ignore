@@ -1297,17 +1297,10 @@ class RuleManager {
 
   // Test one single path without recursively checking parent directories
   //
-  // - checkUnignored `boolean` whether should check if the path is unignored,
-  //   setting `checkUnignored` to `false` could reduce additional
-  //   path matching.
-  // - check `string` either `MODE_IGNORE` or `MODE_CHECK_IGNORE`
+  // - mode `string` either `MODE_IGNORE` or `MODE_CHECK_IGNORE`
 
-  // @returns {TestResult} true if a file is ignored
-  test (path, checkUnignored, mode) {
-    let ignored = false
-    let unignored = false
-    let matchedRule
-
+  // @returns {TestResult}
+  test (path, mode) {
     // Most of a .gitignore is patterns with no slash in them, and running
     //   those against the whole path makes the regular expression engine walk
     //   every directory name on the way to the only segment that could match.
@@ -1322,52 +1315,40 @@ class RuleManager {
       ? basenameOf(path)
       : path
 
+    // The last rule to match decides, as in git, and it is the rule
+    //   `git check-ignore -v` reports, so the scan runs from the end and stops
+    //   at the first match.
     // A plain loop rather than `forEach`, so that `path`, `basename` and
     //   `shortcut` are locals. As a callback they became closure variables,
     //   and reaching for one of those once per rule cost 10% of a scan over a
     //   large rule set -- more than the shortcut they were there to serve.
-    for (let index = 0; index < length; index ++) {
+    for (let index = length - 1; index >= 0; index --) {
       const rule = rules[index]
-      const {negative} = rule
 
-      //          |           ignored : unignored
-      // -------- | ---------------------------------------
-      // negative |   0:0   |   0:1   |   1:0   |   1:1
-      // -------- | ------- | ------- | ------- | --------
-      //     0    |  TEST   |  TEST   |  SKIP   |    X
-      //     1    |  TESTIF |  SKIP   |  TEST   |    X
-
-      // - SKIP: always skip
-      // - TEST: always test
-      // - TESTIF: only test if checkUnignored
-      // - X: that never happen
-      const skip = unignored === negative && ignored !== unignored
-        || negative && !ignored && !unignored && !checkUnignored
-
-      if (!skip && rule[mode].test(
+      if (rule[mode].test(
         shortcut && rule._basenameOnly
           ? basename
           : path
       )) {
-        ignored = !negative
-        unignored = negative
+        const {negative} = rule
 
-        matchedRule = negative
-          ? UNDEFINED
-          : rule
+        const ret = {
+          ignored: !negative,
+          unignored: negative
+        }
+
+        if (!negative) {
+          ret.rule = rule
+        }
+
+        return ret
       }
     }
 
-    const ret = {
-      ignored,
-      unignored
+    return {
+      ignored: false,
+      unignored: false
     }
-
-    if (matchedRule) {
-      ret.rule = matchedRule
-    }
-
-    return ret
   }
 }
 
@@ -1483,7 +1464,7 @@ class Ignore {
   }
 
   // @returns {TestResult}
-  _test (originalPath, cache, checkUnignored) {
+  _test (originalPath, cache) {
     const path = originalPath
       // Supports nullable path
       && checkPath.convert(originalPath)
@@ -1496,7 +1477,7 @@ class Ignore {
         : RETURN_FALSE
     )
 
-    return this._t(path, cache, checkUnignored)
+    return this._t(path, cache)
   }
 
   checkIgnore (path) {
@@ -1509,7 +1490,7 @@ class Ignore {
     // Like `git check-ignore`: a directory excluded by itself or by an
     //   ancestor settles it, and only then is the literal 'abc/' matched
     //   against the rules (see `checkSourceOf`).
-    const dir = this._t(path, this._testCache, true)
+    const dir = this._t(path, this._testCache)
 
     if (dir.ignored) {
       return dir
@@ -1527,10 +1508,7 @@ class Ignore {
     path,
 
     // The cache for the result of a certain checking
-    cache,
-
-    // Whether should check if the path is unignored
-    checkUnignored
+    cache
   ) {
     if (path in cache) {
       return cache[path]
@@ -1540,18 +1518,18 @@ class Ignore {
 
     // If the path contains a parent directory, check the parent first
     const parent = parentPath
-      ? this._t(parentPath, cache, checkUnignored)
+      ? this._t(parentPath, cache)
       : UNDEFINED
 
     return cache[path] = parent && parent.ignored
       // > It is not possible to re-include a file if a parent directory of
       // >   that file is excluded.
       ? parent
-      : this._rules.test(path, checkUnignored, MODE_IGNORE)
+      : this._rules.test(path, MODE_IGNORE)
   }
 
   ignores (path) {
-    return this._test(path, this._ignoreCache, false).ignored
+    return this._test(path, this._ignoreCache).ignored
   }
 
   createFilter () {
@@ -1564,7 +1542,7 @@ class Ignore {
 
   // @returns {TestResult}
   test (path) {
-    return this._test(path, this._testCache, true)
+    return this._test(path, this._testCache)
   }
 }
 

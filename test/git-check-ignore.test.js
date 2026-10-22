@@ -16,6 +16,10 @@ const {
 
 const {test} = tap
 
+const ignore = require('..')
+
+const UNDEFINED = undefined
+
 // This test file is related to dealing with file systems which takes time
 tap.setTimeout(600000)
 
@@ -119,8 +123,13 @@ const getNativeGitIgnoreResults = (rules, paths) => {
     cwd: dir
   })
 
-  return paths
-  .filter(p => {
+  const lines = gitignore.split('\n')
+
+  // For every path, the line of the rule `git check-ignore -v` reports when
+  //   that rule ignores the path, or `undefined` when the path is not ignored.
+  const reported = Object.create(null)
+
+  paths.forEach(p => {
     // `-z` asks for machine-parseable output: the matched path comes back
     //   raw, NUL-terminated, with none of the C-quoting that would otherwise
     //   mangle a path holding a backslash, a tab or a non-ASCII character.
@@ -129,11 +138,16 @@ const getNativeGitIgnoreResults = (rules, paths) => {
     // node-ignore matches case-insensitively by default, while a new
     //   repository takes `core.ignorecase` from the file system it lives on,
     //   so git is told to do as node-ignore does on every platform.
+    //
+    // `-v -n` reports `<source> <linenum> <pattern> <pathname>` for every
+    //   path, all four empty when no rule matches it.
     const out = spawn('git', [
       '-c',
       'core.ignorecase=true',
       'check-ignore',
       '--no-index',
+      '-v',
+      '-n',
       '-z',
       '--stdin'
     ], {
@@ -143,13 +157,27 @@ const getNativeGitIgnoreResults = (rules, paths) => {
     .stdout
     .toString()
 
-    const ignored = out === `${p}\u0000`
+    const [source, linenum, pattern] = out.split('\u0000')
 
-    debug('git check-ignore %s: %j -> ignored: %s', p, out, ignored)
+    // A negative pattern that matches leaves the path unignored
+    const ignored = !!source && pattern[0] !== '!'
 
-    return !ignored
+    debug('git check-ignore -v %s: %j -> ignored: %s', p, out, ignored)
+
+    // git drops the line's trailing CR
+    reported[p] = ignored
+      ? lines[linenum - 1].replace(/\r$/, '')
+      : UNDEFINED
   })
+
+  return reported
 }
+
+const notIgnored = reported => Object.keys(reported)
+.filter(p => reported[p] === UNDEFINED)
+
+// The pattern of a rule, as the line of the .gitignore it stands for
+const lineOf = rule => rule.pattern.replace(/[\r\n]+$/, '')
 
 checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
   description,
@@ -171,9 +199,27 @@ checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
   }
 
   test(`test for test:    ${description}`, t => {
-    const result = getNativeGitIgnoreResults(patterns, paths).sort()
+    const reported = getNativeGitIgnoreResults(patterns, paths)
 
-    expect_result(t, result)
+    expect_result(t, notIgnored(reported).sort())
+
+    // `.checkIgnore()` names the rule `git check-ignore -v` reports
+    const ig = ignore().add(patterns)
+
+    paths.forEach(p => {
+      if (reported[p] === UNDEFINED) {
+        return
+      }
+
+      const {rule} = ig.checkIgnore(p)
+
+      t.equal(
+        rule && lineOf(rule),
+        reported[p],
+        `path: "${p}" is ignored by the rule git reports`
+      )
+    })
+
     t.end()
   })
 })

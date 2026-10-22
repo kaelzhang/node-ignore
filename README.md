@@ -297,7 +297,8 @@ interface TestResult {
   // true if a negative pattern matched the `pathname` itself, and no parent
   //   directory of it is ignored -- see "When both are false" below
   unignored: boolean
-  // The `IgnoreRule` which ignores the pathname
+  // The `IgnoreRule` which ignores the pathname: the last rule to match, the
+  //   one `git check-ignore -v` reports
   rule?: IgnoreRule
 }
 

@@ -1485,6 +1485,23 @@ const cases = [
   ],
 
   [
+    // The oracle also checks that the rule reported for each ignored path is
+    //   the one `git check-ignore -v` names: here `a.js`, not `*.js`.
+    'the last of several rules to match is the one that ignores',
+    [
+      '*.js',
+      'a.js',
+      'b.*'
+    ],
+    {
+      'a.js': 1,
+      'b.js': 1,
+      'c.js': 1,
+      'd.css': 0
+    }
+  ],
+
+  [
     '"/**" ignores every path',
     [
       '/**'

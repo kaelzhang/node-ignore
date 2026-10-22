@@ -50,8 +50,9 @@ declare namespace ignore {
      */
     unignored: boolean
     /**
-     * The rule that ignores the pathname. Present exactly when `ignored` is
-     *   true.
+     * The rule that ignores the pathname, or the parent directory it is
+     *   ignored with: the last rule to match, which is the rule
+     *   `git check-ignore -v` reports. Present exactly when `ignored` is true.
      */
     rule?: IgnoreRule
   }
