@@ -1433,6 +1433,23 @@ const cases = [
   ],
 
   [
+    // A trailing run excludes what is inside the directory and not the
+    //   directory itself, as `a/**` does, so a file inside can still be
+    //   re-included. Were the directory excluded, `!a/keep` could not bring
+    //   `a/keep` back.
+    'a trailing run of asterisks lets a file inside be re-included',
+    [
+      'a/***',
+      '!a/keep'
+    ],
+    {
+      'a/keep': 0,
+      'a/other': 1,
+      'a/x/y': 1
+    }
+  ],
+
+  [
     '"**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo"',
     [
       '**/foo/bar'
