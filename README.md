@@ -475,13 +475,30 @@ not in `git`. For ASCII paths and patterns there is no difference.
 code runs against a real repository, pass the value of the repository's
 `core.ignorecase` explicitly.
 
-### `***` and friends follow the documentation, not the binary
+### A run of asterisks
 
-gitignore(5) says a run of more than two asterisks is "considered regular
-asterisks". The `git` binary, however, strips the literal prefix of a
-pattern before matching, which makes patterns like `***/foo`, `a/***` and
-`a**/b` behave as `**` globstars there. `ignore` follows the documented
-behavior. If you need the globstar, write `**`.
+`git` reads a run of two or more asterisks as a globstar whenever the run
+fills a path segment: it starts the pattern or follows a `/`, and it ends
+the pattern or comes before a `/`. `ignore` does the same, so `***/foo`,
+`a/***` and `a/***/b` behave exactly as `**/foo`, `a/**` and `a/**/b`.
+
+`git` takes two more cases as a globstar, and `ignore` does not:
+
+- **A run right after a literal prefix**, as in `a**/b` or `a***/b`. Before
+  matching, `git` strips the part of a pattern that holds no wildcard, and
+  the run then starts what is left. gitignore(5) lists the positions where
+  `**` is special and calls every other run "regular asterisks", which is
+  what `ignore` does here.
+- **A run next to an escaped slash**, as in `**\/b` or `x\/**/b`.
+
+```js
+ignore().add('a**/b').ignores('axy/z/b')   // false;  git: true
+ignore().add('**\\/b').ignores('x/y/b')    // false;  git: true
+ignore().add('x\\/**/b').ignores('x/y/z/b') // false;  git: true
+```
+
+To get a globstar in either case, give the run a segment of its own, such as
+`a*/**/b`.
 
 ### `checkIgnore()` and a directory passed with a trailing slash
 

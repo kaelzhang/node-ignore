@@ -336,6 +336,28 @@ _test('options.allowRelativePaths = false (default value)', t => {
   t.end()
 })
 
+// A trailing run of three or more asterisks is a globstar, as `a/**` is, so it
+// does not exclude the directory itself when walking. This cannot be a fixture:
+// a fixture path is also checked through `checkIgnore()`, and there
+// `git check-ignore -- a/` does match `a/` itself (see the README on a
+// trailing slash), so one expectation can not stand for both.
+_test('a trailing run of asterisks spares the directory, as "/**" does', t => {
+  ['a/***', 'a/****'].forEach(pattern => {
+    const ig = ignore().add(pattern)
+
+    t.equal(ig.ignores('a/'), false, `${pattern} spares a/`)
+    t.equal(ig.test('a/').ignored, false, `${pattern} test() spares a/`)
+    t.equal(ig.ignores('a/x'), true, `${pattern} ignores what is inside`)
+    t.equal(
+      ig.ignores('a/'),
+      ignore().add('a/**').ignores('a/'),
+      `${pattern} agrees with a/**`
+    )
+  })
+
+  t.end()
+})
+
 // A pattern can hold many wildcards in one segment, and matching a path that
 // never satisfies it should still take time in proportion to the path, not to
 // the number of wildcards. The budget sits far above a linear match and far

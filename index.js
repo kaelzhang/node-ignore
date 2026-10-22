@@ -423,10 +423,15 @@ const REPLACERS = [
     ESCAPE + SPACE
   ],
 
-  // A path segment made of three or more asterisks is read as `**`.
-  // Git does the same: a run of asterisks that spans a whole segment
-  //   matches like a single globstar, so `***/foo` is the same as `**/foo`.
+  // git's wildmatch() reads a run of two or more asterisks as one globstar
+  //   whenever the run fills a path segment: it starts the pattern or follows
+  //   a `/`, and it ends the pattern or comes before a `/`. A run of two is
+  //   already `**`; a longer one is folded into `**` here, so the steps
+  //   below only ever have to know `**`.
   // `***/foo` -> `**/foo`, `a/***/b` -> `a/**/b`, `a/***` -> `a/**`
+  // git also takes a run beside a literal prefix (`a***/b`) or beside an
+  //   escaped slash (`***\/b`) as a globstar, and this does not; the README
+  //   lists both, under "A run of asterisks".
   [
     /(^|\/)\*{3,}(?=\/|$)/g,
     (_, start) => `${start}**`,
