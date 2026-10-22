@@ -423,6 +423,16 @@ const REPLACERS = [
     ESCAPE + SPACE
   ],
 
+  // A path segment made of three or more asterisks is read as `**`.
+  // Git does the same: a run of asterisks that spans a whole segment
+  //   matches like a single globstar, so `***/foo` is the same as `**/foo`.
+  // `***/foo` -> `**/foo`, `a/***/b` -> `a/**/b`, `a/***` -> `a/**`
+  [
+    /(^|\/)\*{3,}(?=\/|$)/g,
+    (_, start) => `${start}**`,
+    '*'
+  ],
+
   // Escape metacharacters
   // which is written down by users but means special for regular expressions.
 

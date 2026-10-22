@@ -1410,6 +1410,29 @@ const cases = [
   ],
 
   [
+    'a segment of three or more asterisks behaves as "**"',
+    [
+      '***/foo',
+      'a/****',
+      'b/***/c'
+    ],
+    {
+      'foo': 1,
+      'x/foo': 1,
+      'x/y/foo': 1,
+      'xfoo': 0,
+      'x/xfoo': 0,
+      'a/x': 1,
+      'a/x/y': 1,
+      'a': 0,
+      'b/c': 1,
+      'b/x/c': 1,
+      'b/x/y/c': 1,
+      'b/x': 0
+    }
+  ],
+
+  [
     '"**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo"',
     [
       '**/foo/bar'
