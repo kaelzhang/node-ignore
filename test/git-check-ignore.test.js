@@ -76,14 +76,14 @@ const mapObjectRule = rule =>
     ? rule
     : rule.pattern
 
+const toGitignore = rules => typeof rules === 'string'
+  ? rules
+  : rules.map(mapObjectRule).join('\n')
+
 const getNativeGitIgnoreResults = (rules, paths) => {
   const dir = createUniqueTmp()
 
-  const gitignore = typeof rules === 'string'
-    ? rules
-    : rules.map(mapObjectRule).join('\n')
-
-  touch(dir, '.gitignore', gitignore)
+  touch(dir, '.gitignore', toGitignore(rules))
 
   paths.forEach((p, i) => {
     if (p === '.gitignore') {
@@ -123,10 +123,8 @@ const getNativeGitIgnoreResults = (rules, paths) => {
     cwd: dir
   })
 
-  const lines = gitignore.split('\n')
-
-  // For every path, the line of the rule `git check-ignore -v` reports when
-  //   that rule ignores the path, or `undefined` when the path is not ignored.
+  // For every path, what `git check-ignore -v` prints when a rule ignores
+  //   the path, or `undefined` when the path is not ignored.
   const reported = Object.create(null)
 
   paths.forEach(p => {
@@ -164,9 +162,8 @@ const getNativeGitIgnoreResults = (rules, paths) => {
 
     debug('git check-ignore -v %s: %j -> ignored: %s', p, out, ignored)
 
-    // git drops the line's trailing CR
     reported[p] = ignored
-      ? lines[linenum - 1].replace(/\r$/, '')
+      ? `${source}:${linenum}:${pattern}\t${p}`
       : UNDEFINED
   })
 
@@ -176,8 +173,70 @@ const getNativeGitIgnoreResults = (rules, paths) => {
 const notIgnored = reported => Object.keys(reported)
 .filter(p => reported[p] === UNDEFINED)
 
-// The pattern of a rule, as the line of the .gitignore it stands for
-const lineOf = rule => rule.pattern.replace(/[\r\n]+$/, '')
+// The rules of a .gitignore, each marked with its line number, the way
+//   README's `.checkIgnore()` example adds them
+const addLines = rules => ignore().add(
+  toGitignore(rules)
+  .split('\n')
+  .map((pattern, index) => ({
+    pattern,
+    mark: String(index + 1)
+  }))
+)
+
+// git's `trim_trailing_spaces()` (dir.c): the trailing spaces go, unless a
+//   backslash quotes one, and a backslash quotes whatever follows it
+const trimTrailingSpaces = line => {
+  let lastSpace = - 1
+
+  for (let i = 0; i < line.length; i ++) {
+    const char = line[i]
+
+    if (char === ' ') {
+      if (lastSpace < 0) {
+        lastSpace = i
+      }
+    } else {
+      if (char === '\\') {
+        i ++
+
+        if (i === line.length) {
+          return line
+        }
+      }
+
+      lastSpace = - 1
+    }
+  }
+
+  return lastSpace < 0
+    ? line
+    : line.slice(0, lastSpace)
+}
+
+// A pattern as `git check-ignore -v` prints it: git reads a .gitignore
+//   without the BOM it starts with, and each line without its CR and trailing
+//   spaces. Doing the same is left to whoever prints, as here.
+const printed = rule => {
+  const line = rule.mark === '1'
+    ? rule.pattern.replace(/^\uFEFF/, '')
+    : rule.pattern
+
+  return trimTrailingSpaces(line.replace(/\r$/, ''))
+}
+
+// What README's `.checkIgnore()` example prints for a path a rule ignores,
+//   which is what `git check-ignore -v` prints for it
+const verbose = (ig, p) => {
+  const {
+    ignored,
+    rule
+  } = ig.checkIgnore(p)
+
+  return ignored
+    ? `.gitignore:${rule.mark}:${printed(rule)}\t${p}`
+    : UNDEFINED
+}
 
 checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
   description,
@@ -203,20 +262,13 @@ checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
 
     expect_result(t, notIgnored(reported).sort())
 
-    // `.checkIgnore()` names the rule `git check-ignore -v` reports
-    const ig = ignore().add(patterns)
+    const ig = addLines(patterns)
 
     paths.forEach(p => {
-      if (reported[p] === UNDEFINED) {
-        return
-      }
-
-      const {rule} = ig.checkIgnore(p)
-
       t.equal(
-        rule && lineOf(rule),
+        verbose(ig, p),
         reported[p],
-        `path: "${p}" is ignored by the rule git reports`
+        `path: "${p}": the same line as git check-ignore -v`
       )
     })
 
