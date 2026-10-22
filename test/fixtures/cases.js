@@ -1459,6 +1459,44 @@ const cases = [
   ],
 
   [
+    '"/**" matches every path, as "**" does',
+    [
+      '*',
+      '!/**'
+    ],
+    {
+      'a': 0,
+      'b/c': 0,
+      'b/d/e': 0
+    }
+  ],
+
+  [
+    '"/***" matches every path, as "/**" does',
+    [
+      'b/**',
+      '!/***'
+    ],
+    {
+      'a': 0,
+      'b/c': 0,
+      'b/d/e': 0
+    }
+  ],
+
+  [
+    '"/**" ignores every path',
+    [
+      '/**'
+    ],
+    {
+      'a': 1,
+      'b/c': 1,
+      'b/d/e': 1
+    }
+  ],
+
+  [
     '"**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo"',
     [
       '**/foo/bar'

@@ -15,6 +15,8 @@ const ESCAPE = '\\'
 const REGEX_LITERAL_SPECIAL = /[.*+?()[\]{}^$|\\/]/
 const BOM = '\uFEFF'
 const REGEX_INVALID_TRAILING_BACKSLASH = /(?:[^\\]|^)\\$/
+// A run of two or more asterisks is a globstar (#175)
+const REGEX_ANCHORED_GLOBSTAR = /^\/\*{2,}$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
 const REGEX_SPLITALL_CRLF = /\r?\n/g
@@ -1152,6 +1154,13 @@ const createRule = ({
   //   would compile to a regex matching every path.
   if (!body) {
     return
+  }
+
+  // `/**` matches every path, as `**` does. The translation below only finds
+  //   a globstar beside a slash it keeps, and the leading one is turned into
+  //   an anchor, so `/**` would come out as `/*` and match one level only.
+  if (REGEX_ANCHORED_GLOBSTAR.test(body)) {
+    body = '**'
   }
 
   body = body
