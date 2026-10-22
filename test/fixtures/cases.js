@@ -643,9 +643,12 @@ const cases = [
   [
     'POSIX character classes: [[:alpha:]] and friends',
     [
+      // A class name is looked up in a table, so a coverage report can not
+      //   tell a wrong expansion from a right one: every class needs a row.
       'alnum[[:alnum:]]x',
       'alpha[[:alpha:]]x',
       'blank[[:blank:]]x',
+      'cntrl[[:cntrl:]]x',
       'digit[[:digit:]]x',
       'graph[[:graph:]]x',
       'lower[[:lower:]]x',
@@ -662,6 +665,11 @@ const cases = [
       'alpha0x': 0,
       'blank x': 1,
       'blank-x': 0,
+      'cntrl\u0001x': 1,
+      'cntrl\u001fx': 1,
+      'cntrl\u007fx': 1,
+      'cntrl x': 0,
+      'cntrlax': 0,
       'digit0x': 1,
       'digitzx': 0,
       'graph-x': 1,
@@ -717,14 +725,17 @@ const cases = [
     'negated POSIX class',
     [
       'neg[![:digit:]]x',
-      'caret[^[:digit:]]x'
+      'caret[^[:digit:]]x',
+      'cntrl[![:cntrl:]]x'
     ],
     {
       'neg0x': 0,
       'negzx': 1,
       'neg-x': 1,
       'caret0x': 0,
-      'caretzx': 1
+      'caretzx': 1,
+      'cntrlax': 1,
+      'cntrl\u0001x': 0
     }
   ],
   [

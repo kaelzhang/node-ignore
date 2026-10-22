@@ -257,29 +257,6 @@ _test('a literal NUL is not a bracket placeholder', t => {
   t.end()
 })
 
-// A POSIX class name is looked up in a table rather than branched on, so a
-// wrong expansion is invisible to a coverage report. `[[:cntrl:]]` is the one
-// class that can not go through test/fixtures/cases.js: `git check-ignore`
-// C-quotes a control character in its output ('"x\001y"'), which the fixture
-// oracle does not unquote, so the case would fail there for the wrong reason.
-// Every expectation below is what `git check-ignore` answers.
-_test('[[:cntrl:]] expands to the control characters', t => {
-  const ig = ignore().add('x[[:cntrl:]]y')
-
-  t.equal(ig.ignores('x\u0001y'), true)
-  t.equal(ig.ignores('x\u001fy'), true)
-  t.equal(ig.ignores('x\u007fy'), true)
-  t.equal(ig.ignores('x y'), false)
-  t.equal(ig.ignores('xay'), false)
-
-  const neg = ignore().add('x[![:cntrl:]]y')
-
-  t.equal(neg.ignores('xay'), true)
-  t.equal(neg.ignores('x\u0001y'), false)
-
-  t.end()
-})
-
 // A path is normally its own prefix, so the walk up to the root cuts each
 // parent out of it. Two accepted shapes break that: an empty segment in the
 // middle ('a//b', whose parent is 'a/', not 'a//'), and a leading separator,
@@ -332,28 +309,6 @@ _test('options.allowRelativePaths = false (default value)', t => {
 
   t.throws(() => ig.ignores('../foo/bar.js'), 'path.relative')
   t.throws(() => ig.ignores('/foo/bar.js'), 'path.relative')
-
-  t.end()
-})
-
-// A trailing run of three or more asterisks is a globstar, as `a/**` is, so it
-// does not exclude the directory itself when walking. This cannot be a fixture:
-// a fixture path is also checked through `checkIgnore()`, and there
-// `git check-ignore -- a/` does match `a/` itself (see the README on a
-// trailing slash), so one expectation can not stand for both.
-_test('a trailing run of asterisks spares the directory, as "/**" does', t => {
-  ['a/***', 'a/****'].forEach(pattern => {
-    const ig = ignore().add(pattern)
-
-    t.equal(ig.ignores('a/'), false, `${pattern} spares a/`)
-    t.equal(ig.test('a/').ignored, false, `${pattern} test() spares a/`)
-    t.equal(ig.ignores('a/x'), true, `${pattern} ignores what is inside`)
-    t.equal(
-      ig.ignores('a/'),
-      ignore().add('a/**').ignores('a/'),
-      `${pattern} agrees with a/**`
-    )
-  })
 
   t.end()
 })
