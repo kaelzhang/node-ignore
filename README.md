@@ -349,7 +349,11 @@ To tell the two situations apart, test the parent directories of the `pathname`,
 
 > new in 7.0.0
 
-Debugs gitignore / exclude files, which is equivalent to `git check-ignore -v`. Usually this method is used for other packages to implement the function of `git check-ignore -v` upon `node-ignore`
+Debugs gitignore / exclude files the way `git check-ignore -v` does. Usually this method is used for other packages to implement the function of `git check-ignore -v` upon `node-ignore`. Apart from the [known differences](#known-differences-from-git):
+
+- `ignored` is what `git check-ignore` answers for `target`.
+- When `ignored` is `true`, `rule` is the rule `git check-ignore -v` reports. Its `pattern` is the pattern as it was added, so trailing spaces that git trims are still there.
+- When the last pattern to match is a negative one, `git check-ignore -v` reports it, while `.checkIgnore()` returns `unignored: true` and no `rule`. For a directory passed with a trailing slash, `unignored` is also `true` when a negative pattern re-includes the directory itself, which `git check-ignore -v` does not report.
 
 - **target** `string` the target to test.
 
