@@ -1263,9 +1263,7 @@ const cases = [
       'cde   ': 0,
       'def': 1,
       'def ': 0
-    },
-    false,
-    true
+    }
   ],
   [
     'An optional prefix "!" which negates the pattern; any matching file excluded by a previous pattern will become included again',
@@ -1819,9 +1817,7 @@ const cases = [
     {
       'some/path/to/test/ignored.js': 1,
       'some/special/path/to/目录/test/ignored.js': 1
-    },
-    false,
-    true // git-check-ignore fails as git converts special chars to escaped unicode before printing
+    }
   ],
 
   [

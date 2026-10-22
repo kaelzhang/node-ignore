@@ -65,6 +65,8 @@ const debugSpawn = (...args) => {
   debug(out.output.toString())
 }
 
+const isGitBuiltin = filename => filename.indexOf('.git/') === 0
+
 const mapObjectRule = rule =>
   typeof rule === 'string'
     ? rule
@@ -81,6 +83,12 @@ const getNativeGitIgnoreResults = (rules, paths) => {
 
   paths.forEach((p, i) => {
     if (p === '.gitignore') {
+      return
+    }
+
+    // `git init` creates `.git/` itself, with the files a fixture asks
+    //   about; creating them first would hand `git init` a broken repository.
+    if (isGitBuiltin(p)) {
       return
     }
 
@@ -117,7 +125,13 @@ const getNativeGitIgnoreResults = (rules, paths) => {
     //   raw, NUL-terminated, with none of the C-quoting that would otherwise
     //   mangle a path holding a backslash, a tab or a non-ASCII character.
     // It insists on `--stdin`, so the path goes in the same way, NUL-ended.
+    //
+    // node-ignore matches case-insensitively by default, while a new
+    //   repository takes `core.ignorecase` from the file system it lives on,
+    //   so git is told to do as node-ignore does on every platform.
     const out = spawn('git', [
+      '-c',
+      'core.ignorecase=true',
       'check-ignore',
       '--no-index',
       '-z',
@@ -137,14 +151,11 @@ const getNativeGitIgnoreResults = (rules, paths) => {
   })
 }
 
-const notGitBuiltin = filename => filename.indexOf('.git/') !== 0
-
 checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
   description,
   patterns,
   skip_test_fixture,
   paths,
-  expected,
   expect_result
 }) => {
   if (
@@ -155,9 +166,6 @@ checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
     || IS_WINDOWS
     // `git check-ignore` could only handles non-empty filenames
     || !paths.some(Boolean)
-    // `git check-ignore` will by default ignore .git/ directory
-    // which `node-ignore` should not do as well
-    || !expected.every(notGitBuiltin)
   ) {
     return
   }
