@@ -870,6 +870,15 @@ const pinWildcards = source => {
 
 // @param {pattern}
 const makeRegexPrefix = pattern => {
+  // `/**` matches every path, as `**` does. The translation below only finds
+  //   a globstar beside a slash it keeps, and the leading one is turned into
+  //   an anchor, so `/**` would come out as `/*` and match one level only.
+  //   Here rather than in `createRule`, so that `checkSourceOf`, which
+  //   compiles `/**/` again without its trailing slash, gets it too.
+  if (REGEX_ANCHORED_GLOBSTAR.test(pattern)) {
+    pattern = '**'
+  }
+
   const {source, sources} = extractBrackets(pattern)
 
   const replaced = REPLACERS.reduce(
@@ -1154,13 +1163,6 @@ const createRule = ({
   //   would compile to a regex matching every path.
   if (!body) {
     return
-  }
-
-  // `/**` matches every path, as `**` does. The translation below only finds
-  //   a globstar beside a slash it keeps, and the leading one is turned into
-  //   an anchor, so `/**` would come out as `/*` and match one level only.
-  if (REGEX_ANCHORED_GLOBSTAR.test(body)) {
-    body = '**'
   }
 
   body = body

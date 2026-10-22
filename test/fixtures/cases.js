@@ -1497,6 +1497,37 @@ const cases = [
   ],
 
   [
+    // checkIgnore('abc/') matches `/**/` once more without its trailing
+    //   slash, as `/**`, which has to match every path there too.
+    'checkIgnore: a negated "/**/" re-includes "dir/"',
+    [
+      '**',
+      '!/**/'
+    ],
+    {
+      'abc/': 0,
+      'abc/sub/': 0
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
+    'checkIgnore: "/**/" ignores "dir/" that a later rule does not re-include',
+    [
+      '/***/',
+      '!/**/?bc'
+    ],
+    {
+      'abc/': 1
+    },
+    false,
+    false,
+    ['checkIgnore']
+  ],
+
+  [
     '"**/foo/bar" matches file or directory "bar" anywhere that is directly under directory "foo"',
     [
       '**/foo/bar'
