@@ -7,6 +7,7 @@ const ignore = require('..')
 const {
   cases,
   checkEnv,
+  displayPath,
   SHOULD_TEST_WINDOWS
 } = require('./fixtures/cases')
 
@@ -73,7 +74,7 @@ cases(({
       t.equal(
         ig.ignores(path),
         should_ignore,
-        `path: "${path}" should ${not}be ignored`
+        `path: ${displayPath(path)} should ${not}be ignored`
       )
     })
     t.end()
@@ -91,7 +92,7 @@ cases(({
       t.equal(
         ignored,
         should_ignore,
-        `path: "${path}" should ${not}be ignored`
+        `path: ${displayPath(path)} should ${not}be ignored`
       )
     })
     t.end()

@@ -11,6 +11,7 @@ const {
   debug,
   cases,
   checkEnv,
+  displayPath,
   IS_WINDOWS
 } = require('./fixtures/cases')
 
@@ -268,7 +269,7 @@ checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
       t.equal(
         verbose(ig, p),
         reported[p],
-        `path: "${p}": the same line as git check-ignore -v`
+        `path: ${displayPath(p)}: the same line as git check-ignore -v`
       )
     })
 
