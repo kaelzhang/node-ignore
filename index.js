@@ -19,7 +19,7 @@ const REGEX_INVALID_TRAILING_BACKSLASH = /(?:[^\\]|^)\\$/
 const REGEX_ANCHORED_GLOBSTAR = /^\/\*{2,}$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
-const REGEX_SPLITALL_CRLF = /\r?\n/g
+const REGEX_SPLITALL_LF = /\n/g
 
 // Invalid:
 // - /foo,
@@ -1025,7 +1025,7 @@ const checkPattern = pattern => pattern
   && !REGEX_INVALID_TRAILING_BACKSLASH.test(pattern)
 
 const splitPattern = pattern => pattern
-.split(REGEX_SPLITALL_CRLF)
+.split(REGEX_SPLITALL_LF)
 
 class IgnoreRule {
   constructor (
@@ -1091,18 +1091,41 @@ class IgnoreRule {
   }
 }
 
-const isLineEnd = char => char === '\r' || char === '\n'
+// The LF before the blank line that `body` ends with at `end`, or -1: git
+//   reads a line as blank when it holds spaces only, once one CR is gone.
+//   Past the start, `body[- 1]` is undefined and matches nothing.
+const lfBeforeBlankLine = (body, end) => {
+  if (body[end - 1] === '\r') {
+    end --
+  }
 
-// Drop a line terminator, which can remain when patterns are passed as an
-//   array, and then the trailing spaces. Git trims spaces only, and a space
-//   escaped by an odd run of backslashes stays, unescaped, as the last one.
+  while (body[end - 1] === SPACE) {
+    end --
+  }
+
+  return body[end - 1] === '\n'
+    ? end - 1
+    : - 1
+}
+
+// Read a line the way git does: drop the blank lines a pattern passed in an
+//   array can still end with, along with the LF before each, then one CR,
+//   then the trailing spaces. Git trims spaces only, and a space escaped by
+//   an odd run of backslashes stays, unescaped, as the last one.
 // Scanned from the end: a regular expression can only try each start in
 //   turn, which is quadratic over a long run of spaces or backslashes.
 // 'a  ' -> 'a';  'a\ ' -> 'a ';  'a\\ ' -> 'a\\';  'a\t' -> 'a\t'
+// 'a\r\n' -> 'a';  'a\r\r' -> 'a\r';  'a\n\r' -> 'a'
 const trimEnd = body => {
   let end = body.length
+  let lf = lfBeforeBlankLine(body, end)
 
-  while (end && isLineEnd(body[end - 1])) {
+  while (lf >= 0) {
+    end = lf
+    lf = lfBeforeBlankLine(body, end)
+  }
+
+  if (end && body[end - 1] === '\r') {
     end --
   }
 

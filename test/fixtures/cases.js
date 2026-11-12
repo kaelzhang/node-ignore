@@ -2210,6 +2210,53 @@ lineTerminators.forEach(char => {
 if (!SHOULD_TEST_WINDOWS) {
   cases.push(
     [
+      // git drops one CR before each LF, and then the trailing spaces
+      'a line loses only its last CR, as git reads it',
+      'a\r\r\nb\r \r\nc \r\nd\r',
+      {
+        'a': 0,
+        'a\r': 1,
+        'b': 0,
+        'b\r': 1,
+        'c': 1,
+        'c\r': 0,
+        'd': 1,
+        'd\r': 0
+      }
+    ],
+    [
+      'a pattern passed in an array loses only its last CR',
+      [
+        'a\r\r',
+        'b\r\r\n'
+      ],
+      {
+        'a': 0,
+        'a\r': 1,
+        'b': 0,
+        'b\r': 1
+      }
+    ],
+    [
+      'a pattern passed in an array may end with blank lines',
+      [
+        'a\n\r',
+        'b\n\n',
+        'c\r\n\r',
+        'd\n \r',
+        'e\r\n \n'
+      ],
+      {
+        'a': 1,
+        'b': 1,
+        'c': 1,
+        'd': 1,
+        'e': 1,
+        'a\r': 0,
+        'c\r': 0
+      }
+    ],
+    [
       'a BOM is dropped before a comment or a "!" is recognized',
       [
         '\uFEFF# x',
