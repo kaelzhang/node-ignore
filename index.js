@@ -581,7 +581,8 @@ const REPLACERS = [
     // 'abc.*/' -> go
     // 'abc.*'  -> skip this rule,
     //    coz trailing single wildcard will be handed by [trailing wildcard]
-    /(^|[^\\]+)(\\\*)+(?=.+)/g,
+    // `[\s\S]`, as a pattern can hold a line terminator other than LF
+    /(^|[^\\]+)(\\\*)+(?=[\s\S])/g,
 
     // '*.js' matches '.js'
     // '*.js' doesn't match 'abc'

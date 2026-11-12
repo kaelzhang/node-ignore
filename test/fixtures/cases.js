@@ -2191,6 +2191,20 @@ lineTerminators.forEach(char => {
       ['checkIgnore']
     ]
   )
+
+  // A line of a .gitignore can hold any line terminator but LF
+  if (char !== '\n') {
+    cases.push([
+      `a wildcard before ${label} in a pattern`,
+      `a*${char}b`,
+      {
+        [`a${char}b`]: 1,
+        [`ax${char}b`]: 1,
+        [`x/axy${char}b`]: 1,
+        [`ax${char}c`]: 0
+      }
+    ])
+  }
 })
 
 if (!SHOULD_TEST_WINDOWS) {
