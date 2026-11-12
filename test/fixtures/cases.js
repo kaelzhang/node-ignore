@@ -2139,6 +2139,60 @@ const cases = [
   ],
 ]
 
+// Line terminators are ordinary filename characters for wildcard matching.
+// Windows filenames cannot contain LF or CR, but can contain U+2028/U+2029.
+const lineTerminators = SHOULD_TEST_WINDOWS
+  ? ['\u2028', '\u2029']
+  : ['\n', '\r', '\u2028', '\u2029']
+lineTerminators.forEach(char => {
+  const label = `U+${char.charCodeAt(0).toString(16)}`
+
+  cases.push(
+    [
+      `a leading globstar matches a directory containing ${label}`,
+      '**/target.txt',
+      {
+        'target.txt': 1,
+        [`dir${char}name/target.txt`]: 1,
+        [`outer/dir${char}name/deep/target.txt`]: 1,
+        [`dir${char}name/other.txt`]: 0,
+        [`dir${char}name/target.txt.bak`]: 0
+      }
+    ],
+    [
+      `a trailing globstar matches paths containing ${label}`,
+      'root/**',
+      {
+        'root': 0,
+        [`root/file${char}name.txt`]: 1,
+        [`root/${char}`]: 1,
+        [`root/dir${char}name/`]: 1,
+        [`root/dir${char}name/deep/file.txt`]: 1,
+        [`other/file${char}name.txt`]: 0
+      }
+    ],
+    [
+      `a negated leading globstar re-includes paths containing ${label}`,
+      ['*.txt', '!**/keep.txt'],
+      {
+        [`dir${char}name/keep.txt`]: 0,
+        [`dir${char}name/drop.txt`]: 1,
+        [`dir${char}name/other.md`]: 0
+      }
+    ],
+    [
+      `checkIgnore matches a trailing globstar after re-including a directory containing ${label}`,
+      ['root/**', '!root/*/'],
+      {
+        [`root/dir${char}name/`]: 1
+      },
+      false,
+      false,
+      ['checkIgnore']
+    ]
+  )
+})
+
 if (!SHOULD_TEST_WINDOWS) {
   cases.push(
     [
@@ -2567,5 +2621,10 @@ exports.checkEnv = key => hasOnly
 
 exports.IS_WINDOWS = IS_WINDOWS
 exports.SHOULD_TEST_WINDOWS = SHOULD_TEST_WINDOWS
+
+// Keep line separators out of TAP assertion names.
+exports.displayPath = value => JSON.stringify(value)
+.replace(/\u2028/g, '\\u2028')
+.replace(/\u2029/g, '\\u2029')
 
 exports.debug = debug

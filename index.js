@@ -497,7 +497,8 @@ const REPLACERS = [
     /^\^*(?:\\\*\\\*\\\/)+/,
 
     // '**/foo' <-> 'foo'
-    () => '^(?:.*\\/)?',
+    // A directory name can contain a line terminator, which `.` excludes.
+    () => '^(?:[\\s\\S]*\\/)?',
     '*'
   ],
 
@@ -714,7 +715,7 @@ const replaceTrailingWildcard = (_, p1) => {
 const REGEX_REPLACE_TRAILING_DOUBLESTAR = /\uE001$/
 
 // 'abc/**' matches everything under 'abc', but not 'abc/' itself (#21)
-const replaceTrailingDoublestar = () => '.+(?=$|\\/$)'
+const replaceTrailingDoublestar = () => '[\\s\\S]+(?=$|\\/$)'
 
 const WILDCARD = '[^\\/]*'
 
@@ -932,7 +933,7 @@ const checkSourceOf = (body, prefix) => {
   return last === TRAILING_WILDCARD
     ? `${head}$`
     : last === TRAILING_DOUBLESTAR
-      ? `${head}.*$`
+      ? `${head}[\\s\\S]*$`
       : NEVER_MATCH
 }
 
