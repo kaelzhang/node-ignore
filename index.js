@@ -1482,6 +1482,10 @@ class Ignore {
   }
 
   checkIgnore (path) {
+    // Normalize Windows separators before deciding whether this is a literal
+    // directory query, and before matching it or walking its ancestors.
+    path = checkPath.convert(path)
+
     // If the path doest not end with a slash, `.ignores()` is much equivalent
     //   to `git check-ignore`
     if (path.charCodeAt(path.length - 1) !== SLASH_CODE) {
