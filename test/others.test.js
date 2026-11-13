@@ -288,6 +288,31 @@ _test('checkIgnore() takes a path a walk cannot cut up', t => {
   t.end()
 })
 
+if (SHOULD_TEST_WINDOWS) {
+  _test('checkIgnore() keeps rule details for Windows directory paths', t => {
+    const ig = ignore().add({pattern: 'foo/bar/*', mark: 'exclude'})
+    const expected = {
+      ignored: true,
+      unignored: false,
+      rule: {pattern: 'foo/bar/*', mark: 'exclude', negative: false}
+    }
+
+    t.same(ig.checkIgnore('foo\\bar\\'), expected)
+    t.same(ig.checkIgnore('foo\\bar/'), expected)
+    t.same(ig.checkIgnore('foo/bar/'), expected)
+
+    ig.add('!foo/bar/*')
+
+    const unignored = {ignored: false, unignored: true}
+
+    t.same(ig.checkIgnore('foo\\bar\\'), unignored)
+    t.same(ig.checkIgnore('foo\\bar/'), unignored)
+    t.same(ig.checkIgnore('foo/bar/'), unignored)
+
+    t.end()
+  })
+}
+
 _test('options.allowRelativePaths = true', t => {
   const ig = ignore({
     allowRelativePaths: true
