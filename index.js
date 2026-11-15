@@ -1025,7 +1025,6 @@ const checkPattern = pattern => pattern
 
 const splitPattern = pattern => pattern
 .split(REGEX_SPLITALL_CRLF)
-.filter(Boolean)
 
 class IgnoreRule {
   constructor (
@@ -1130,9 +1129,9 @@ const trimEnd = body => {
 const createRule = ({
   pattern,
   mark
-}, ignoreCase) => {
+}, ignoreCase, stripBOM) => {
   // Git drops a BOM before it reads the first line, so before anything else.
-  let body = pattern[0] === BOM
+  let body = stripBOM && pattern[0] === BOM
     ? pattern.slice(1)
     : pattern
 
@@ -1207,7 +1206,7 @@ class RuleManager {
     this._basenameCount = 0
   }
 
-  _add (pattern) {
+  _add (pattern, stripBOM) {
     // #32
     if (pattern && pattern[KEY_IGNORE]) {
       this._rules = this._rules.concat(pattern._rules._rules)
@@ -1223,7 +1222,7 @@ class RuleManager {
     }
 
     const rule = checkPattern(pattern.pattern)
-      && createRule(pattern, this._ignoreCase)
+      && createRule(pattern, this._ignoreCase, stripBOM)
 
     if (rule) {
       this._added = true
@@ -1241,12 +1240,17 @@ class RuleManager {
   // @param {Array<string> | string | Ignore} pattern
   add (pattern) {
     this._added = false
+    const isStringPattern = isString(pattern)
 
     makeArray(
-      isString(pattern)
+      isStringPattern
         ? splitPattern(pattern)
         : pattern
-    ).forEach(this._add, this)
+    ).forEach((line, index) => {
+      // Keep blank lines until here: only the first physical line can carry
+      //   a BOM. Independently supplied patterns retain their own BOM handling.
+      this._add(line, !isStringPattern || index === 0)
+    })
 
     if (this._added) {
       this._literalRules = UNDEFINED
