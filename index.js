@@ -369,6 +369,7 @@ const DIRECT = null
 // A separator at the beginning or in the middle of a pattern, as opposed to
 //   one at the very end.
 const REGEX_INNER_SLASH = /\/(?!$)/
+const WILDCARD = '[^\\/]*'
 
 // > If the pattern ends with a slash,
 // > it is removed for the purpose of the following description,
@@ -488,8 +489,7 @@ const REPLACERS = [
     /^\^*(?:\\\*\\\*\\\/)+/,
 
     // '**/foo' <-> 'foo'
-    // A directory name can contain a line terminator, which `.` excludes.
-    () => '^(?:[\\s\\S]*\\/)?',
+    () => '(?:^|\\/)',
     '*'
   ],
 
@@ -500,8 +500,8 @@ const REPLACERS = [
     // If starts with '**', adding a '^' to the regular expression also works
     DIRECT,
     (source, pattern) => {
-      // Nothing to anchor to, or already anchored
-      if (!source || source[0] === '^') {
+      // Nothing to anchor to, or already anchored (`^` or `(?:^|\/)`)
+      if (!source || source[0] === '^' || source[0] === '(') {
         return source
       }
 
@@ -572,20 +572,14 @@ const REPLACERS = [
     // 'abc.*/' -> go
     // 'abc.*'  -> skip this rule,
     //    coz trailing single wildcard will be handed by [trailing wildcard]
-    // `[\s\S]`, as a pattern can hold a line terminator other than LF
-    /(^|[^\\]+)(\\\*)+(?=[\s\S])/g,
+    /(^|[^\\])(?:\\\*)+(?!$)/g,
 
     // '*.js' matches '.js'
     // '*.js' doesn't match 'abc'
-    (_, p1, p2) => {
-      // 1.
-      // > An asterisk "*" matches anything except a slash.
-      // 2.
-      // > Other consecutive asterisks are considered regular asterisks
-      // > and will match according to the previous rules.
-      const unescaped = p2.replace(/\\\*/g, '[^\\/]*')
-      return p1 + unescaped
-    },
+    // 1. An asterisk "*" matches anything except a slash.
+    // 2. Other consecutive asterisks are considered regular asterisks
+    //    and collapse into one non-slash wildcard run.
+    (_, p1) => p1 + WILDCARD,
     '*'
   ],
 
@@ -706,10 +700,10 @@ const replaceTrailingWildcard = (_, p1) => {
 
 const REGEX_REPLACE_TRAILING_DOUBLESTAR = /\uE001$/
 
-// 'abc/**' matches everything under 'abc', but not 'abc/' itself (#21)
-const replaceTrailingDoublestar = () => '[\\s\\S]+(?=$|\\/$)'
-
-const WILDCARD = '[^\\/]*'
+// 'abc/**' matches everything under 'abc', but not 'abc/' itself (#21):
+//   requiring one arbitrary character (line terminators included, #176)
+//   after 'abc/' is necessary and sufficient for `.test(path)`.
+const replaceTrailingDoublestar = () => '[\\s\\S]'
 
 // The fixed piece between the wildcard at `at` and the next wildcard of the
 //   run: the tokens that separate them, joined as they appear in the source.
@@ -925,7 +919,7 @@ const checkSourceOf = (body, prefix) => {
   return last === TRAILING_WILDCARD
     ? `${head}$`
     : last === TRAILING_DOUBLESTAR
-      ? `${head}[\\s\\S]*$`
+      ? head
       : NEVER_MATCH
 }
 
@@ -1143,10 +1137,13 @@ const trimEnd = (body, stripLineEnd) => {
     : body.slice(0, end)
 }
 
-const createRule = ({
+const createRule = (
   pattern,
-  mark
-}, ignoreCase, stripLineEnd, stripBOM) => {
+  mark,
+  ignoreCase,
+  stripLineEnd,
+  stripBOM
+) => {
   // Git drops a BOM before it reads the first line, so before anything else.
   let body = stripBOM && pattern[0] === BOM
     ? pattern.slice(1)
@@ -1237,14 +1234,19 @@ class RuleManager {
       return
     }
 
-    if (isString(pattern)) {
-      pattern = {
-        pattern
-      }
-    }
+    const isStr = isString(pattern)
+    const raw = isStr
+      ? pattern
+      : pattern.pattern
 
-    const rule = checkPattern(pattern.pattern)
-      && createRule(pattern, this._ignoreCase, !this._split, stripBOM)
+    const rule = checkPattern(raw)
+      && createRule(
+        raw,
+        isStr ? UNDEFINED : pattern.mark,
+        this._ignoreCase,
+        !this._split,
+        stripBOM
+      )
 
     if (rule) {
       this._added = true
