@@ -4,7 +4,14 @@
 //   reported relative to it. With a single subject there is nothing to
 //   compare against and only absolute figures are shown.
 
+const {median, deviation} = require('./runner')
+
 const NOISE_FLOOR = 1
+// Consistency factor turning a median absolute deviation into a robust
+//   standard-deviation equivalent under normality (1 / Phi^-1(0.75)).
+const MAD_SCALE = 1.4826
+
+const mad = numbers => deviation(numbers, median(numbers))
 
 const formatTime = ns => {
   if (ns < 1000) {
@@ -33,8 +40,8 @@ const describe = (percent, noisy) => {
     : `${formatSigned(percent)} slower`
 }
 
-// How much a subject's own samples wobbled, as a percentage of its median.
-// A delta smaller than the combined wobble of both subjects is not a result.
+// How much a subject's own samples wobbled, as a percentage of its median;
+//   also used as the fallback noise band when paired round deltas are absent.
 const spread = result => result.nsPerCall
   ? result.deviation / result.nsPerCall * 100
   : 0
@@ -44,17 +51,33 @@ const analyse = comparison => comparison.map(entry => {
 
   return Object.assign({}, entry, {
     results: entry.results.map((result, index) => {
+      const hasPaired = index !== 0
+        && Array.isArray(result.pairedDeltas)
+        && result.pairedDeltas.length > 0
+
       const percent = index === 0 || !reference.nsPerCall
         ? 0
-        : (result.nsPerCall - reference.nsPerCall) / reference.nsPerCall * 100
+        : hasPaired
+          ? median(result.pairedDeltas)
+          : (result.nsPerCall - reference.nsPerCall) / reference.nsPerCall * 100
 
-      const noise = spread(reference) + spread(result) + NOISE_FLOOR
+      // Paired rounds cancel machine-wide drift instead of inflating both
+      //   marginal spreads; inter-block spread guards against process-level
+      //   variance across worker generations.
+      const pairedNoise = hasPaired
+        ? Math.max(
+          mad(result.pairedDeltas) * MAD_SCALE,
+          result.blockDeltas && result.blockDeltas.length > 1
+            ? mad(result.blockDeltas) * MAD_SCALE * 2
+            : 0
+        ) + NOISE_FLOOR
+        : spread(reference) + spread(result) + NOISE_FLOOR
 
       return Object.assign({}, result, {
         percent,
         spread: spread(result),
         isReference: index === 0,
-        noisy: index !== 0 && Math.abs(percent) < noise
+        noisy: index !== 0 && Math.abs(percent) < pairedNoise
       })
     })
   })

@@ -8,6 +8,37 @@
 // Everything here is deterministic. No `Math.random()`, so two runs on the
 //   same machine differ only by the machine.
 
+const fs = require('fs')
+const path = require('path')
+const vm = require('vm')
+const Module = require('module')
+
+// Load an isolated copy of `subjectPath` with Windows path handling turned on,
+//   without mutating the main `ignore` module that POSIX suites share.
+const loadWin32Ignore = subjectPath => {
+  const code = fs.readFileSync(subjectPath, 'utf8')
+  const sandboxModule = {exports: {}}
+  const compiled = vm.runInThisContext(Module.wrap(code), {
+    filename: subjectPath
+  })
+
+  compiled(
+    sandboxModule.exports,
+    require,
+    sandboxModule,
+    subjectPath,
+    path.dirname(subjectPath)
+  )
+
+  const setup = sandboxModule.exports[Symbol.for('setupWindows')]
+
+  if (typeof setup === 'function') {
+    setup()
+  }
+
+  return sandboxModule.exports
+}
+
 // GitHub's `Node.gitignore` template, which is what most JavaScript projects
 //   actually start from.
 const TYPICAL = `
@@ -172,7 +203,25 @@ const WORKING_SET = 2000
 
 const WALK = DISTINCT.slice(0, WORKING_SET)
 
-const WALK_DIRECTORIES = WALK.map(path => `${path}/`)
+const WALK_DIRECTORIES = WALK.map(p => `${p}/`)
+
+const WALK_WIN32 = WALK.map(p => p.replace(/\//g, '\\'))
+
+// Multi-line CRLF `.gitignore` content with blank lines, matching README's
+//   `add(fs.readFileSync('.gitignore').toString())` path on Windows checkouts.
+const LARGE_CRLF_STRING = `${LARGE.join('\r\n')}\r\n${'\r\n'.repeat(100)}`
+
+// Leading, middle and trailing globstars, which modern monorepos use heavily
+//   and which `TYPICAL` does not exercise at all.
+const GLOBSTAR_RULES = [
+  '**/node_modules/**',
+  '**/.DS_Store',
+  '**/dist/**',
+  'src/**/test/**',
+  'packages/**/coverage/**',
+  '*.log',
+  '!src/keep.log'
+]
 
 // [pattern, path] pairs, each a few hundred to a few thousand characters of
 //   what makes a regex chain or a compiled regex do the most work per
@@ -229,10 +278,15 @@ const recycle = (ignore, patterns) => {
 //   spread of these suites from +/-13% down to a couple of percent.
 const walk = (fresh, paths) => () => {
   const ig = fresh()
+  let hits = 0
 
   for (let i = 0; i < paths.length; i ++) {
-    ig.ignores(paths[i])
+    if (ig.ignores(paths[i])) {
+      hits ++
+    }
   }
+
+  return hits
 }
 
 // A suite is `{name, description, unit, weight, setup}`, where `setup(ignore)`
@@ -264,15 +318,29 @@ const suites = [
   },
 
   {
+    name: 'compile/crlf-string',
+    description: 'add() a 955 line CRLF .gitignore string with blank lines',
+    unit: 'pattern',
+    weight: LARGE.length,
+    setup: ignore => ({
+      run: () => ignore().add(LARGE_CRLF_STRING)
+    })
+  },
+
+  {
     name: 'compile/per-directory',
     description: 'five small .gitignore files, the way git reads them',
     unit: 'file',
     weight: PER_DIRECTORY.length,
     setup: ignore => ({
       run: () => {
+        let last = null
+
         for (let i = 0; i < PER_DIRECTORY.length; i ++) {
-          ignore().add(PER_DIRECTORY[i])
+          last = ignore().add(PER_DIRECTORY[i])
         }
+
+        return last
       }
     })
   },
@@ -288,6 +356,16 @@ const suites = [
   },
 
   {
+    name: 'match/globstar',
+    description: '2k distinct paths against leading/middle/trailing globstars',
+    unit: 'path',
+    weight: WORKING_SET,
+    setup: ignore => ({
+      run: walk(recycle(ignore, GLOBSTAR_RULES), WALK)
+    })
+  },
+
+  {
     name: 'match/repeat',
     description: '20k lookups over 266 paths, cache hits after the first pass',
     unit: 'path',
@@ -295,13 +373,19 @@ const suites = [
     setup: ignore => {
       const ig = ready(ignore, TYPICAL)
 
-      REPO_PATHS.forEach(path => ig.ignores(path))
+      REPO_PATHS.forEach(p => ig.ignores(p))
 
       return {
         run: () => {
+          let hits = 0
+
           for (let i = 0; i < 20000; i ++) {
-            ig.ignores(REPO_PATHS[i % REPO_PATHS.length])
+            if (ig.ignores(REPO_PATHS[i % REPO_PATHS.length])) {
+              hits ++
+            }
           }
+
+          return hits
         }
       }
     }
@@ -336,7 +420,7 @@ const suites = [
       const fresh = recycle(ignore, TYPICAL)
 
       return {
-        run: () => fresh().filter(WALK)
+        run: () => fresh().filter(WALK).length
       }
     }
   },
@@ -352,10 +436,15 @@ const suites = [
       return {
         run: () => {
           const ig = fresh()
+          let hits = 0
 
           for (let i = 0; i < WALK.length; i ++) {
-            ig.checkIgnore(WALK[i])
+            if (ig.checkIgnore(WALK[i]).ignored) {
+              hits ++
+            }
           }
+
+          return hits
         }
       }
     }
@@ -376,10 +465,41 @@ const suites = [
       return {
         run: () => {
           const ig = fresh()
+          let hits = 0
 
           for (let i = 0; i < WALK_DIRECTORIES.length; i ++) {
-            ig.checkIgnore(WALK_DIRECTORIES[i])
+            if (ig.checkIgnore(WALK_DIRECTORIES[i]).ignored) {
+              hits ++
+            }
           }
+
+          return hits
+        }
+      }
+    }
+  },
+
+  {
+    name: 'check-ignore/win32',
+    description: 'checkIgnore() over 2k distinct backslash paths (Windows mode)',
+    unit: 'path',
+    weight: WORKING_SET,
+    setup: (_, subjectPath) => {
+      const win32Ignore = loadWin32Ignore(subjectPath)
+      const fresh = recycle(win32Ignore, TYPICAL)
+
+      return {
+        run: () => {
+          const ig = fresh()
+          let hits = 0
+
+          for (let i = 0; i < WALK_WIN32.length; i ++) {
+            if (ig.checkIgnore(WALK_WIN32[i]).ignored) {
+              hits ++
+            }
+          }
+
+          return hits
         }
       }
     }
@@ -395,11 +515,17 @@ const suites = [
     weight: ADVERSARIAL.length,
     setup: ignore => ({
       run: () => {
-        for (let i = 0; i < ADVERSARIAL.length; i ++) {
-          const [pattern, path] = ADVERSARIAL[i]
+        let hits = 0
 
-          ignore().add(pattern).ignores(path)
+        for (let i = 0; i < ADVERSARIAL.length; i ++) {
+          const [pattern, p] = ADVERSARIAL[i]
+
+          if (ignore().add(pattern).ignores(p)) {
+            hits ++
+          }
         }
+
+        return hits
       }
     })
   },
@@ -412,7 +538,7 @@ const suites = [
     unit: 'path',
     weight: WORKING_SET,
     setup: ignore => ({
-      run: () => ignore().add(TYPICAL).filter(WALK)
+      run: () => ignore().add(TYPICAL).filter(WALK).length
     })
   }
 ]

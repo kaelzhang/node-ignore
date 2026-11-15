@@ -14,11 +14,17 @@
 //   over IPC: no shared call sites, and the machine's own drift still lands
 //   on both alike.
 
+const path = require('path')
 const {suites} = require('./suites')
 
-const ignore = require(process.argv[2])
+const subjectPath = path.resolve(process.argv[2])
+const ignore = require(subjectPath)
 
 const NS_PER_MS = 1e6
+
+// Retain every call's return value so V8 cannot eliminate pure work inside a
+//   hot loop once a suite's closures are inlined.
+let sink = null
 
 /* istanbul ignore next */
 const collect = typeof global.gc === 'function'
@@ -29,7 +35,7 @@ const takeSample = (run, batch) => {
   const started = process.hrtime.bigint()
 
   for (let i = 0; i < batch; i ++) {
-    run()
+    sink = run()
   }
 
   return Number(process.hrtime.bigint() - started) / batch
@@ -41,7 +47,7 @@ const warmUp = (run, warmupMs) => {
   const deadline = Date.now() + warmupMs
 
   while (Date.now() < deadline) {
-    run()
+    sink = run()
   }
 }
 
@@ -55,7 +61,7 @@ const calibrate = (run, targetMs) => {
     const started = process.hrtime.bigint()
 
     for (let i = 0; i < batch; i ++) {
-      run()
+      sink = run()
     }
 
     const elapsed = Number(process.hrtime.bigint() - started)
@@ -86,7 +92,7 @@ const commands = {
       throw new Error(`unknown suite "${suite}"`)
     }
 
-    const {run} = found.setup(ignore)
+    const {run} = found.setup(ignore, subjectPath)
 
     prepared = run
 
@@ -101,7 +107,8 @@ const commands = {
     collect()
 
     return {
-      nsPerCall: takeSample(prepared, batch)
+      nsPerCall: takeSample(prepared, batch),
+      retained: sink !== undefined
     }
   }
 }

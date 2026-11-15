@@ -54,15 +54,24 @@ const FLAGS = {
 }
 
 const NUMERIC = ['samples', 'blocks', 'targetMs', 'warmupMs', 'maxRegression']
+const POSITIVE = ['samples', 'blocks', 'targetMs']
 
-// A `NaN` from a mistyped flag would travel all the way into the timing loop,
-//   where it turns a bad argument into a hang rather than an error, so it is
-//   rejected here at the boundary instead.
-const toNumber = (flag, value) => {
+// A `NaN`, zero or negative count from a mistyped flag would travel into the
+//   timing or block loop and either divide by zero or hang, so reject it at
+//   the boundary.
+const toNumber = (flag, value, key) => {
   const number = Number(value)
+  const valid = value.trim() !== '' && Number.isFinite(number) && (
+    POSITIVE.indexOf(key) >= 0
+      ? number > 0
+      : number >= 0
+  )
 
-  if (!Number.isFinite(number)) {
-    throw new Error(`option "${flag}" needs a number, but got "${value}"`)
+  if (!valid) {
+    const kind = POSITIVE.indexOf(key) >= 0
+      ? 'a positive number'
+      : 'a non-negative number'
+    throw new Error(`option "${flag}" needs ${kind}, but got "${value}"`)
   }
 
   return number
@@ -92,7 +101,7 @@ const parse = argv => {
 
     options[key] = NUMERIC.indexOf(key) < 0
       ? value
-      : toNumber(arg, value)
+      : toNumber(arg, value, key)
   }
 
   return options
@@ -101,14 +110,15 @@ const parse = argv => {
 // A baseline is either a file that is already on disk, or a git ref whose
 //   `index.js` we materialise into a temporary file first. Either way what
 //   comes back is a path, because the worker that loads it lives in another
-//   process.
+//   process, plus a cleanup hook when a temporary directory was created.
 const loadBaseline = reference => {
   const asPath = path.resolve(ROOT, reference)
 
   if (fs.existsSync(asPath) && fs.statSync(asPath).isFile()) {
     return {
       name: path.relative(ROOT, asPath) || reference,
-      path: asPath
+      path: asPath,
+      cleanup: () => {}
     }
   }
 
@@ -117,16 +127,17 @@ const loadBaseline = reference => {
     maxBuffer: 1 << 26
   })
 
-  const file = path.join(
-    fs.mkdtempSync(path.join(os.tmpdir(), 'ignore-benchmark-')),
-    'baseline.js'
-  )
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ignore-benchmark-'))
+  const file = path.join(dir, 'baseline.js')
 
   fs.writeFileSync(file, source)
 
   return {
     name: reference,
-    path: file
+    path: file,
+    cleanup: () => {
+      fs.rmSync(dir, {recursive: true, force: true})
+    }
   }
 }
 
@@ -139,59 +150,68 @@ const main = async argv => {
   }
 
   const subjects = []
+  const baseline = options.baseline
+    ? loadBaseline(options.baseline)
+    : null
 
-  if (options.baseline) {
-    subjects.push(loadBaseline(options.baseline))
+  if (baseline) {
+    subjects.push(baseline)
   }
 
-  subjects.push({
-    name: subjects.length
-      ? 'working tree'
-      : 'index.js',
-    path: path.join(ROOT, 'index.js')
-  })
+  try {
+    subjects.push({
+      name: subjects.length
+        ? 'working tree'
+        : 'index.js',
+      path: path.join(ROOT, 'index.js')
+    })
 
-  const selected = options.filter
-    ? suites.filter(suite => suite.name.indexOf(options.filter) >= 0)
-    : suites
+    const selected = options.filter
+      ? suites.filter(suite => suite.name.indexOf(options.filter) >= 0)
+      : suites
 
-  if (!selected.length) {
-    throw new Error(`no suite matches "${options.filter}"`)
-  }
+    if (!selected.length) {
+      throw new Error(`no suite matches "${options.filter}"`)
+    }
 
-  const comparison = await compare(subjects, selected, {
-    samples: options.samples,
-    blocks: options.blocks,
-    targetMs: options.targetMs,
-    warmupMs: options.warmupMs
-  })
+    const comparison = await compare(subjects, selected, {
+      samples: options.samples,
+      blocks: options.blocks,
+      targetMs: options.targetMs,
+      warmupMs: options.warmupMs
+    })
 
-  const render = report[options.format]
+    const render = report[options.format]
 
-  if (!render) {
-    throw new Error(`unknown format "${options.format}"`)
-  }
+    if (!render) {
+      throw new Error(`unknown format "${options.format}"`)
+    }
 
-  process.stdout.write(`${render(comparison)}\n`)
+    process.stdout.write(`${render(comparison)}\n`)
 
-  const limit = options.maxRegression
+    const limit = options.maxRegression
 
-  if (!limit && limit !== 0) {
+    if (!limit && limit !== 0) {
+      return 0
+    }
+
+    const worst = report.worstRegression(comparison)
+
+    if (worst && worst.percent > limit) {
+      process.stderr.write(
+        `\nregression: "${worst.suite}" is ${worst.percent.toFixed(1)}% slower `
+        + `than the baseline, over the ${limit}% budget\n`
+      )
+
+      return 1
+    }
+
     return 0
+  } finally {
+    if (baseline) {
+      baseline.cleanup()
+    }
   }
-
-  const worst = report.worstRegression(comparison)
-
-  if (worst && worst.percent > limit) {
-    process.stderr.write(
-      `\nregression: "${worst.suite}" is ${worst.percent.toFixed(1)}% slower `
-      + `than the baseline, over the ${limit}% budget\n`
-    )
-
-    return 1
-  }
-
-  return 0
 }
 
 /* istanbul ignore next */

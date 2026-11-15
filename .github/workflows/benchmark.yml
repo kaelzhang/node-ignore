@@ -78,10 +78,13 @@ jobs:
           {
             echo '## Performance'
             echo
+            printf '_Node %s · %s_\n\n' \
+              "$(node -v)" \
+              "$(node -p 'os.cpus()[0]?.model || process.arch')"
             echo 'Each version runs in a worker process of its own, with'
-            echo 'samples interleaved between them, so the runner'"'"'s own drift'
-            echo 'affects both alike. A delta smaller than the two subjects'"'"''
-            echo 'combined sample spread is reported as `noise`, not a result.'
+            echo 'samples interleaved in paired rounds across fresh worker'
+            echo 'generations so the runner'"'"'s own drift cancels out. A paired'
+            echo 'delta smaller than the robust spread is reported as `noise`.'
             echo
             cat benchmark.md
           } > summary.md

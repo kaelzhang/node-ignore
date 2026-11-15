@@ -76,8 +76,8 @@ const deviation = (numbers, mid) =>
   median(numbers.map(n => Math.abs(n - mid)))
 
 // A worker, wrapped so the parent can await one request at a time.
-const spawn = subject => {
-  const child = fork(WORKER, [subject.path], {
+const spawn = (subject, index) => {
+  const child = fork(WORKER, [path.resolve(subject.path)], {
     // The worker settles the heap between samples when it can, so a
     //   collection is paid for outside the clock rather than inside whichever
     //   sample happened to trip it.
@@ -113,6 +113,7 @@ const spawn = subject => {
   })
 
   return {
+    index,
     name: subject.name,
 
     send (message) {
@@ -142,17 +143,25 @@ const sequentially = (items, step) => items.reduce(
 const measureBlock = async (workers, suite, samples, options) => {
   const {warmupMs, targetMs} = withDefaults(options)
 
-  // Every worker calibrates, and they then all use the largest batch any of
-  //   them asked for, so one sample is the same amount of work everywhere.
-  const prepared = await Promise.all(workers.map(worker => worker.send({
+  // Every worker calibrates one at a time -- running warmup and calibration in
+  //   parallel would make them contend for CPU boost and under-size `batch` --
+  //   and they then all use the largest batch any of them asked for, so one
+  //   sample is the same amount of work everywhere.
+  const prepared = []
+
+  await sequentially(workers, worker => worker
+  .send({
     type: 'prepare',
     suite: suite.name,
     warmupMs,
     targetMs
-  })))
+  })
+  .then(one => {
+    prepared.push(one)
+  }))
 
   const batch = Math.max(...prepared.map(one => one.batch))
-  const taken = new Map(workers.map(worker => [worker.name, []]))
+  const taken = workers.map(() => [])
 
   const rounds = Array.from({length: samples}, (_, round) => round)
 
@@ -166,30 +175,67 @@ const measureBlock = async (workers, suite, samples, options) => {
     return sequentially(order, worker => worker
     .send({type: 'sample', batch})
     .then(({nsPerCall}) => {
-      taken.get(worker.name).push(nsPerCall)
+      taken[worker.index].push(nsPerCall)
     }))
   })
 
   return taken
 }
 
-const summarise = (subjects, suite, collected) => ({
-  suite: suite.name,
-  description: suite.description,
-  weight: suite.weight || 1,
-  unit: suite.unit || 'op',
-  results: subjects.map(subject => {
-    const numbers = collected.get(subject.name)
-    const mid = median(numbers)
+const summarise = (subjects, suite, collected) => {
+  const referenceBlocks = collected[0] || []
 
-    return {
-      name: subject.name,
-      nsPerCall: mid,
-      deviation: deviation(numbers, mid),
-      samples: numbers.length
-    }
-  })
-})
+  return {
+    suite: suite.name,
+    description: suite.description,
+    weight: suite.weight || 1,
+    unit: suite.unit || 'op',
+    results: subjects.map((subject, index) => {
+      const subjectBlocks = collected[index]
+      const numbers = []
+
+      subjectBlocks.forEach(block => {
+        numbers.push(...block)
+      })
+
+      const mid = median(numbers)
+      let pairedDeltas = null
+      let blockDeltas = null
+
+      if (index > 0) {
+        pairedDeltas = []
+        blockDeltas = []
+
+        subjectBlocks.forEach((block, blockIndex) => {
+          const refBlock = referenceBlocks[blockIndex] || []
+          const roundDeltas = []
+
+          block.forEach((value, round) => {
+            const ref = refBlock[round]
+            if (ref > 0) {
+              const delta = (value - ref) / ref * 100
+              pairedDeltas.push(delta)
+              roundDeltas.push(delta)
+            }
+          })
+
+          if (roundDeltas.length) {
+            blockDeltas.push(median(roundDeltas))
+          }
+        })
+      }
+
+      return {
+        name: subject.name,
+        nsPerCall: mid,
+        deviation: deviation(numbers, mid),
+        samples: numbers.length,
+        pairedDeltas,
+        blockDeltas
+      }
+    })
+  }
+}
 
 // @param {Array<{name, path}>} subjects versions of index.js to compare
 // @param {Array<Suite>} suites see `suites.js`
@@ -198,10 +244,10 @@ const compare = async (subjects, suites, options) => {
   const {samples, blocks} = withDefaults(options)
   const perBlock = Math.max(1, Math.round(samples / blocks))
 
-  // suite name -> subject name -> every sample taken for it, all blocks
+  // suite name -> subject index -> array of per-block sample arrays
   const collected = new Map(suites.map(suite => [
     suite.name,
-    new Map(subjects.map(subject => [subject.name, []]))
+    subjects.map(() => [])
   ]))
 
   await sequentially(
@@ -216,7 +262,7 @@ const compare = async (subjects, suites, options) => {
             const into = collected.get(suite.name)
 
             workers.forEach(worker => {
-              into.get(worker.name).push(...taken.get(worker.name))
+              into[worker.index].push(taken[worker.index])
             })
           }))
       } finally {
