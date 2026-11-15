@@ -405,3 +405,33 @@ _test('a wildcard-heavy pattern matches in linear time', t => {
 
   t.end()
 })
+
+_test('a CRLF string keeps rule.pattern free of the line-ending CR (#176)', t => {
+  const ig = ignore().add('foo\r\nbar \r\na\r\r\nd\r')
+
+  t.equal(ig.checkIgnore('foo').rule.pattern, 'foo')
+  t.equal(ig.checkIgnore('bar').rule.pattern, 'bar ')
+  t.equal(ig.checkIgnore('a\r').rule.pattern, 'a\r')
+  t.equal(ig.checkIgnore('d').rule.pattern, 'd')
+
+  t.end()
+})
+
+_test('an unpaired trailing backslash adds no rule in any input form (#176)', t => {
+  const ig = ignore().add('kept')
+
+  t.equal(ig.ignores('kept'), true)
+
+  /* eslint no-underscore-dangle: ["off"] */
+  const ruleCount = ig._rules._rules.length
+  const cacheBefore = ig._ignoreCache
+
+  ig.add('one\\\r\n')
+  ig.add(['two\\\r\n'])
+  ig.add('three\\\\\\')
+
+  t.equal(ig._rules._rules.length, ruleCount)
+  t.equal(ig._ignoreCache, cacheBefore)
+
+  t.end()
+})

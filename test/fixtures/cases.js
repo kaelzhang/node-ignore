@@ -2331,6 +2331,19 @@ if (!SHOULD_TEST_WINDOWS) {
       }
     ],
     [
+      'an unclosed bracket range ending with an escaped final slash matches nothing (#176)',
+      [
+        '[0-\\/ ',
+        '[a\\/ '
+      ],
+      {
+        '0': 0,
+        '0/': 0,
+        'a': 0,
+        'a/': 0
+      }
+    ],
+    [
       '#155: quoted spaces and backslashes after a slash remain literal',
       [
         'bar/\\ ',

@@ -14,12 +14,11 @@ const ESCAPE = '\\'
 //   expression, so a literal one has to be escaped before it is emitted.
 const REGEX_LITERAL_SPECIAL = /[.*+?()[\]{}^$|\\/]/
 const BOM = '\uFEFF'
-const REGEX_INVALID_TRAILING_BACKSLASH = /(?:[^\\]|^)\\$/
 // A run of two or more asterisks is a globstar (#175)
 const REGEX_ANCHORED_GLOBSTAR = /^\/\*{2,}$/
 const REGEX_REPLACE_LEADING_EXCAPED_EXCLAMATION = /^\\!/
 const REGEX_REPLACE_LEADING_EXCAPED_HASH = /^\\#/
-const REGEX_SPLITALL_LF = /\n/g
+const REGEX_SPLITALL_CRLF = /\r?\n/g
 
 // Invalid:
 // - /foo,
@@ -150,13 +149,11 @@ const scanBracket = (pattern, start) => {
     }
 
     if (char === ESCAPE) {
-      const escaped = pattern[index + 1]
-      if (escaped === UNDEFINED) {
-        return null
-      }
+      // A pattern can not end on a lone backslash -- `createRule` has
+      //   already thrown it away -- so there is a character to read.
+      const escaped = pattern[++ index]
       body += escapeMember(escaped)
       prev = escaped
-      index ++
     } else if (
       char === '-'
       && prev
@@ -166,8 +163,6 @@ const scanBracket = (pattern, start) => {
       index ++
       let to = pattern[index]
       if (to === ESCAPE) {
-        // A pattern can not end on a lone backslash -- `checkPattern` has
-        //   already thrown it away -- so there is an upper bound to read.
         to = pattern[index += 1]
       }
       // An out-of-order range matches nothing in git but is a syntax error in
@@ -303,8 +298,7 @@ const extractBrackets = pattern => {
       //   replacers), `\[` (a literal bracket, the one `[` the bracket
       //   replacer still expects), and `\ ` (a quoted space, which one pass
       //   below rewrites in bulk -- holding each one aside instead costs more
-      //   on a pattern built out of them). A lone trailing backslash can reach
-      //   here after line-ending cleanup.
+      //   on a pattern built out of them).
       //
       // A quoted backslash is not among them. The chain doubles every
       //   backslash, then takes the doubling back out again, and a quoted one
@@ -313,10 +307,7 @@ const extractBrackets = pattern => {
       //   the literal it means, it never joins that run.
       const escaped = pattern[index + 1]
 
-      if (
-        escaped === UNDEFINED
-        || escaped === SLASH && index + 2 === length
-      ) {
+      if (escaped === SLASH && index + 2 === length) {
         // Git removes a final directory slash before matching. An escape
         //   without a character after that removal makes the pattern invalid.
         out += hold(NEVER_MATCH)
@@ -1018,14 +1009,19 @@ const parentOf = path => {
 
 const isString = subject => typeof subject === 'string'
 
-// Blank lines and comments are told by `createRule`, once the pattern is
-//   normalized.
+// Blank lines, comments and trailing lone backslashes are told by
+//   `createRule`, once the pattern is normalized.
 const checkPattern = pattern => pattern
   && isString(pattern)
-  && !REGEX_INVALID_TRAILING_BACKSLASH.test(pattern)
 
-const splitPattern = pattern => pattern
-.split(REGEX_SPLITALL_LF)
+// Git drops one CR before each LF, and one at the end of a final line that
+//   has no LF after it.
+const splitPattern = pattern => (
+  pattern[pattern.length - 1] === '\r'
+    ? pattern.slice(0, - 1)
+    : pattern
+)
+.split(REGEX_SPLITALL_CRLF)
 
 class IgnoreRule {
   constructor (
@@ -1091,57 +1087,54 @@ class IgnoreRule {
   }
 }
 
-// The LF before the blank line that `body` ends with at `end`, or -1: git
-//   reads a line as blank when it holds spaces only, once one CR is gone.
-//   Past the start, `body[- 1]` is undefined and matches nothing.
-const lfBeforeBlankLine = (body, end) => {
-  if (body[end - 1] === '\r') {
-    end --
+const hasTrailingBackslash = str => {
+  let count = 0
+
+  while (str[str.length - count - 1] === ESCAPE) {
+    count ++
   }
 
-  while (body[end - 1] === SPACE) {
-    end --
-  }
-
-  return body[end - 1] === '\n'
-    ? end - 1
-    : - 1
+  return count % 2 === 1
 }
 
-// Read a line the way git does: drop the blank lines a pattern passed in an
-//   array can still end with, along with the LF before each, then one CR,
-//   then the trailing spaces. Git trims spaces only, and a space escaped by
-//   an odd run of backslashes stays, unescaped, as the last one.
+// Read a line the way git does: when `stripLineEnd` is set (an unsplit array
+//   or object pattern), drop any trailing blank lines along with the LF
+//   before each and at most one CR at the end of the line; then trim trailing
+//   spaces in the same backward pass. Git trims spaces only, and a space
+//   escaped by an odd run of backslashes stays, unescaped, as the last one.
 // Scanned from the end: a regular expression can only try each start in
 //   turn, which is quadratic over a long run of spaces or backslashes.
 // 'a  ' -> 'a';  'a\ ' -> 'a ';  'a\\ ' -> 'a\\';  'a\t' -> 'a\t'
 // 'a\r\n' -> 'a';  'a\r\r' -> 'a\r';  'a\n\r' -> 'a'
-const trimEnd = body => {
-  let end = body.length
-  let lf = lfBeforeBlankLine(body, end)
+const trimEnd = (body, stripLineEnd) => {
+  let lineEnd = body.length
+  let end
 
-  while (lf >= 0) {
-    end = lf
-    lf = lfBeforeBlankLine(body, end)
-  }
+  for (;;) {
+    if (stripLineEnd && body[lineEnd - 1] === '\r') {
+      lineEnd --
+    }
 
-  if (end && body[end - 1] === '\r') {
-    end --
-  }
+    end = lineEnd
 
-  const lineEnd = end
+    while (body[end - 1] === SPACE) {
+      end --
+    }
 
-  while (end && body[end - 1] === SPACE) {
-    end --
+    if (!stripLineEnd || body[end - 1] !== '\n') {
+      break
+    }
+
+    lineEnd = end - 1
   }
 
   if (end === lineEnd) {
-    return body.slice(0, end)
+    return body.slice(0, lineEnd)
   }
 
   let backslashes = 0
 
-  while (backslashes < end && body[end - backslashes - 1] === ESCAPE) {
+  while (body[end - backslashes - 1] === ESCAPE) {
     backslashes ++
   }
 
@@ -1153,7 +1146,7 @@ const trimEnd = body => {
 const createRule = ({
   pattern,
   mark
-}, ignoreCase, stripBOM) => {
+}, ignoreCase, stripLineEnd, stripBOM) => {
   // Git drops a BOM before it reads the first line, so before anything else.
   let body = stripBOM && pattern[0] === BOM
     ? pattern.slice(1)
@@ -1174,18 +1167,23 @@ const createRule = ({
 
   // Normalize the body before checking which slashes anchor the pattern.
   //   Otherwise `bar/ ` is mistaken for a pattern containing an inner slash.
-  //   Only a body ending in a space or a line terminator has anything to trim.
+  //   A line from `splitPattern` has already lost its line ending, so only a
+  //   trailing space remains to trim there.
   const last = body[body.length - 1]
 
-  if (last === SPACE || last === '\r' || last === '\n') {
-    body = trimEnd(body)
+  if (
+    last === SPACE
+    || stripLineEnd && (last === '\r' || last === '\n')
+  ) {
+    body = trimEnd(body, stripLineEnd)
   }
 
   // > A blank line matches no files, so it can serve as a separator for
   // >   readability.
-  // Nor does a lone "!", or anything else left empty here: an empty pattern
-  //   would compile to a regex matching every path.
-  if (!body) {
+  // Nor does a lone "!", a pattern ending on an unpaired backslash, or
+  //   anything else left empty here: an empty pattern would compile to a
+  //   regex matching every path.
+  if (!body || hasTrailingBackslash(body)) {
     return
   }
 
@@ -1246,7 +1244,7 @@ class RuleManager {
     }
 
     const rule = checkPattern(pattern.pattern)
-      && createRule(pattern, this._ignoreCase, stripBOM)
+      && createRule(pattern, this._ignoreCase, !this._split, stripBOM)
 
     if (rule) {
       this._added = true
@@ -1264,16 +1262,16 @@ class RuleManager {
   // @param {Array<string> | string | Ignore} pattern
   add (pattern) {
     this._added = false
-    const isStringPattern = isString(pattern)
+    this._split = isString(pattern)
 
     makeArray(
-      isStringPattern
+      this._split
         ? splitPattern(pattern)
         : pattern
     ).forEach((line, index) => {
       // Keep blank lines until here: only the first physical line can carry
       //   a BOM. Independently supplied patterns retain their own BOM handling.
-      this._add(line, !isStringPattern || index === 0)
+      this._add(line, !this._split || index === 0)
     })
 
     if (this._added) {
