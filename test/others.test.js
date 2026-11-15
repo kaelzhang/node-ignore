@@ -435,3 +435,79 @@ _test('an unpaired trailing backslash adds no rule in any input form (#176)', t 
 
   t.end()
 })
+
+_test('checkIgnore() and non-string inputs validate paths consistently (#176, #177)', t => {
+  const ig = ignore().add('foo')
+  const lax = ignore({
+    allowRelativePaths: true
+  }).add('*')
+
+  t.throws(
+    () => ig.checkIgnore(''),
+    {
+      name: 'TypeError',
+      message: 'path must not be empty'
+    }
+  )
+
+  t.throws(
+    () => ig.checkIgnore(false),
+    {
+      name: 'TypeError',
+      message: 'path must be a string, but got `false`'
+    }
+  )
+
+  t.throws(
+    () => ig.checkIgnore(null),
+    {
+      name: 'TypeError',
+      message: 'path must be a string, but got `null`'
+    }
+  )
+
+  t.throws(
+    () => ig.ignores(123),
+    {
+      name: 'TypeError',
+      message: 'path must be a string, but got `123`'
+    }
+  )
+
+  t.throws(
+    () => ig.checkIgnore(123),
+    {
+      name: 'TypeError',
+      message: 'path must be a string, but got `123`'
+    }
+  )
+
+  if (SHOULD_TEST_WINDOWS) {
+    t.throws(
+      () => ig.checkIgnore('C:\\a'),
+      {
+        name: 'RangeError',
+        message: 'path should be a `path.relative()`d string, but got "C:\\a"'
+      }
+    )
+  }
+
+  t.same(lax.checkIgnore(''), {
+    ignored: false,
+    unignored: false
+  })
+
+  t.same(lax.checkIgnore(false), {
+    ignored: false,
+    unignored: false
+  })
+
+  t.same(lax.checkIgnore(123), {
+    ignored: false,
+    unignored: false
+  })
+
+  t.equal(isPathValid(123), false)
+
+  t.end()
+})

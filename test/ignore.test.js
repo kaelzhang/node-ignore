@@ -116,27 +116,26 @@ cases(({
   })
 
   check('IGNORE_ONLY_WIN32', 'checkIgnore')
-  && tt(`win32: .checkIgnore(): ${description}`, t => {
+  && tt(`win32: .checkIgnore(path): ${description}`, t => {
     const ig = ignore().addPattern(patterns)
 
     Object.keys(paths_object).forEach(path => {
       const should_ignore = !!paths_object[path]
-      const win_path = make_win32(path)
+      const not = should_ignore ? '' : 'not '
 
-      // Also cover a forward slash after Windows directory separators.
-      const targets = path.endsWith('/')
-        ? [win_path, `${win_path.slice(0, - 1)}/`]
-        : [win_path]
-
-      targets.forEach(target => {
+      // A directory as 'a\\b\\', and as 'a\\b/', both of which a Windows
+      //   caller may write
+      new Set([
+        make_win32(path),
+        path.replace(/\/(?!$)/g, '\\')
+      ]).forEach(win_path => {
         t.equal(
-          ig.checkIgnore(target).ignored,
+          ig.checkIgnore(win_path).ignored,
           should_ignore,
-          `path: ${displayPath(target)}`
+          `path: ${displayPath(win_path)} should ${not}be ignored`
         )
       })
     })
-
     t.end()
   })
 })

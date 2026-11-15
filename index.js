@@ -1453,6 +1453,10 @@ checkPath.isNotRelative = isNotRelative
 checkPath.convert = p => p
 
 
+const convertPath = target =>
+  isString(target) && checkPath.convert(target)
+
+
 class Ignore {
   constructor ({
     ignorecase = true,
@@ -1491,11 +1495,7 @@ class Ignore {
   }
 
   // @returns {TestResult}
-  _test (originalPath, cache) {
-    const path = originalPath
-      // Supports nullable path
-      && checkPath.convert(originalPath)
-
+  _test (originalPath, cache, path) {
     checkPath(
       path,
       originalPath,
@@ -1504,18 +1504,23 @@ class Ignore {
         : RETURN_FALSE
     )
 
-    return this._t(path, cache)
+    return path
+      ? this._t(path, cache)
+      : {
+        ignored: false,
+        unignored: false
+      }
   }
 
-  checkIgnore (path) {
-    // Normalize Windows separators before deciding whether this is a literal
-    // directory query, and before matching it or walking its ancestors.
-    path = checkPath.convert(path)
+  checkIgnore (target) {
+    // A Windows path is converted first, so that a directory given with a
+    //   trailing separator, `\` or `/`, is told the same way
+    const path = convertPath(target)
 
-    // If the path doest not end with a slash, `.ignores()` is much equivalent
+    // If the path does not end with a slash, `.ignores()` is much equivalent
     //   to `git check-ignore`
-    if (path.charCodeAt(path.length - 1) !== SLASH_CODE) {
-      return this.test(path)
+    if (!path || path.charCodeAt(path.length - 1) !== SLASH_CODE) {
+      return this._test(target, this._testCache, path)
     }
 
     // Like `git check-ignore`: a directory excluded by itself or by an
@@ -1560,7 +1565,7 @@ class Ignore {
   }
 
   ignores (path) {
-    return this._test(path, this._ignoreCache).ignored
+    return this._test(path, this._ignoreCache, convertPath(path)).ignored
   }
 
   createFilter () {
@@ -1573,14 +1578,14 @@ class Ignore {
 
   // @returns {TestResult}
   test (path) {
-    return this._test(path, this._testCache)
+    return this._test(path, this._testCache, convertPath(path))
   }
 }
 
 const factory = options => new Ignore(options)
 
 const isPathValid = path =>
-  checkPath(path && checkPath.convert(path), path, RETURN_FALSE)
+  checkPath(convertPath(path), path, RETURN_FALSE)
 
 /* istanbul ignore next */
 const setupWindows = () => {
