@@ -101,11 +101,20 @@ ig.filter(['.abc\\a.js', '.abc\\d\\e.js'])
 # Methods
 
 ## .add(pattern: string | Ignore): this
-## .add(patterns: Array<string | Ignore>): this
-## .add({pattern: string, mark?: string}): this  since 7.0.0
+## .add(patterns: Array<string | Ignore | PatternParams>): this
+## .add(pattern: PatternParams): this  since 7.0.0
 
-- **pattern** `string | Ignore` An ignore pattern string, or the `Ignore` instance
-- **patterns** `Array<string | Ignore>` Array of ignore patterns.
+```ts
+// Since 7.0.0
+interface PatternParams {
+  // A single ignore pattern (not split into multiple rules on newlines)
+  pattern: string
+  mark?: string
+}
+```
+
+- **pattern** `string | Ignore | PatternParams` An ignore pattern string, an `Ignore` instance, or a `PatternParams` object (`since 7.0.0`).
+- **patterns** `Array<string | Ignore | PatternParams>` Array (or `ReadonlyArray`) of ignore patterns, `Ignore` instances, or `PatternParams` objects.
 - **mark?** `string` Pattern mark, which is used to associate the pattern with a certain marker, such as the line no of the `.gitignore` file. Actually it could be an arbitrary string and is optional.
 
 Adds a rule or several rules to the current manager.
