@@ -277,23 +277,6 @@ checkEnv('IGNORE_ONLY_FIXTURES') && cases(({
   })
 })
 
-if (!IS_WINDOWS && checkEnv('IGNORE_ONLY_FIXTURES')) {
-  test('later BOMs in a multiline string agree with git', t => {
-    const patterns = '\uFEFF# comment\n\uFEFFname\n\uFEFF#comment\n\uFEFF!negative\n\uFEFF'
-    const paths = [
-      'name', '\uFEFFname',
-      '#comment', '\uFEFF#comment',
-      '!negative', '\uFEFF!negative',
-      '\uFEFF'
-    ]
-    const reported = getNativeGitIgnoreResults(patterns, paths)
-    const ig = ignore().add(patterns)
-
-    t.same(ig.filter(paths).sort(), notIgnored(reported).sort())
-    t.end()
-  })
-}
-
 test(`dummy test for windows`, t => {
   t.pass()
   t.end()

@@ -150,6 +150,73 @@ const cases = [
     }
   ],
   [
+    '#178: a BOM is stripped only from the first line',
+    [
+      '\uFEFF# comment',
+      '\uFEFFname',
+      '\uFEFF#comment',
+      'negated',
+      '\uFEFF!negated',
+      '\uFEFF',
+      '\uFEFF   '
+    ],
+    {
+      '# comment': 0,
+      '\uFEFF# comment': 0,
+      'name': 0,
+      '\uFEFFname': 1,
+      '#comment': 0,
+      '\uFEFF#comment': 1,
+      'negated': 1,
+      '!negated': 0,
+      '\uFEFF!negated': 1,
+      '\uFEFF': 1,
+      'a/\uFEFF': 1
+    }
+  ],
+  [
+    '#178: a BOM after an initial blank line stays literal with LF',
+    '\n\uFEFFafter-lf\n\uFEFF#hash\nnegated\n\uFEFF!negated',
+    {
+      'after-lf': 0,
+      '\uFEFFafter-lf': 1,
+      '#hash': 0,
+      '\uFEFF#hash': 1,
+      'negated': 1,
+      '!negated': 0,
+      '\uFEFF!negated': 1
+    }
+  ],
+  [
+    '#178: a BOM after an initial blank line stays literal with CRLF',
+    '\r\n\uFEFFafter-crlf\r\n\uFEFF\r\n',
+    {
+      'after-crlf': 0,
+      '\uFEFFafter-crlf': 1,
+      '\uFEFF': 1
+    }
+  ],
+  [
+    '#178: a BOM after a BOM-only first line stays literal with CRLF',
+    '\uFEFF\r\n\uFEFFafter-bom\r\n',
+    {
+      'after-bom': 0,
+      '\uFEFFafter-bom': 1,
+      '\uFEFF': 0
+    }
+  ],
+  [
+    '#178: only one leading BOM is stripped from the first line',
+    '\uFEFF\uFEFFdouble\r\n\uFEFFsecond\r\n',
+    {
+      'double': 0,
+      '\uFEFFdouble': 1,
+      '\uFEFF\uFEFFdouble': 0,
+      'second': 0,
+      '\uFEFFsecond': 1
+    }
+  ],
+  [
     'a lone "!" matches no files',
     [
       '*',

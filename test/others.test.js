@@ -16,54 +16,35 @@ const _test = checkEnv('IGNORE_ONLY_OTHERS')
   ? test
   : () => {}
 
-_test('a BOM is stripped only at the start of a multiline string', t => {
-  const newlines = ['\n', '\r\n']
-  const firstLines = ['', '# comment', '\uFEFF# comment']
-  const names = ['name', '#comment', '!negative', '']
-  newlines.forEach(newline => {
-    firstLines.forEach(firstLine => {
-      const patterns = [
-        firstLine,
-        '\uFEFFname',
-        '\uFEFF#comment',
-        '\uFEFF!negative',
-        '\uFEFF'
-      ].join(newline)
-      const ig = ignore().add(patterns)
-
-      names.forEach(name => {
-        const path = `\uFEFF${name}`
-        const {ignored, rule} = ig.checkIgnore(path)
-        t.equal(ig.ignores(path), true, 'a later BOM is literal')
-        t.equal(ignored, true)
-        t.equal(rule && rule.pattern, path)
-      })
-
-      t.same(ig.filter(['name', '#comment', '!negative']), [
-        'name', '#comment', '!negative'
-      ])
-    })
-  })
-
-  const ig = ignore().add('name\n\uFEFF!name')
-  t.equal(ig.ignores('name'), true, 'a later BOM does not introduce negation')
-  t.end()
-})
-
-_test('each independently added pattern can start with a BOM', t => {
+_test('each separate .add() call strips at most one leading BOM on its first entry (#178)', t => {
   const ig = ignore()
   .add('\uFEFFfirst')
   .add('\uFEFFsecond')
   .add(['\uFEFFthird', '\uFEFFfourth'])
   .add({pattern: '\uFEFFfifth', mark: 'custom'})
 
-  const names = ['first', 'second', 'third', 'fourth', 'fifth']
-  names.forEach(name => {
-    t.equal(ig.ignores(name), true)
-    t.equal(ig.checkIgnore(name).rule.pattern, `\uFEFF${name}`)
+  t.equal(ig.ignores('first'), true)
+  t.equal(ig.checkIgnore('first').rule.pattern, '\uFEFFfirst')
+
+  t.equal(ig.ignores('second'), true)
+  t.equal(ig.checkIgnore('second').rule.pattern, '\uFEFFsecond')
+
+  t.equal(ig.ignores('third'), true)
+  t.equal(ig.checkIgnore('third').rule.pattern, '\uFEFFthird')
+
+  t.equal(ig.ignores('fourth'), false)
+  t.equal(ig.ignores('\uFEFFfourth'), true)
+  t.equal(ig.checkIgnore('\uFEFFfourth').rule.pattern, '\uFEFFfourth')
+
+  t.equal(ig.ignores('fifth'), true)
+  t.equal(ig.checkIgnore('fifth').rule.pattern, '\uFEFFfifth')
+  t.equal(ig.checkIgnore('fifth').rule.mark, 'custom')
+
+  t.same(ignore().add('\uFEFF!keep').test('keep'), {
+    ignored: false,
+    unignored: true
   })
 
-  t.equal(ig.checkIgnore('fifth').rule.mark, 'custom')
   t.end()
 })
 

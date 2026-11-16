@@ -1016,6 +1016,7 @@ const splitPattern = pattern => (
     : pattern
 )
 .split(REGEX_SPLITALL_CRLF)
+.filter(Boolean)
 
 class IgnoreRule {
   constructor (
@@ -1225,7 +1226,7 @@ class RuleManager {
     this._basenameCount = 0
   }
 
-  _add (pattern, stripBOM) {
+  _add (pattern, index) {
     // #32
     if (pattern && pattern[KEY_IGNORE]) {
       this._rules = this._rules.concat(pattern._rules._rules)
@@ -1245,7 +1246,7 @@ class RuleManager {
         isStr ? UNDEFINED : pattern.mark,
         this._ignoreCase,
         !this._split,
-        stripBOM
+        this._stripBOM && !index
       )
 
     if (rule) {
@@ -1265,16 +1266,13 @@ class RuleManager {
   add (pattern) {
     this._added = false
     this._split = isString(pattern)
+    this._stripBOM = !this._split || pattern[0] === BOM
 
     makeArray(
       this._split
         ? splitPattern(pattern)
         : pattern
-    ).forEach((line, index) => {
-      // Keep blank lines until here: only the first physical line can carry
-      //   a BOM. Independently supplied patterns retain their own BOM handling.
-      this._add(line, !this._split || index === 0)
-    })
+    ).forEach(this._add, this)
 
     if (this._added) {
       this._literalRules = UNDEFINED
