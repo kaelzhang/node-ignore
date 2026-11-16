@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": true,
+    "exactOptionalPropertyTypes": true
   }
 }

@@ -10,13 +10,22 @@ declare namespace ignore {
   type Pathname = string
 
   interface PatternParams {
+    /**
+     * A single ignore pattern, not split into multiple rules on newlines.
+     */
     pattern: string
     /**
      * Carried through to `IgnoreRule.mark`, for packages that build upon
      *   `ignore`.
      */
-    mark?: string
+    mark?: string | undefined
   }
+
+  /**
+   * A single entry accepted by `Ignore.add()`, either standalone or as an
+   *   element of an array.
+   */
+  type Pattern = string | Ignore | PatternParams
 
   interface IgnoreRule {
     /**
@@ -26,7 +35,7 @@ declare namespace ignore {
     /**
      * Carried through from `PatternParams.mark`.
      */
-    mark?: string
+    mark?: string | undefined
     /**
      * Whether the pattern is a negative one, such as `!foo`.
      */
@@ -60,18 +69,16 @@ declare namespace ignore {
   interface Ignore {
     /**
      * Adds one or several rules to the current manager.
-     * @param  {string[]} patterns
-     * @returns IgnoreBase
+     * @param patterns A rule or array of rules to add.
+     * @returns The current `Ignore` instance.
      */
-    add(
-      patterns: string | Ignore | readonly (string | Ignore | PatternParams)[] | PatternParams
-    ): this
+    add(patterns: Pattern | readonly Pattern[]): this
 
     /**
      * Filters the given array of pathnames, and returns the filtered array.
      * NOTICE that each path here should be a relative path to the root of your repository.
-     * @param paths the array of paths to be filtered.
-     * @returns The filtered array of paths
+     * @param pathnames The array of paths to be filtered.
+     * @returns The filtered array of paths.
      */
     filter(pathnames: readonly Pathname[]): Pathname[]
 
@@ -83,32 +90,33 @@ declare namespace ignore {
 
     /**
      * Returns Boolean whether pathname should be ignored.
-     * @param  {string} pathname a path to check
-     * @returns boolean
+     * @param pathname A path to check.
+     * @returns Whether `pathname` is ignored.
      */
     ignores(pathname: Pathname): boolean
 
     /**
      * Tests the pathname against the rules. `ignored` and `unignored` can
      *   both be false: see `TestResult.unignored` for the two cases.
-     * @param  {string} pathname a path to check
-     * @returns TestResult
+     * @param pathname A path to check.
+     * @returns The `TestResult` for `pathname`.
      */
     test(pathname: Pathname): TestResult
 
     /**
      * Debugs ignore rules and returns the checking result, which is
      *   equivalent to `git check-ignore -v`.
-     * @returns TestResult
+     * @param pathname A path to check.
+     * @returns The `TestResult` for `pathname`.
      */
     checkIgnore(pathname: Pathname): TestResult
   }
 
   interface Options {
-    ignorecase?: boolean
+    ignorecase?: boolean | undefined
     // For compatibility
-    ignoreCase?: boolean
-    allowRelativePaths?: boolean
+    ignoreCase?: boolean | undefined
+    allowRelativePaths?: boolean | undefined
   }
 
   function isPathValid(pathname: string): boolean

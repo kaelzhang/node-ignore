@@ -2,6 +2,8 @@ import ignore, {isPathValid} from '../..'
 import type {
   Ignore,
   IgnoreRule,
+  Options,
+  Pattern,
   PatternParams,
   Pathname,
   TestResult
@@ -113,3 +115,74 @@ const ig9 = ignore().add([
 equal(ig9.ignores('first'), true, 'mixed array accepts strings')
 equal(ig9.test('second').rule?.mark, 'second-line', 'mixed array accepts marks')
 equal(ig9.ignores('third'), true, 'mixed array accepts Ignore instances')
+
+// Optional properties accept explicit undefined under exactOptionalPropertyTypes
+const conditionalMarks = ['alpha', 'beta'].map((pattern, index) => ({
+  pattern,
+  mark: index === 0 ? '1' : undefined
+}))
+const ig10 = ignore({
+  ignorecase: undefined,
+  ignoreCase: undefined,
+  allowRelativePaths: undefined
+}).add(conditionalMarks).add({pattern: 'gamma', mark: undefined})
+equal(ig10.checkIgnore('alpha').rule?.mark, '1', 'explicit mark preserved')
+equal(ig10.checkIgnore('beta').rule?.mark, undefined, 'undefined mark preserved')
+equal(ig10.checkIgnore('gamma').rule?.mark, undefined, 'single undefined mark preserved')
+
+const unannotatedRule = ignore().add('plain').checkIgnore('plain').rule
+equal(
+  unannotatedRule ? 'mark' in unannotatedRule : false,
+  true,
+  'IgnoreRule always carries an own mark property at runtime'
+)
+equal(unannotatedRule?.mark, undefined, 'unmarked IgnoreRule.mark is undefined')
+equal(
+  'rule' in ignore().add('plain').checkIgnore('other'),
+  false,
+  'TestResult omits rule property when not ignored'
+)
+
+interface CustomIgnore extends Ignore {
+  readonly customTag: string
+}
+
+interface RichPattern extends PatternParams {
+  readonly file: string
+  readonly line: number
+}
+
+// Compile-time boundary and negative type assertions (not invoked at runtime)
+function assertTypeBoundaries (custom: CustomIgnore, rich: readonly RichPattern[]) {
+  const chained: CustomIgnore = custom.add(markedPatterns)
+  const singlePattern: Pattern = {pattern: 'a', mark: '1'}
+  const nsPattern: ignore.Pattern = singlePattern
+  const nsOptions: Options = {ignorecase: false}
+  chained.add(nsPattern).add(rich)
+  ignore(nsOptions)
+
+  const maybeRule = ignore().add('foo').checkIgnore('foo').rule
+  if (maybeRule && 'mark' in maybeRule) {
+    // @ts-expect-error IgnoreRule always has own `mark` property which may be undefined
+    maybeRule.mark.toUpperCase()
+  }
+
+  // @ts-expect-error number element in pattern array
+  ignore().add([123])
+  // @ts-expect-error null element in pattern array
+  ignore().add([null])
+  // @ts-expect-error undefined element in pattern array
+  ignore().add([undefined])
+  // @ts-expect-error empty object in pattern array
+  ignore().add([{}])
+  // @ts-expect-error missing pattern property in array element
+  ignore().add([{mark: '1'}])
+  // @ts-expect-error non-string pattern in array element
+  ignore().add([{pattern: 123}])
+  // @ts-expect-error non-string mark in array element
+  ignore().add([{pattern: 'a', mark: 123}])
+  // @ts-expect-error nested pattern arrays are not flattened at runtime
+  ignore().add([['nested']])
+  // @ts-expect-error unknown excess property on inline object literal in array
+  ignore().add([{pattern: 'a', mark: '1', unknownProp: true}])
+}
