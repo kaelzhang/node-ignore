@@ -16,6 +16,57 @@ const _test = checkEnv('IGNORE_ONLY_OTHERS')
   ? test
   : () => {}
 
+_test('a BOM is stripped only at the start of a multiline string', t => {
+  const newlines = ['\n', '\r\n']
+  const firstLines = ['', '# comment', '\uFEFF# comment']
+  const names = ['name', '#comment', '!negative', '']
+  newlines.forEach(newline => {
+    firstLines.forEach(firstLine => {
+      const patterns = [
+        firstLine,
+        '\uFEFFname',
+        '\uFEFF#comment',
+        '\uFEFF!negative',
+        '\uFEFF'
+      ].join(newline)
+      const ig = ignore().add(patterns)
+
+      names.forEach(name => {
+        const path = `\uFEFF${name}`
+        const {ignored, rule} = ig.checkIgnore(path)
+        t.equal(ig.ignores(path), true, 'a later BOM is literal')
+        t.equal(ignored, true)
+        t.equal(rule && rule.pattern, path)
+      })
+
+      t.same(ig.filter(['name', '#comment', '!negative']), [
+        'name', '#comment', '!negative'
+      ])
+    })
+  })
+
+  const ig = ignore().add('name\n\uFEFF!name')
+  t.equal(ig.ignores('name'), true, 'a later BOM does not introduce negation')
+  t.end()
+})
+
+_test('each independently added pattern can start with a BOM', t => {
+  const ig = ignore()
+  .add('\uFEFFfirst')
+  .add('\uFEFFsecond')
+  .add(['\uFEFFthird', '\uFEFFfourth'])
+  .add({pattern: '\uFEFFfifth', mark: 'custom'})
+
+  const names = ['first', 'second', 'third', 'fourth', 'fifth']
+  names.forEach(name => {
+    t.equal(ig.ignores(name), true)
+    t.equal(ig.checkIgnore(name).rule.pattern, `\uFEFF${name}`)
+  })
+
+  t.equal(ig.checkIgnore('fifth').rule.mark, 'custom')
+  t.end()
+})
+
 _test('.add(<Ignore>)', t => {
   const a = ignore().add(['.abc/*', '!.abc/d/'])
   const b = ignore().add(a).add('!.abc/e/')
