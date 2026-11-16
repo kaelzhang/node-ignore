@@ -64,7 +64,7 @@ declare namespace ignore {
      * @returns IgnoreBase
      */
     add(
-      patterns: string | Ignore | readonly (string | Ignore)[] | PatternParams
+      patterns: string | Ignore | readonly (string | Ignore | PatternParams)[] | PatternParams
     ): this
 
     /**

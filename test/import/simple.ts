@@ -90,3 +90,26 @@ const rule7: IgnoreRule | undefined = ignoreRule7
 const pathname: Pathname = 'foo/'
 equal(rule7?.negative, false, 'not a negative rule')
 equal(ig7.checkIgnore(pathname).ignored, true, 'Pathname is a string')
+
+// Marked patterns can be supplied as arrays, including readonly mixed inputs
+const markedPatterns = ['foo/*', '!foo/keep'].map((pattern, index) => ({
+  pattern,
+  mark: String(index + 1)
+}))
+const ig8 = ignore()
+const added8: typeof ig8 = ig8.add(markedPatterns)
+equal(added8, ig8, 'adding marked patterns returns this')
+equal(ig8.checkIgnore('foo/file').rule?.mark, '1', 'array preserves rule marks')
+equal(ig8.test('foo/keep').unignored, true, 'array preserves negative patterns')
+
+const readonlyMarkedPatterns: readonly PatternParams[] = markedPatterns
+ignore().add(readonlyMarkedPatterns)
+
+const ig9 = ignore().add([
+  'first',
+  {pattern: 'second', mark: 'second-line'},
+  ignore().add('third')
+] as const)
+equal(ig9.ignores('first'), true, 'mixed array accepts strings')
+equal(ig9.test('second').rule?.mark, 'second-line', 'mixed array accepts marks')
+equal(ig9.ignores('third'), true, 'mixed array accepts Ignore instances')
