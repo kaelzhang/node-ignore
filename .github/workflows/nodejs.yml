@@ -18,7 +18,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
+      with:
+        # `compat` checks each promised tag out into a worktree on Linux, so
+        # only that runner needs the tags and the history that reaches them.
+        fetch-depth: ${{ runner.os == 'Linux' && '0' || '1' }}
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
@@ -41,6 +45,14 @@ jobs:
     - name: cases, with full coverage required
       run: |
         npm run test:cases
+    # compat/config.js lists the released versions this working tree promises
+    # to stay compatible with, plus the latest tag. Running both POSIX and
+    # --win32 modes here on Linux reuses this job's checkout and node_modules
+    # instead of spinning up a separate workflow and runner.
+    - name: compatibility with promised releases
+      if: runner.os == 'Linux'
+      run: |
+        npm run compat
     - name: upload to codecov
       if: runner.os == 'Linux'
       uses: codecov/codecov-action@v5
