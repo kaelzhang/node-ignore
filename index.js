@@ -1546,8 +1546,12 @@ class Ignore {
     // The cache for the result of a certain checking
     cache
   ) {
-    if (path in cache) {
-      return cache[path]
+    // Every cached result is an object, so one read both tells a hit and
+    //   fetches it, where `in` and then a read hashed the path twice.
+    const cached = cache[path]
+
+    if (cached) {
+      return cached
     }
 
     const parentPath = parentOf(path)
